@@ -9,7 +9,13 @@ module Parser
 ( getc
 , sat
 , none
+, many
+, alt
+, enum
+, some
 , char
+, string
+, _const
 , digit
 , lower
 , upper
@@ -18,14 +24,22 @@ module Parser
 , token
 , symbol
 , grouped
+, manywith
+, somewith
+, oneOf
 , apply
 , parse
+, Parser
+, (<|>), (>>=)
+, trim
 ) where 
 
 import Data.Char ( isDigit , isLower , isUpper, isSpace)
+import Data.List (dropWhileEnd)
 
 import Control.Monad ((>>=), return, ap, liftM, guard)
-import Control.Applicative (Alternative, (<|>), empty, many)
+import Control.Applicative (Alternative, (<|>), empty, many, some, optional)
+import Prelude hiding (head)
 
 newtype Parser a = Parser (String -> [(a, String)])
 
@@ -71,8 +85,8 @@ getc = Parser f where
 sat :: (Char -> Bool) -> Parser Char
 sat p = do { c <- getc; guard (p c); return c }
 
-char :: Char -> Parser ()
-char x = do { c <- sat (==x); return () }
+char :: Char -> Parser Char
+char x = sat (==x)
 
 string :: String -> Parser ()
 string "" = return ()
@@ -81,6 +95,10 @@ string (c:cs) = do { char c; string cs; return () }
 digit = sat isDigit
 lower = sat isLower
 upper = sat isUpper
+
+head :: [a] -> Maybe a
+head [] = Nothing
+head (x:xs) = Just x
 
 optional' :: Parser [a] -> Parser [a]
 optional' p = p <|> none
@@ -99,3 +117,27 @@ grouped o c p = do { symbol o;
                      symbol c;
                      return v; }
 
+manywith sep p = optional' (somewith sep p)
+somewith sep p = do
+  first <- p
+  rest <- many (sep >> p)
+  return (first:rest)
+
+oneOf :: String -> Parser Char
+oneOf "" = empty
+oneOf (c:cs) = char c <|> oneOf cs
+
+_const :: String -> Parser String
+_const s = do
+  symbol s
+  return s
+  
+alt :: (a -> Parser a) -> [a] -> Parser a
+alt p [] = fail ""
+alt p (x:xs) = p x <|> alt p xs
+
+enum :: [String] -> Parser String
+enum xs = alt (\s -> do { symbol s ; return s }) xs
+
+trim :: String -> String
+trim = dropWhile isSpace . dropWhileEnd isSpace
