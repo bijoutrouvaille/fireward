@@ -87,4 +87,6 @@ spec = do
   describe "somewith" $ do
     it "parses into an array" $
       apply (somewith (symbol ",") (token digit)) " 3, 4 , 5,6,3 ff+" `shouldBe` [("34563", " ff+")]
+
+
   

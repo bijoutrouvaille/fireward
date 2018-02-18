@@ -9,7 +9,10 @@ module RuleParser
 , _pathWild
 , _pathStatic
 , _pathDir
-, _funcMember
+, _funcDef
+, _funcBody
+, _string
+, escape
 , FuncDef (..)
 , TypeDef (..)
 , PathDef (..)
@@ -25,7 +28,7 @@ import Parser
 import Control.Applicative (optional)
 import Data.Char (isSpace)
 
-data FuncDef = FuncDef [String] String deriving (Show, Eq)
+data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
 data TypeDef = TypeDef [Member] deriving (Show, Eq)
 
@@ -59,28 +62,68 @@ _varName = do
 
 separated = manywith . symbol
 
+escape :: Char -> Parser String
+escape c = do
+  char '\\'
+  r <- sat (==c)
+  return ('\\':[r])
+
+
+{-
+- str = "(all - {"})*"
+-}
+_getWhile p = many $ sat p
+_stringD :: Char -> Parser String
+_stringD delim = do
+  char delim
+  a <- many $ (_const ('\\':[delim]) <|> (:[]) <$> sat (/=delim))
+  -- a <- (_getWhile (/=delim))
+  char delim
+  return $ concat (([delim]:a) ++ [[delim]])
+  -- return a
+  -- where 
+  --       more = 
+
+             
+_string :: Parser String
+_string = _stringD '"' <|> _stringD '\''
+
 _funcBody :: Parser String
-_funcBody = many $ sat (/='}')
+_funcBody = token $ do
+  let notDone c = c/='}' && c/=';'
+  a <- many $ _string <|> satS notDone
+  optional $ symbol ";"
+  return $ concat a
 
 
-_funcMember :: Parser Member
-_funcMember = do
+_funcDef :: Parser FuncDef
+_funcDef = do
+  symbol "function"
   name <- token _varName
   params <- grouped "(" ")" paramList
-  -- symbol "=>"
-  body <- grouped "{" "}" _funcBody
-  return $ f name params body
-  where
-    f n p = MemberFunc n . FuncDef p
-    paramList = separated "," (token _varName)
+  symbol "{"
+  optional $ symbol "return"
+  body <- _funcBody
+  symbol "}"
+  return $ FuncDef name params (trim body)
+  where paramList = separated "," (token _varName)
 
 _typeDef :: Parser TypeDef
 _typeDef = grouped "{" "}" $ do
-  members <- many (_field <|> _funcMember)
+  members <- many _field
   return $ TypeDef members
   
+_terminated parser terminator = do
+  v <- parser
+  terminator
+  return v
 _typeRefs :: Parser [TypeRef]
-_typeRefs = manywith (symbol "|") ((TypeNameRef <$> token _varName) <|> (InlineTypeRef <$> _typeDef))
+_typeRefs = manywith (symbol "|") ( 
+  (TypeNameRef <$> withComma (token _varName)) 
+    <|> (InlineTypeRef <$> withComma _typeDef))
+  where
+    comma = optional $ symbol ","
+    withComma p = _terminated p comma
 
 _field :: Parser Member
 _field = do
@@ -145,15 +188,19 @@ _path = do
   parts <- token _pathParts
   className <- _pathType
   symbol "{"
-  body <- many (PathBodyPath <$> _path <|> PathBodyDir <$> _pathDir)
+  body <- many (PathBodyPath <$> _path <|> PathBodyDir <$> _pathDir <|> PathBodyFunc <$> _funcDef)
   symbol "}"
   return  $ PathDef parts className body
 
+
 data TopLevel = TopLevelType String [TypeRef]
               | TopLevelPath PathDef
+              | TopLevelFunc FuncDef
   deriving (Show, Eq)
   
-_topLevel = (TopLevelPath <$> _path) <|> _topLevelType 
+_topLevel = (TopLevelPath <$> _path) 
+        <|> _topLevelType 
+        <|> TopLevelFunc <$> _funcDef
 
 
 parseRules :: String -> [([TopLevel], String)]

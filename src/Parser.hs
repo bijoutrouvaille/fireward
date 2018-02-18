@@ -8,6 +8,7 @@
 module Parser 
 ( getc
 , sat
+, satS
 , none
 , many
 , alt
@@ -85,12 +86,16 @@ getc = Parser f where
 sat :: (Char -> Bool) -> Parser Char
 sat p = do { c <- getc; guard (p c); return c }
 
+satS :: (Char -> Bool) -> Parser String
+satS p = (:[]) <$> sat p 
+
 char :: Char -> Parser Char
 char x = sat (==x)
 
 string :: String -> Parser ()
 string "" = return ()
 string (c:cs) = do { char c; string cs; return () }
+
 
 digit = sat isDigit
 lower = sat isLower
@@ -129,7 +134,7 @@ oneOf (c:cs) = char c <|> oneOf cs
 
 _const :: String -> Parser String
 _const s = do
-  symbol s
+  string s
   return s
   
 alt :: (a -> Parser a) -> [a] -> Parser a
@@ -141,3 +146,4 @@ enum xs = alt (\s -> do { symbol s ; return s }) xs
 
 trim :: String -> String
 trim = dropWhile isSpace . dropWhileEnd isSpace
+

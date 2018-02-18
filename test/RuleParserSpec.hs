@@ -1,5 +1,6 @@
 module RuleParserSpec (main, spec) where
 
+import Parser
 import RuleParser
 
 import Data.Char (isDigit)
@@ -94,4 +95,85 @@ spec = do
         ] (Just "X") [
           PathBodyDir (PathDirective ["create"] "true")
         ])], "")]
+  describe "escape" $ do
+    it "detects escaped chars" $
+      apply (escape '\'') "\\''" `shouldBe` [("\\'", "'")]
+    it "detects many escaped chars" $
+      apply (many $ escape '\'') "\\'\\'x" `shouldBe` [(["\\'", "\\'"], "x")]
+    it "detects an escaped char or a arbitrary" $
+      apply (escape '\'' <|> _const "f") "\\'x" `shouldBe` [("\\'", "x")]
+    it "detects many of an escaped char or arbitrary" $
+      apply (many $ escape '\'' <|> _const "f") "\\'f\\'fx" `shouldBe` 
+        [(["\\'", "f", "\\'", "f"], "x")]
+    it "detects many of an escaped char or many sats" $
+      apply (many $ escape '\'' <|> (:[]) <$> (sat (/='0'))) "\\'f\\'fx" `shouldBe` 
+        [(["\\'", "f", "\\'", "f", "x"], "")]
+        
+    it "parses a string" $
+      apply _string "'hello world' + 3"
+        `shouldBe` [("'hello world'", " + 3")]
+    it "parses a string with escaped quotes" $
+      apply _string "'hello \\'world' + 3"
+        `shouldBe` [("'hello \\'world'", " + 3")]
+    it "parses a one-line function" $ 
+      parseRules "function abc(h) { return x.y || b }"
+      `shouldBe`
+      [([TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")],"")]
+    it "parses a multiline function" $
+      parseRules (unlines [
+        "function abc(h) { ",
+        "  return x.y || b",
+        "}"
+      ])
+      `shouldBe`
+      [([TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")],"")]
+    it "parses a complex type" $
+      parseRules (unlines [
+        "type Zxx = Null | { ",
+        "  one: X,",
+        "  two: {three: Z, four: P|X}",
+        "}"
+      ])
+      `shouldBe`
+      [([ TopLevelType "Zxx" [TypeNameRef "Null", InlineTypeRef (TypeDef [
+        MemberField "one" [TypeNameRef "X"],
+        MemberField "two" [InlineTypeRef (TypeDef [
+          MemberField "three" [TypeNameRef "Z"],
+          MemberField "four" [TypeNameRef "P",TypeNameRef "X"]
+        ])]
+      ])]],"")]
+    it "parses a function a type and a path" $
+      parseRules (unlines [
+        "type Zxx = { ",
+        "  one: X,",
+        "  two: Y",
+        "}",
+        
+        "function abc(h) { ",
+        "  return x.y || b",
+        "}"
+      ])
+      `shouldBe`
+      [([ TopLevelType "Zxx" [InlineTypeRef (TypeDef [MemberField "one" [TypeNameRef "X"],MemberField "two" [TypeNameRef "Y"]])],
+          TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")
+        ],"")]
+    it "parses a complex path" $
+      parseRules (unlines [
+        "match /x is A {",
+        "  match /y is B {",
+        "    allow read, write: if true;",
+        "    allow create, write: if false;",
+        "    function qqq(a,b,c) {",
+        "      return 123",
+        "    }",
+        "  }",
+        "}"
+      ]) `shouldBe` [([ TopLevelPath (PathDef [PathPartStatic "x"] (Just "A") [
+        PathBodyPath (PathDef [PathPartStatic "y"] (Just "B") [
+          PathBodyDir (PathDirective ["read","write"] "true"),
+          PathBodyDir (PathDirective ["create","write"] "false"),
+          PathBodyFunc (FuncDef "qqq" ["a","b","c"] "123")])
+        ])
+      ],"")]
+
 
