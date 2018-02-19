@@ -21,22 +21,23 @@ module RuleParser
 , PathBodyItem (..)
 , TypeRef (..)
 , TopLevel (..)
-, Member (..)
+, Field (..)
 ) where
 
 import Parser
 import Control.Applicative (optional)
 import Data.Char (isSpace)
 
-data FuncDef = FuncDef String [String] String deriving (Show, Eq)
-
-data TypeDef = TypeDef [Member] deriving (Show, Eq)
+data TopLevel = TopLevelType String [TypeRef]
+              | TopLevelPath PathDef
+              | TopLevelFunc FuncDef
+  deriving (Show, Eq)
 
 type PathOp = String
 type PathCondition = String
 data PathDirective = PathDirective [PathOp] PathCondition
   deriving (Show, Eq)
-data PathDef = PathDef [PathPart] (Maybe String) [PathBodyItem]
+data PathDef = PathDef [PathPart] [TypeRef] [PathBodyItem]
   deriving (Show, Eq)
 data PathPart = PathPartStatic String 
               | PathPartVar String 
@@ -48,9 +49,12 @@ data PathBodyItem = PathBodyDir PathDirective
                   | PathBodyFunc FuncDef
   deriving (Show, Eq)
 
--- data Object = Type TypeDef | Path PathDef | Func FuncDef
+data FuncDef = FuncDef String [String] String deriving (Show, Eq)
+
+-- TopLevelType String [TypeRef]
+data TypeDef = TypeDef [Field] deriving (Show, Eq)
 data TypeRef = TypeNameRef String | InlineTypeRef TypeDef deriving (Show, Eq)
-data Member = MemberFunc String FuncDef | MemberField String [TypeRef] deriving (Show, Eq)
+data Field = Field Bool String [TypeRef] deriving (Show, Eq)
 
 _alpha = lower <|> upper
 _alphaNum = _alpha <|> digit
@@ -125,12 +129,13 @@ _typeRefs = manywith (symbol "|") (
     comma = optional $ symbol ","
     withComma p = _terminated p comma
 
-_field :: Parser Member
+_field :: Parser Field
 _field = do
   name <- token _varName
+  opt <- optional $ symbol "?"
   symbol ":"
   types <- _typeRefs
-  return $ MemberField name types
+  return $ Field (opt == Nothing) name types
 
 _topLevelType :: Parser TopLevel
 _topLevelType = do 
@@ -159,10 +164,8 @@ _pathWild = grouped "{" "}" $ do
 _pathParts :: Parser [PathPart]
 _pathParts = manywith (char '/') (_pathVar <|> _pathStatic <|> _pathWild)
 
-_pathType :: Parser (Maybe String)
-_pathType = optional $ do
-  symbol "is" 
-  token _varName
+_pathType :: Parser [TypeRef]
+_pathType = (symbol "is" >> token _typeRefs) <|> return []
 
 _pathDir :: Parser PathDirective
 _pathDir = do
@@ -170,6 +173,8 @@ _pathDir = do
   -- ops <-  _const "read"
   ops <- manywith (symbol ",") $ enum 
     [ "read"
+    , "get"
+    , "list"
     , "write"
     , "create"
     , "update"
@@ -193,10 +198,6 @@ _path = do
   return  $ PathDef parts className body
 
 
-data TopLevel = TopLevelType String [TypeRef]
-              | TopLevelPath PathDef
-              | TopLevelFunc FuncDef
-  deriving (Show, Eq)
   
 _topLevel = (TopLevelPath <$> _path) 
         <|> _topLevelType 
