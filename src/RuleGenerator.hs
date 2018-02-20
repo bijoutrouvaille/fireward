@@ -1,4 +1,6 @@
 module RuleGenerator (
+  Error(..),
+  Loc(..),
   loc,
   generate
 ) where
@@ -147,7 +149,7 @@ gen (TopLevelPath def) = pathBlock 0 def
     pathHead parts = intercalate "/" $ pathPart <$> parts
     pathBody ind bodyItems = joinLines $ pathBodyItem ind <$> bodyItems
     pathBodyItem ind (PathBodyDir (PathDirective ops cond)) =
-      concat [indent ind, "allow ", intercalate ", " ops, ": if ", cond, ";"]
+      concat [indent (ind + 1), "allow ", intercalate ", " ops, ": if ", cond, ";"]
     pathBodyItem ind (PathBodyFunc def) =
       funcBlock (ind + 1) def
     pathBodyItem ind (PathBodyPath def) = 

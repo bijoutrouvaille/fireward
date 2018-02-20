@@ -1,0 +1,15 @@
+type UserAccount = {
+  email: string
+}
+type User = {
+  name: {first:string, last?: string}
+  account: UserAccount
+}
+
+function validEmail(resource) {
+  return resource.email.data().indexOf('@') != -1 
+}
+
+match /users/{userId} is User {
+  allow write: if validEmail(request.resource);
+}
