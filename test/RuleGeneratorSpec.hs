@@ -59,18 +59,22 @@ spec = do
       g "type X = A | {b:B|BB}"
       `shouldBe` ru
       [ "function isX (resource) {"
-      , " return isA(resource)"
-      , " || resource.keys().hasAll(['b'])"
-      , " && resource.size() >= 1"
-      , " && resource.size() <= 1"
-      , " && (isB(resource.b)"
-      , " || isBB(resource.b))"
+      , "  return isA(resource)"
+      , "  || resource.keys().hasAll(['b'])"
+      , "  && resource.size() >= 1"
+      , "  && resource.size() <= 1"
+      , "  && (isB(resource.b)"
+      , "  || isBB(resource.b));"
       , "}" 
       ]
     it "generates a path with a type" $
       g "match x is X {}" `shouldBe` ru
         [ "match /x {"
-        , "  allow write: if isX(resource);"
+        , "  function is__pathType (resource) {"
+        , "    return isX(resource);"
+        , "  }"
+        , "  allow write: if is__pathType(resource);"
         , "}"
         ]
+
 

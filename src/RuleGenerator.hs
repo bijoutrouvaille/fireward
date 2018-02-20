@@ -30,15 +30,18 @@ getOr l n f = if length l < n
 capitalize "" = ""
 capitalize (c:cs) = (toUpper c) : cs
 
+joinLines = intercalate "\n"
+
 indent n = take (n*2) $ repeat ' '
 
 block :: Int -> [String] -> String
-block ind items = concat
-  [ " {\n"
-  , unlines . fmap (indent (ind + 1) ++) $ items
-  , indent ind, "}"
+block ind items = joinLines
+  [ "{"
+  , joinLines $ (indent (ind + 1) ++) <$> items
+  , indent ind ++ "}"
   ]
 
+surround :: String -> String -> String -> String
 surround b e s = concat [b,s,e]
 
 generate :: String -> Either Error String
@@ -53,14 +56,13 @@ generate source = if length allResults == 0
     q :: ([TopLevel], String) -> Either Error String
     q (tops, unparsed) = if length unparsed > 0
                             then Left $ Error (Just $ loc (lines source) (lines unparsed)) "Could not parse."
-                            else Right . trim . unlines $ gen <$> tops
-    -- ref (TypeNameRef name) = name
-    -- ref (InlineTypeRef def) = typeBody def
+                            else Right . trim . joinLines $ gen <$> tops
     sourceLines = lines source 
     ast = parseRules source
 
 funcBlock ind (FuncDef name params body) = concat 
-  [ indent ind, "function "
+  [ indent ind
+  , "function "
   , name
   , "(", intercalate ", " params, ") { return ", body', "; }"
   ]
@@ -84,8 +86,9 @@ typeBlock ind (TypeDef fields) = block ind $
 typeFunc :: String -> [TypeRef] -> String
 typeFunc name refs = 
   concat [ "function is"
-  , capitalize name, " (resource) {\n return " 
-  , intercalate "\n || " $ refCheck Nothing "resource" <$> refs
+  , capitalize name, " (resource) {\n  return " 
+  , intercalate "\n  || " $ refCheck Nothing "resource" <$> refs
+  , ";"
   , "\n}"
   ]
   where
@@ -97,9 +100,9 @@ typeFunc name refs =
     defCheck :: String -> TypeDef -> String
     defCheck parent (TypeDef fields) = concat $ (
       [ parent, ".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
-      , "\n && "++parent++".size() >= " ++ show mn
-      , "\n && "++parent++".size() <= " ++ show mx
-      ] ++ fmap (("\n && "++) . fieldCheck parent) fields)
+      , "\n  && "++parent++".size() >= " ++ show mn
+      , "\n  && "++parent++".size() <= " ++ show mx
+      ] ++ fmap (("\n  && "++) . fieldCheck parent) fields)
         where
           requiredKeys = fmap key . req $ fields
           mx = length fields
@@ -115,9 +118,9 @@ typeFunc name refs =
 
     fieldCheck parent (Field r n refs) = if r 
       then "(" ++ rs ++")"
-      else "(!"++parent++".hasAny(['"++n++"'])\n || ("++ rs ++"))"
+      else "(!"++parent++".hasAny(['"++n++"'])\n  || ("++ rs ++"))"
         where
-          rs = intercalate "\n || " $ refCheck (Just parent) n <$> refs
+          rs = intercalate "\n  || " $ refCheck (Just parent) n <$> refs
       
     addr Nothing n = n
     addr (Just p) n = p ++ "." ++ n
@@ -130,17 +133,23 @@ gen (TopLevelType name refs) = --"type " ++ name ++ " = " ++ (typeRefList 0 refs
 gen (TopLevelPath def) = pathBlock 0 def
   where
     pathBlock ind (PathDef parts refs bodyItems) =
-      concat 
-        [ "match /"
-        , pathHead parts
+      joinLines . filter (/="") $
+        [ indent ind ++ "match /" ++ pathHead parts ++ " {"
+        , pathTypeFunc ind refs
         , pathBody ind bodyItems
+        , pathTypeDir ind refs
+        , indent ind ++ "}"
         ]
+    ifNo xs i e = if length xs == 0 then i else e
+    shiftBy ind s = joinLines $ (indent ind++) <$> lines s
+    pathTypeDir ind refs = ifNo refs "" $ indent (ind+1) ++ "allow write: if is__pathType(resource);"
+    pathTypeFunc ind refs = ifNo refs "" . shiftBy (ind+1) $ typeFunc "__pathType" refs
     pathHead parts = intercalate "/" $ pathPart <$> parts
-    pathBody ind bodyItems = block ind $ pathBodyItem ind <$> bodyItems
+    pathBody ind bodyItems = joinLines $ pathBodyItem ind <$> bodyItems
     pathBodyItem ind (PathBodyDir (PathDirective ops cond)) =
       concat [indent ind, "allow ", intercalate ", " ops, ": if ", cond, ";"]
     pathBodyItem ind (PathBodyFunc def) =
-      funcBlock ind def
+      funcBlock (ind + 1) def
     pathBodyItem ind (PathBodyPath def) = 
       pathBlock (ind + 1) def
 
