@@ -1,0 +1,7 @@
+type X = int | string | {
+  a: string
+  b: {
+    aa: int|string
+    bb: string | int | float | {n:string}
+  } | float
+}

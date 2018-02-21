@@ -58,10 +58,10 @@ options =
             "FILE")
         "Input string"
  
-    , Option "v" ["verbose"]
-        (NoArg
-            (\opt -> return opt { optVerbose = True }))
-        "Enable verbose messages"
+    -- , Option "v" ["verbose"]
+    --     (NoArg
+    --         (\opt -> return opt { optVerbose = True }))
+    --     "Enable verbose messages"
  
     , Option "V" ["version"]
         (NoArg

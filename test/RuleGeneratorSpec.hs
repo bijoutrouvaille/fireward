@@ -73,7 +73,7 @@ spec = do
         , "  function is__pathType (resource) {"
         , "    return isX(resource);"
         , "  }"
-        , "  allow write: if is__pathType(resource);"
+        , "  allow write: if is__pathType(request.resource);"
         , "}"
         ]
 

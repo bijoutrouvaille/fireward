@@ -34,12 +34,13 @@ capitalize (c:cs) = (toUpper c) : cs
 
 joinLines = intercalate "\n"
 
-indent n = take (n*2) $ repeat ' '
+indent n = take n $ repeat ' '
+indentBy n = (indent n ++)
 
 block :: Int -> [String] -> String
 block ind items = joinLines
   [ "{"
-  , joinLines $ (indent (ind + 1) ++) <$> items
+  , joinLines $ (indent (ind + 2) ++) <$> items
   , indent ind ++ "}"
   ]
 
@@ -69,14 +70,14 @@ funcBlock ind (FuncDef name params body) = concat
   , "(", intercalate ", " params, ") { return ", body', "; }"
   ]
   where
-    body' = trim . unlines $ (indent (ind + 1) ++) <$> lines body
+    body' = trim . unlines $ (indent (ind + 2) ++) <$> lines body
 
 typeRefList :: Int -> [TypeRef] -> String
 typeRefList ind refs = 
   trim .  intercalate " | " $ ref <$> refs
   where
     ref (TypeNameRef name) = name
-    ref (InlineTypeRef def) = typeBlock (ind + 1) def
+    ref (InlineTypeRef def) = typeBlock (ind + 2) def
 
 typeBlock :: Int -> TypeDef -> String
 typeBlock ind (TypeDef fields) = block ind $
@@ -89,7 +90,7 @@ typeFunc :: String -> [TypeRef] -> String
 typeFunc name refs = 
   concat [ "function is"
   , capitalize name, " (resource) {\n  return " 
-  , intercalate "\n  || " $ refCheck Nothing "resource" <$> refs
+  , intercalate "\n  || " $ refCheck 0 Nothing "resource" <$> refs
   , ";"
   , "\n}"
   ]
@@ -99,30 +100,35 @@ typeFunc name refs =
     req = filter isReq
     primitives :: [String]
     primitives = words "list string bool timestamp null int float"
-    defCheck :: String -> TypeDef -> String
-    defCheck parent (TypeDef fields) = concat $ (
+    defCheck :: Int -> String -> TypeDef -> String
+    defCheck ind parent (TypeDef fields) = concat $ (
       [ parent, ".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
-      , "\n  && "++parent++".size() >= " ++ show mn
-      , "\n  && "++parent++".size() <= " ++ show mx
-      ] ++ fmap (("\n  && "++) . fieldCheck parent) fields)
+      , line, parent++".size() >= " ++ show mn
+      , line, parent++".size() <= " ++ show mx
+      ] ++ fmap ((line++) . fieldCheck ind parent) fields)
         where
+          initial = if ind==2 then "  " else " "
+          line = ("\n" ++ indent (ind)) ++ "  && "
           requiredKeys = fmap key . req $ fields
           mx = length fields
           mn = length . req $ fields
-    refCheck parent name (TypeNameRef t) =
-      if t `elem` primitives then prim else func
+    refCheck ind parent name (TypeNameRef t) =
+      cond 
         where
+          cond = if t `elem` primitives then prim else func
           prim = _addr ++ " is " ++ t
           func = "is" ++ capitalize t ++ "(" ++ _addr ++ ")"
           _addr = addr parent name 
-    refCheck parent name (InlineTypeRef def) = 
-      defCheck (addr parent name) def
+    refCheck ind parent name (InlineTypeRef def) = 
+      defCheck (ind + 2) (addr parent name) def
 
-    fieldCheck parent (Field r n refs) = if r 
+    fieldCheck :: Int -> String -> Field -> String
+    fieldCheck ind parent (Field r n refs) = if r 
       then "(" ++ rs ++")"
-      else "(!"++parent++".hasAny(['"++n++"'])\n  || ("++ rs ++"))"
+      else "(!"++parent++".hasAny(['"++n++"'])"++line++"|| ("++ rs ++"))"
         where
-          rs = intercalate "\n  || " $ refCheck (Just parent) n <$> refs
+          rs = intercalate (line ++"|| ") $ refCheck (ind + 2) (Just parent) n <$> refs
+          line = "\n" ++ indent ind
       
     addr Nothing n = n
     addr (Just p) n = p ++ "." ++ n
@@ -144,16 +150,16 @@ gen (TopLevelPath def) = pathBlock 0 def
         ]
     ifNo xs i e = if length xs == 0 then i else e
     shiftBy ind s = joinLines $ (indent ind++) <$> lines s
-    pathTypeDir ind refs = ifNo refs "" $ indent (ind+1) ++ "allow write: if is__pathType(resource);"
+    pathTypeDir ind refs = ifNo refs "" $ indent (ind+1) ++ "allow write: if is__pathType(request.resource.data);"
     pathTypeFunc ind refs = ifNo refs "" . shiftBy (ind+1) $ typeFunc "__pathType" refs
     pathHead parts = intercalate "/" $ pathPart <$> parts
     pathBody ind bodyItems = joinLines $ pathBodyItem ind <$> bodyItems
     pathBodyItem ind (PathBodyDir (PathDirective ops cond)) =
-      concat [indent (ind + 1), "allow ", intercalate ", " ops, ": if ", cond, ";"]
+      concat [indent (ind + 2), "allow ", intercalate ", " ops, ": if ", cond, ";"]
     pathBodyItem ind (PathBodyFunc def) =
-      funcBlock (ind + 1) def
+      funcBlock (ind + 2) def
     pathBodyItem ind (PathBodyPath def) = 
-      pathBlock (ind + 1) def
+      pathBlock (ind + 2) def
 
     pathPart (PathPartVar v) = concat ["{", v, "}"]
     pathPart (PathPartWild w) = concat ["{", w, "=**}"]
