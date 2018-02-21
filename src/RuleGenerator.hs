@@ -29,6 +29,8 @@ getOr l n f = if length l < n
                  then Right (l!!n) 
                  else Left f
 
+xs `hasAnyOf` ys = not . null $ filter (flip elem $ ys) xs
+
 capitalize "" = ""
 capitalize (c:cs) = (toUpper c) : cs
 
@@ -102,13 +104,16 @@ typeFunc name refs =
     primitives = words "list string bool timestamp null int float"
     defCheck :: Int -> String -> TypeDef -> String
     defCheck ind parent (TypeDef fields) = concat $ (
-      [ parent, ".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
-      , line, parent++".size() >= " ++ show mn
-      , line, parent++".size() <= " ++ show mx
-      ] ++ fmap ((line++) . fieldCheck ind parent) fields)
+      [ "("
+      , line, parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
+      , line, "&& ", parent++".size() >= " ++ show mn
+      , line, "&& ", parent++".size() <= " ++ show mx
+      ] ++ fmap ((line0++) . fieldCheck (ind + 2) parent) fields)
+      ++ [line0, ")"]
         where
           initial = if ind==2 then "  " else " "
-          line = ("\n" ++ indent (ind)) ++ "  && "
+          line0 = ("\n" ++ indent (ind + 2))
+          line = ("\n" ++ indent (ind + 4))
           requiredKeys = fmap key . req $ fields
           mx = length fields
           mn = length . req $ fields
@@ -120,15 +125,21 @@ typeFunc name refs =
           func = "is" ++ capitalize t ++ "(" ++ _addr ++ ")"
           _addr = addr parent name 
     refCheck ind parent name (InlineTypeRef def) = 
-      defCheck (ind + 2) (addr parent name) def
+      defCheck (ind) (addr parent name) def
 
     fieldCheck :: Int -> String -> Field -> String
     fieldCheck ind parent (Field r n refs) = if r 
-      then "(" ++ rs ++")"
-      else "(!"++parent++".hasAny(['"++n++"'])"++line++"|| ("++ rs ++"))"
+      then "  && " ++ formattedRefs
+      else "  && ("++line++"!"++parent++".hasAny(['"++n++"'])"++line++"|| "++ formattedRefs ++ line0 ++ ")"
         where
-          rs = intercalate (line ++"|| ") $ refCheck (ind + 2) (Just parent) n <$> refs
-          line = "\n" ++ indent ind
+          formattedRefs = 
+            if length refs == 1
+            then rs
+            else "(" ++ line ++ "   " ++ rs ++ line ++")"
+          rs = intercalate (line ++"|| ") $ refCheck (ind) (Just parent) n <$> refs
+          linei = "\n" ++ indent (ind)
+          line0 = "\n" ++ indent (ind + 2)
+          line = "\n" ++ indent (ind + 4)
       
     addr Nothing n = n
     addr (Just p) n = p ++ "." ++ n
@@ -144,17 +155,37 @@ gen (TopLevelPath def) = pathBlock 0 def
       joinLines . filter (/="") $
         [ indent ind ++ "match /" ++ pathHead parts ++ " {"
         , pathTypeFunc ind refs
-        , pathBody ind bodyItems
-        , pathTypeDir ind refs
+        , pathBody ind (augmentWithType bodyItems refs)
         , indent ind ++ "}"
         ]
     ifNo xs i e = if length xs == 0 then i else e
     shiftBy ind s = joinLines $ (indent ind++) <$> lines s
-    pathTypeDir ind refs = ifNo refs "" $ indent (ind+1) ++ "allow write: if is__pathType(request.resource.data);"
-    pathTypeFunc ind refs = ifNo refs "" . shiftBy (ind+1) $ typeFunc "__pathType" refs
+    -- do nothing if no refs provided
+    -- augment each if bodyItems contains write update or create
+    -- add a write otherwise
+    pathTypeCond = "is__pathType(request.resource.data)"
+    pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
+    augmentWithType bodyItems [] = bodyItems
+    augmentWithType [] refs = [ pathTypeDir ]
+    augmentWithType bodyItems refs = if hasWriteDirs bodyItems
+      then withRefCheck <$> bodyItems 
+      else bodyItems
+    withRefCheck item = if hasWriteOps item 
+      then insertRefCheck item
+      else item
+    insertRefCheck (PathBodyDir (PathDirective ops cond)) =
+      PathBodyDir $ PathDirective ops (pathTypeCond ++ " && (" ++ cond ++ ")")
+    insertRefCheck x = x
+    hasWriteDirs = not . null . writeDirs
+    writeDirs bodyItems = filter hasWriteOps bodyItems 
+    hasWriteOps (PathBodyDir (PathDirective ops cond)) = 
+      ops `hasAnyOf` ["write", "update", "create"]
+    hasWriteOps _ = False
+    pathTypeFunc ind refs = ifNo refs "" . shiftBy (ind + 2) $ typeFunc "__pathType" refs
     pathHead parts = intercalate "/" $ pathPart <$> parts
     pathBody ind bodyItems = joinLines $ pathBodyItem ind <$> bodyItems
-    pathBodyItem ind (PathBodyDir (PathDirective ops cond)) =
+    pathBodyItem ind (PathBodyDir (PathDirective ops cond)) = 
+      
       concat [indent (ind + 2), "allow ", intercalate ", " ops, ": if ", cond, ";"]
     pathBodyItem ind (PathBodyFunc def) =
       funcBlock (ind + 2) def

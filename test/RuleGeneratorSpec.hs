@@ -14,7 +14,12 @@ import Debug.Trace (trace)
 main :: IO ()
 main = hspec spec
 
+repN (a:b:s) = if [a,b]=="\\n" 
+                   then '\n':(repN s) else a:(repN (b:s))
+repN s = s
+showN = repN . show
 g = RuleGenerator.generate
+gt z = (\x->trace (showN x) x) (RuleGenerator.generate z)
 gu = RuleGenerator.generate . trim . unlines
 ru = Right . trim . unlines
 
@@ -56,15 +61,34 @@ spec = do
          , "}"
          ]
     it "generates a function from a type" $
-      g "type X = A | {b:B|BB}"
+      g "type X = Z | ZZ | {a:A, b?:B|BB, c:{ca:int, cb?:string}}"
       `shouldBe` ru
       [ "function isX (resource) {"
-      , "  return isA(resource)"
-      , "  || resource.keys().hasAll(['b'])"
-      , "  && resource.size() >= 1"
-      , "  && resource.size() <= 1"
-      , "  && (isB(resource.b)"
-      , "  || isBB(resource.b));"
+      , "  return isZ(resource)"
+      , "  || isZZ(resource)"
+      , "  || ("
+      , "    resource.keys().hasAll(['a', 'c'])"
+      , "    && resource.size() >= 2"
+      , "    && resource.size() <= 3"
+      , "    && isA(resource.a)"
+      , "    && ("
+      , "      !resource.hasAny(['b'])"
+      , "      || ("
+      , "         isB(resource.b)"
+      , "      || isBB(resource.b)"
+      , "      )"
+      , "    )"
+      , "    && ("
+      , "      resource.c.keys().hasAll(['ca'])"
+      , "      && resource.c.size() >= 1"
+      , "      && resource.c.size() <= 2"
+      , "      && resource.c.ca is int"
+      , "      && ("
+      , "        !resource.c.hasAny(['cb'])"
+      , "        || resource.c.cb is string"
+      , "      )"
+      , "    )"
+      , "  );"
       , "}" 
       ]
     it "generates a path with a type" $
@@ -73,8 +97,17 @@ spec = do
         , "  function is__pathType (resource) {"
         , "    return isX(resource);"
         , "  }"
-        , "  allow write: if is__pathType(request.resource);"
+        , "  allow write: if is__pathType(request.resource.data);"
         , "}"
         ]
 
+    it "generates a path with a type and custom write condition" $
+      g "match x is X { allow create: if true; }" `shouldBe` ru
+        [ "match /x {"
+        , "  function is__pathType (resource) {"
+        , "    return isX(resource);"
+        , "  }"
+        , "  allow create: if is__pathType(request.resource.data) && (true);"
+        , "}"
+        ]
 
