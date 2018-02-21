@@ -7,6 +7,7 @@ import RuleGenerator
 import Data.Char (isDigit)
 import Control.Applicative
 import Control.Monad
+import Control.Monad.IO.Class (liftIO)
 import Test.Hspec
 import Test.QuickCheck
 import Debug.Trace (trace)
@@ -14,24 +15,31 @@ import Debug.Trace (trace)
 main :: IO ()
 main = hspec spec
 
-repN (a:b:s) = if [a,b]=="\\n" 
-                   then '\n':(repN s) else a:(repN (b:s))
-repN s = s
-showN = repN . show
-g = RuleGenerator.generate
-gt z = (\x->trace (showN x) x) (RuleGenerator.generate z)
-gu = RuleGenerator.generate . trim . unlines
-ru = Right . trim . unlines
+esc c r (a:b:s) = if [a,b]==['\\', c] 
+                   then r:(esc c r s) else a:(esc c r (b:s))
+esc c r s = s
+repN = esc 'n' '\n'
+repQ = esc '"' '\"'
+repA = repN . repQ
+showN :: Show a => a -> String
+showN = repA . show
+showE (Right x) = "Right " ++ repA x
+showE (Left (Error loc x)) = "Left " ++ repA x
+g = showE . RuleGenerator.generate
+gt z = (\x->trace (showN x) x) (g z)
+gu = g . trim . unlines
+r = ("Right " ++) . repA
+ru = r . trim . unlines
 
 spec :: Spec
 spec = do
   describe "Rule Generator" $ do
     it "generates a simple path" $
-      g "match /x {}" `shouldBe` Right "match /x {\n}"
+      g "match /x {}" `shouldBe` r "match /x {\n}"
     it "generates a simple function" $
       g "function f(a,b,c) { return 123; }" 
       `shouldBe` 
-      Right "function f(a, b, c) { return 123; }" 
+      r "function f(a, b, c) { return 123; }" 
     it "generates a path in path" $
       gu 
         [ "match /a/{b} {"
@@ -66,8 +74,7 @@ spec = do
       [ "function isX (resource) {"
       , "  return isZ(resource)"
       , "  || isZZ(resource)"
-      , "  || ("
-      , "    resource.keys().hasAll(['a', 'c'])"
+      , "  || resource.keys().hasAll(['a', 'c'])"
       , "    && resource.size() >= 2"
       , "    && resource.size() <= 3"
       , "    && isA(resource.a)"
@@ -78,17 +85,14 @@ spec = do
       , "      || isBB(resource.b)"
       , "      )"
       , "    )"
-      , "    && ("
-      , "      resource.c.keys().hasAll(['ca'])"
+      , "    && resource.c.keys().hasAll(['ca'])"
       , "      && resource.c.size() >= 1"
       , "      && resource.c.size() <= 2"
       , "      && resource.c.ca is int"
       , "      && ("
       , "        !resource.c.hasAny(['cb'])"
       , "        || resource.c.cb is string"
-      , "      )"
-      , "    )"
-      , "  );"
+      , "      );"
       , "}" 
       ]
     it "generates a path with a type" $
@@ -110,4 +114,11 @@ spec = do
         , "  allow create: if is__pathType(request.resource.data) && (true);"
         , "}"
         ]
-
+    it "indents a complex file" $ do
+      door <- readFile "test/fixtures/indent.door"
+      _rule <- readFile "test/fixtures/indent.rules"
+      let rule = take ((length _rule) - 1) _rule
+      res <- return (g door)
+      g door `shouldBe` r rule
+      -- (trace (showN res)) (return 1)
+      -- shouldBe 1 1

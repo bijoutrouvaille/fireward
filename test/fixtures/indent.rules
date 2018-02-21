@@ -1,0 +1,27 @@
+function isX (resource) {
+  return resource is int
+  || resource is string
+  || resource.keys().hasAll(['a', 'b'])
+    && resource.size() >= 2
+    && resource.size() <= 2
+    && resource.a is string
+    && (
+         resource.b.keys().hasAll(['aa', 'bb'])
+      && resource.b.size() >= 2
+      && resource.b.size() <= 2
+      && (
+           resource.b.aa is int
+        || resource.b.aa is string
+        )
+      && (
+           resource.b.bb is string
+        || resource.b.bb is int
+        || resource.b.bb is float
+        || resource.b.bb.keys().hasAll(['n'])
+        && resource.b.bb.size() >= 1
+        && resource.b.bb.size() <= 1
+        && resource.b.bb.n is string
+        )
+      || resource.b is float
+      );
+}

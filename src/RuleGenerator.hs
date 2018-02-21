@@ -104,12 +104,13 @@ typeFunc name refs =
     primitives = words "list string bool timestamp null int float"
     defCheck :: Int -> String -> TypeDef -> String
     defCheck ind parent (TypeDef fields) = concat $ (
-      [ "("
-      , line, parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
+      [ ""
+      -- , "(", line
+      , parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
       , line, "&& ", parent++".size() >= " ++ show mn
       , line, "&& ", parent++".size() <= " ++ show mx
       ] ++ fmap ((line0++) . fieldCheck (ind + 2) parent) fields)
-      ++ [line0, ")"]
+      -- ++ [line0, ")"]
         where
           initial = if ind==2 then "  " else " "
           line0 = ("\n" ++ indent (ind + 2))
