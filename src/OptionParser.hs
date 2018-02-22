@@ -28,12 +28,14 @@ import Data.List (intercalate)
 import Data.Char (isSpace)
 
 data Options = Options  { optVerbose    :: Bool
+                        , optLang       :: String
                         , optInput      :: IO String
                         , optOutput     :: String -> IO ()
                         }
 
 startOptions :: Options
 startOptions = Options  { optVerbose    = False
+                        , optLang       = "rules"
                         , optInput      = getContents
                         , optOutput     = putStr
                         }
@@ -57,6 +59,11 @@ options =
             (\arg opt -> return opt { optInput = return arg })
             "FILE")
         "Input string"
+    , Option "l" ["lang", "language"]
+        (ReqArg
+            (\arg opt -> return opt { optLang = arg })
+            "language")
+        "Output language. One of: rules, typescript."
  
     -- , Option "v" ["verbose"]
     --     (NoArg

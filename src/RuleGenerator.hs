@@ -1,29 +1,14 @@
 module RuleGenerator (
-  Error(..),
-  Loc(..),
-  loc,
   generate
 ) where
 
 import Parser
 import RuleParser
+import Error (Error(..))
+import Loc (loc, Loc)
 import Data.List (findIndices, intercalate, stripPrefix)
 import Data.Char (toUpper)
 
-data Loc = Loc Int Int
-         deriving (Show, Eq)
-data Error = Error (Maybe Loc) String
-         deriving (Show, Eq)
-
-loc :: [String] -> [String] -> Loc
-loc _ [] = Loc 0 0
-loc [] _ = Loc 0 0
-loc (s:reverseSourceLines) (u:reverseUnparsedLines) = 
-  if s == u
-     then addLine $ loc reverseSourceLines reverseUnparsedLines
-     else Loc 0 (length $ stripPrefix (reverse u) (reverse s))
-  where
-    addLine (Loc l c) = Loc (l+1) c
   
 getOr l n f = if length l < n 
                  then Right (l!!n) 
@@ -39,12 +24,6 @@ joinLines = intercalate "\n"
 indent n = take n $ repeat ' '
 indentBy n = (indent n ++)
 
-block :: Int -> [String] -> String
-block ind items = joinLines
-  [ "{"
-  , joinLines $ (indent (ind + 2) ++) <$> items
-  , indent ind ++ "}"
-  ]
 
 surround :: String -> String -> String -> String
 surround b e s = concat [b,s,e]
@@ -60,7 +39,7 @@ generate source = if length allResults == 0
     tree = parseRules source
     q :: ([TopLevel], String) -> Either Error String
     q (tops, unparsed) = if length unparsed > 0
-                            then Left $ Error (Just $ loc (lines source) (lines unparsed)) "Could not parse."
+                            then Left $ Error (loc source unparsed) "Could not parse."
                             else Right . trim . joinLines $ gen <$> tops
     sourceLines = lines source 
     ast = parseRules source
@@ -74,18 +53,7 @@ funcBlock ind (FuncDef name params body) = concat
   where
     body' = trim . unlines $ (indent (ind + 2) ++) <$> lines body
 
-typeRefList :: Int -> [TypeRef] -> String
-typeRefList ind refs = 
-  trim .  intercalate " | " $ ref <$> refs
-  where
-    ref (TypeNameRef name) = name
-    ref (InlineTypeRef def) = typeBlock (ind + 2) def
 
-typeBlock :: Int -> TypeDef -> String
-typeBlock ind (TypeDef fields) = block ind $
-  f <$> fields
-  where
-    f (Field r name refs) = name ++ ": " ++ typeRefList ind refs
 
 
 typeFunc :: String -> [TypeRef] -> String

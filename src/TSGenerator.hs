@@ -7,13 +7,13 @@ module TSGenerator
 
 import Parser
 import RuleParser
+
 import Loc (loc, Loc(..))
+import Error (Error(..))
+
 import Data.List (findIndices, intercalate, stripPrefix)
 import Data.Char (toUpper)
 import Control.Monad (ap)
-
-data Error = Error (Maybe Loc) String
-         deriving (Show, Eq)
 
 capitalize "" = ""
 capitalize (c:cs) = (toUpper c) : cs
@@ -52,7 +52,7 @@ typeRefList ind refs =
     ref (TypeNameRef name) = convertToNative name
     ref (InlineTypeRef def) = typeBlock ind def
 
-topLevelType name refs = "type "++name++" = "++typeRefList 0 refs
+topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs
 
 gen :: [TopLevel] -> Either Error String
 gen tops = result where

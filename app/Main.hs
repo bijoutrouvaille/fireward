@@ -1,7 +1,11 @@
 module Main where
 
 
-import RuleGenerator (generate, Error(..), Loc(..))
+import Error (Error(..))
+import Loc (Loc(..))
+import qualified RuleGenerator 
+import qualified TSGenerator 
+
 import OptionParser (getOptions, Options(..))
 
 import System.IO 
@@ -17,7 +21,7 @@ import Data.List (intercalate)
 import Data.Char (isSpace)
 
 showLoc Nothing = ""
-showLoc (Just (Loc l c)) = " (line: "++show l++", col: "++show c++")"
+showLoc (Just (Loc l c)) = " (on line "++show l++": "++c++")"
 showErr (Error loc text) = unlines
   [ "Error"++showLoc loc++":"
   , text
@@ -34,9 +38,16 @@ wrapRules r = intercalate "\n"
   , "  }"
   , "}"
   ]
-rulesM = return . wrapRules
+-- rulesM = return . wrapRules
 out output (Left e) = hPutStrLn stderr (showErr e)
-out output (Right v) = rulesM v >>= output 
+out output (Right v) = output v
+
+generate lang
+  | lang == "typescript" = TSGenerator.generate
+  | lang == "ts" = TSGenerator.generate
+  | lang == "rules" = fmap wrapRules . RuleGenerator.generate 
+  | otherwise = const . Left . Error Nothing $ 
+      "Specified language \""++lang++"\"not recognized."
 
 main :: IO ()
 main = do
@@ -44,7 +55,8 @@ main = do
   let Options { optInput = input
               , optOutput = output
               , optVerbose = verbose
+              , optLang = lang
               } = opts
 
-  input >>= (return . generate) >>= out output
+  input >>= (return . generate lang) >>= out output
 

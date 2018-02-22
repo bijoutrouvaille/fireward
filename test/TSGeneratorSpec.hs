@@ -36,7 +36,7 @@ spec = do
     it "generates a simple thing" $
       g "type X = Y | {a:int}"
       `shouldBe` ru
-      [ "type X = Y | {"
+      [ "export type X = Y | {"
       , "  a: number"
       , "}"
       ]
@@ -55,10 +55,10 @@ spec = do
       , "}"
       ]
       `shouldBe` ru
-      [ "type X = Y | {"
+      [ "export type X = Y | {"
       , "  a: number"
       , "}"
-      , "type Compound = {"
+      , "export type Compound = {"
       , "  a: number"
       , "  b: {"
       , "    ba: number"

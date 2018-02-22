@@ -1,6 +1,8 @@
 module RuleGeneratorSpec (main, spec) where
 
 import Parser (trim)
+import Error
+import Loc
 import RuleParser
 import RuleGenerator
 
