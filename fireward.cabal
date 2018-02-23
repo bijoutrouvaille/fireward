@@ -2,15 +2,15 @@ name:                fireward
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/firedoor#readme
-license:             BSD3
+homepage:            https://github.com/trouvaille/fireward#readme
+license:             MIT
 license-file:        LICENSE
-author:              Author name here
+author:              Bijou Trouvaille
 maintainer:          example@example.com
-copyright:           2017 Author name here
+copyright:           2017 Bijou Trouvaille
 category:            Web
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  readme.md
 cabal-version:       >=1.10
 
 library
@@ -22,6 +22,7 @@ library
                        , TSGenerator
                        , Loc
                        , Error
+                       , LogicPrinter
 
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
