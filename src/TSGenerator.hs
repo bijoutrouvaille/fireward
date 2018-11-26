@@ -35,6 +35,7 @@ natives =
   [ ("int", "number")
   , ("float", "number")
   , ("timestamp", "number")
+  , ("bool", "boolean")
   ]
 fork f g a = (f a) (g a)
 typeBlock :: Int -> TypeDef -> String
@@ -48,8 +49,13 @@ typeRefList ind refs =
   where
     convertToNative = flip maybe id <*> flip lookup natives
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
-    -- see the full explanation in docs/func-modad.md
-    ref (TypeNameRef name) = convertToNative name
+    -- see the full explanation in docs/func-monad.md
+    ref (TypeNameRef name Nothing) = convertToNative name
+    ref (TypeNameRef name (Just size)) = if size==0
+                                            then convertToNative name ++ "[]"
+                                            else intercalate " | " [ "["++intercalate ", " [ name | j <- [0..i]]++"]"
+                                                   | i <- [0..size-1]
+                                                 ]
     ref (InlineTypeRef def) = typeBlock ind def
 
 topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs

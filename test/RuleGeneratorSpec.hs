@@ -97,6 +97,19 @@ spec = do
       , "      );"
       , "}" 
       ]
+    it "generates a check of definite size" $
+      g "type X = { x: string[2] }"
+      `shouldBe` ru
+      [ "function isX (resource) {"
+      , "  return resource.keys().hasAll(['x'])"
+      , "    && resource.size() >= 1"
+      , "    && resource.size() <= 1"
+      , "    && resource.x is list"
+      , "    && (resource.x.size() <= 1 || resource.x[0] is string)"
+      , "    && (resource.x.size() <= 2 || resource.x[1] is string);"
+      , "}"
+      ]
+      
     it "generates a path with a type" $
       g "match x is X {}" `shouldBe` ru
         [ "match /x {"
@@ -116,6 +129,8 @@ spec = do
         , "  allow create: if is__pathType(request.resource.data) && (true);"
         , "}"
         ]
+    -- it "generates a definite array" $
+    --   g "match 
     it "indents a complex file" $ do
       door <- readFile "test/fixtures/indent.door"
       _rule <- readFile "test/fixtures/indent.rules"

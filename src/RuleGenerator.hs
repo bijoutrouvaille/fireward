@@ -8,6 +8,7 @@ import Error (Error(..))
 import Loc (loc, Loc)
 import Data.List (findIndices, intercalate, stripPrefix)
 import Data.Char (toUpper)
+import Data.Maybe (maybe)
 
   
 getOr l n f = if length l < n 
@@ -70,15 +71,16 @@ typeFunc name refs =
     req = filter isReq
     primitives :: [String]
     primitives = words "list string bool timestamp null int float"
+    addr :: Maybe String -> String -> String
+    addr Nothing n = n
+    addr (Just p) n = p ++ "." ++ n
     defCheck :: Int -> String -> TypeDef -> String
     defCheck ind parent (TypeDef fields) = concat $ (
       [ ""
-      -- , "(", line
       , parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
       , line, "&& ", parent++".size() >= " ++ show mn
       , line, "&& ", parent++".size() <= " ++ show mx
       ] ++ fmap ((line0++) . fieldCheck (ind + 2) parent) fields)
-      -- ++ [line0, ")"]
         where
           initial = if ind==2 then "  " else " "
           line0 = ("\n" ++ indent (ind + 2))
@@ -86,13 +88,21 @@ typeFunc name refs =
           requiredKeys = fmap key . req $ fields
           mx = length fields
           mn = length . req $ fields
-    refCheck ind parent name (TypeNameRef t) =
-      cond 
-        where
-          cond = if t `elem` primitives then prim else func
-          prim = _addr ++ " is " ++ t
-          func = "is" ++ capitalize t ++ "(" ++ _addr ++ ")"
-          _addr = addr parent name 
+    refCheck ind parent name (TypeNameRef t arrSize) = cond 
+      where
+        listCond = _addr ++ " is list"
+        -- arrCond size = if size == "" then isList else isList ++ " && " ++ _addr ++ ".size()<="++size
+        cond = if t `elem` primitives then prim arrSize else func
+        -- prim = if arrSize/=Nothing then () else _addr ++ " is " ++ t
+        -- prim = maybe (_addr ++ " is " ++ t) arrCond arrSize
+        prim :: (Maybe Int)->String
+        prim Nothing = _addr ++ " is " ++ t
+        prim (Just n) = listCond ++ (if n == 0 then "" else "\n" ++ indent (ind+1) ++  " && "  ++ arrElemCheck n)
+        sizeCheck i = 
+           "(" ++ _addr ++ ".size() <= " ++ show i ++ " || " ++ _addr ++ "[" ++ show (i-1) ++ "] is " ++ t ++ ")"
+        arrElemCheck n = intercalate ("\n" ++ indent (ind+1) ++ " && ") [ sizeCheck i | i <- [1..n] ]
+        func = "is" ++ capitalize t ++ "(" ++ _addr ++ ")"
+        _addr = addr parent name 
     refCheck ind parent name (InlineTypeRef def) = 
       defCheck (ind) (addr parent name) def
 
@@ -110,8 +120,6 @@ typeFunc name refs =
           line0 = "\n" ++ indent (ind + 2)
           line = "\n" ++ indent (ind + 4)
       
-    addr Nothing n = n
-    addr (Just p) n = p ++ "." ++ n
     
 
 gen (TopLevelFunc def) = funcBlock 0 def

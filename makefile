@@ -1,5 +1,7 @@
 .PHONY: test
 
+EXEC:=fireward
+
 test:
 	stack test --file-watch
 
@@ -14,3 +16,13 @@ tmp/try.rules: $(file)
 
 try: tmp/try.rules
 	@#
+
+prefix?=/usr/local/bin
+PREFIX:=$(prefix)
+
+
+LOCAL_PATH:=$(shell stack path --local-bin)
+install: 
+	stack install && cp $(LOCAL_PATH)/$(EXEC) $(prefix)/
+
+	

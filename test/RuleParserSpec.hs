@@ -17,19 +17,19 @@ spec :: Spec
 spec = do
   describe "rule parser" $ do
     it "parses a field" $
-      apply _field "zoo: null" `shouldBe` [(Field True "zoo" [TypeNameRef "null"],"")]
+      apply _field "zoo: null" `shouldBe` [(Field True "zoo" [TypeNameRef "null" Nothing],"")]
     it "parses a type" $
-      apply _typeDef "{ zoo: null }" `shouldBe` [(TypeDef [Field True "zoo" [TypeNameRef "null"]],"")]
+      apply _typeDef "{ zoo: null }" `shouldBe` [(TypeDef [Field True "zoo" [TypeNameRef "null" Nothing]],"")]
     it "parses a simple type" $
       parseRules "type Hor = { zoo: Null }" `shouldBe` [([
-          TopLevelType "Hor" [InlineTypeRef (TypeDef [Field True "zoo" [TypeNameRef "Null"]])]
+          TopLevelType "Hor" [InlineTypeRef (TypeDef [Field True "zoo" [TypeNameRef "Null" Nothing]])]
       ],"")]
     it "parses two simple types" $
       parseRules (unlines [ "type A = {a:Null}"
                           , "type B = {b:Null}"
                           ]) `shouldBe` [([
-                            TopLevelType "A" [InlineTypeRef (TypeDef [Field True "a" [TypeNameRef "Null"]])], 
-                            TopLevelType "B" [InlineTypeRef (TypeDef [Field True "b" [TypeNameRef "Null"]])]
+                            TopLevelType "A" [InlineTypeRef (TypeDef [Field True "a" [TypeNameRef "Null" Nothing]])], 
+                            TopLevelType "B" [InlineTypeRef (TypeDef [Field True "b" [TypeNameRef "Null" Nothing]])]
                           ], "")]
     it "parses a pathStatic in pathParts" $
       apply _pathParts "hello" `shouldBe` [([PathPartStatic "hello"],"")]
@@ -57,7 +57,7 @@ spec = do
           PathPartStatic "hello",
           PathPartVar "pretty",
           PathPartWild "world"
-      ] [ TypeNameRef "Rough" ] [], "\n")]
+      ] [ TypeNameRef "Rough" Nothing ] [], "\n")]
     -- data PathDirective = PathDirective [PathOp] PathCondition
     it "parses a path directive" $
       apply _pathDir "allow read: if 1<3 && true;" `shouldBe` [
@@ -84,7 +84,7 @@ spec = do
                  , "  allow read: if 1>2 && 3<4;"
                  , "}"
                  ]) `shouldBe` [([
-                  TopLevelType "A" [InlineTypeRef (TypeDef [Field True "a" [TypeNameRef "String"]])],
+                  TopLevelType "A" [InlineTypeRef (TypeDef [Field True "a" [TypeNameRef "String" Nothing]])],
                   TopLevelPath (PathDef [
                     PathPartStatic "stat",
                     PathPartVar "var",
@@ -98,7 +98,7 @@ spec = do
       parseRules "match a/{x=**} is X {allow create: if true;}"
         `shouldBe` [([TopLevelPath (PathDef [
           PathPartStatic "a", PathPartWild "x"
-        ] [ TypeNameRef "X" ] [
+        ] [ TypeNameRef "X" Nothing ] [
           PathBodyDir (PathDirective ["create"] "true")
         ])], "")]
   describe "escape" $ do
@@ -141,11 +141,11 @@ spec = do
         "}"
       ])
       `shouldBe`
-      [([ TopLevelType "Zxx" [TypeNameRef "Null", InlineTypeRef (TypeDef [
-        Field True "one" [TypeNameRef "X"],
+      [([ TopLevelType "Zxx" [TypeNameRef "Null" Nothing, InlineTypeRef (TypeDef [
+        Field True "one" [TypeNameRef "X" Nothing],
         Field True "two" [InlineTypeRef (TypeDef [
-          Field True "three" [TypeNameRef "Z"],
-          Field True "four" [TypeNameRef "P",TypeNameRef "X"]
+          Field True "three" [TypeNameRef "Z" Nothing],
+          Field True "four" [TypeNameRef "P" Nothing, TypeNameRef "X" Nothing]
         ])]
       ])]],"")]
     it "parses a function a type and a path" $
@@ -160,7 +160,7 @@ spec = do
         "}"
       ])
       `shouldBe`
-      [([ TopLevelType "Zxx" [InlineTypeRef (TypeDef [Field True "one" [TypeNameRef "X"],Field True "two" [TypeNameRef "Y"]])],
+      [([ TopLevelType "Zxx" [InlineTypeRef (TypeDef [Field True "one" [TypeNameRef "X" Nothing], Field True "two" [TypeNameRef "Y" Nothing]])],
           TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")
         ],"")]
     it "parses a complex path" $
@@ -174,8 +174,8 @@ spec = do
         "    }",
         "  }",
         "}"
-      ]) `shouldBe` [([ TopLevelPath (PathDef [PathPartStatic "x"] [ TypeNameRef "A" ] [
-        PathBodyPath (PathDef [PathPartStatic "y"] [ TypeNameRef "B" ] [
+      ]) `shouldBe` [([ TopLevelPath (PathDef [PathPartStatic "x"] [ TypeNameRef "A" Nothing ] [
+        PathBodyPath (PathDef [PathPartStatic "y"] [ TypeNameRef "B" Nothing ] [
           PathBodyDir (PathDirective ["read","write"] "true"),
           PathBodyDir (PathDirective ["create","write"] "false"),
           PathBodyFunc (FuncDef "qqq" ["a","b","c"] "123")])

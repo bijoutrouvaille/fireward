@@ -53,7 +53,8 @@ data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
 -- TopLevelType String [TypeRef]
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
-data TypeRef = TypeNameRef String | InlineTypeRef TypeDef deriving (Show, Eq)
+-- TypeNameRef name (Maybe array-size)
+data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeRef TypeDef deriving (Show, Eq)
 data Field = Field Bool String [TypeRef] deriving (Show, Eq)
 
 _alpha = lower <|> upper
@@ -92,6 +93,9 @@ _stringD delim = do
 _string :: Parser String
 _string = _stringD '"' <|> _stringD '\''
 
+_integer :: Parser Int
+_integer = read <$> many digit
+
 _funcBody :: Parser String
 _funcBody = token $ do
   let notDone c = c/='}' && c/=';'
@@ -123,11 +127,23 @@ _terminated parser terminator = do
   return v
 _typeRefs :: Parser [TypeRef]
 _typeRefs = manywith (symbol "|") ( 
-  (TypeNameRef <$> withComma (token _varName)) 
+  -- (TypeNameRef <$> withComma (token _varName)) 
+  (withComma _singleTypeName)
     <|> (InlineTypeRef <$> withComma _typeDef))
   where
     comma = optional $ symbol ","
     withComma p = _terminated p comma
+
+_listOp :: Parser Int
+_listOp = do
+  symbol "["
+  size <- optional _integer
+  symbol "]"
+  return $ maybe 0 id size
+_singleTypeName = do
+  name <- token _varName
+  arrSize <- optional $ _listOp
+  return $ TypeNameRef name arrSize
 
 _field :: Parser Field
 _field = do
