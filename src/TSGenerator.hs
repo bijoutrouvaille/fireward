@@ -2,6 +2,7 @@ module TSGenerator
 ( Error (..)
 , loc
 , generate
+, stdTypes
 ) where
 
 
@@ -11,7 +12,7 @@ import RuleParser
 import Loc (loc, Loc(..))
 import Error (Error(..))
 
-import Data.List (findIndices, intercalate, stripPrefix)
+import Data.List (findIndices, intersperse, intercalate, stripPrefix)
 import Data.Char (toUpper)
 import Control.Monad (ap)
 
@@ -34,15 +35,34 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "number")
+  , ("timestamp", "Date|{isEqual: (other: any)=>boolean}")
   , ("bool", "boolean")
+  , ("null", "null")
   ]
+
+
+
+maxTuples = 12
+tupleX n opt = "[" ++ (intercalate ", " ["T" ++ if opt then "?" else "" | j <- [0..n-1]]) ++ "]"
+maxTupleX n = "export type ArrayMax"++show n++"<T> = "  ++ (tupleX n True) 
+someTuple = "export type SomeTuple<T> = " ++ intercalate " | " [ "ArrayMax" ++ show j ++ "<T> "| j <- [1..maxTuples-1]]
+funcMaxArray = ts ++ "\nexport function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }" 
+  where ts = intercalate "\n" ["export function toArrayMax<T>(n: "++show n++", arr:T[]):ArrayMax"++show n++"<T>" | n <- [1..maxTuples-1]]
+
+stdTuples = intercalate "\n\n" [ maxTupleX n | n <- [1..maxTuples] ]
+
+stdTypes = (intercalate "\n" 
+           [ stdTuples 
+           , someTuple
+           , funcMaxArray
+           ]) ++ "\n\n"
+
 fork f g a = (f a) (g a)
 typeBlock :: Int -> TypeDef -> String
 typeBlock ind (TypeDef fields) = block ind $
   f <$> fields
   where
-    f (Field r name refs) = name ++ ": " ++ typeRefList (ind + 2) refs
+    f (Field r name refs) = name ++ (if r then "" else "?") ++ ": " ++ typeRefList (ind + 2) refs
 typeRefList :: Int -> [TypeRef] -> String
 typeRefList ind refs = 
   trim .  intercalate " | " $ ref <$> refs
@@ -51,18 +71,19 @@ typeRefList ind refs =
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
     -- see the full explanation in docs/func-monad.md
     ref (TypeNameRef name Nothing) = convertToNative name
-    ref (TypeNameRef name (Just size)) = if size==0
+    ref (TypeNameRef name (Just size)) = if size==0 || size > 12
                                             then convertToNative name ++ "[]"
-                                            else intercalate " | " [ "["++intercalate ", " [ name | j <- [0..i]]++"]"
-                                                   | i <- [0..size-1]
-                                                 ]
+                                            else "ArrayMax"++show size++"<"++name++">"
+                                            -- else intercalate " | " [ "["++intercalate ", " [ name | j <- [0..i]]++"]"
+                                            --        | i <- [0..size-1]
+                                                 -- ]
     ref (InlineTypeRef def) = typeBlock ind def
 
 topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs
 
 gen :: [TopLevel] -> Either Error String
 gen tops = result where
-  result = Right $ joinLines strings
+  result = Right $ stdTypes ++ joinLines strings
   strings = g <$> tops 
   g (TopLevelType name refs) = topLevelType name refs
   g _ = ""

@@ -2,6 +2,11 @@ module RuleGenerator (
   generate
 ) where
 
+-- Definitions:
+-- _type functions_ are functions that check to make sure that the data resource confirms to the type structure.
+-- 
+--
+
 import Parser
 import RuleParser
 import Error (Error(..))
@@ -16,6 +21,8 @@ getOr l n f = if length l < n
                  else Left f
 
 xs `hasAnyOf` ys = not . null $ filter (flip elem $ ys) xs
+xs `hasSameElems` ys = (xs `hasOnly` ys)  && length xs == length ys
+xs `hasOnly` ys = null $ filter (flip elem $ ys) xs
 
 capitalize "" = ""
 capitalize (c:cs) = (toUpper c) : cs
@@ -29,6 +36,7 @@ indentBy n = (indent n ++)
 surround :: String -> String -> String -> String
 surround b e s = concat [b,s,e]
 
+-- the main exported function. calls the `gen` function internally.
 generate :: String -> Either Error String
 generate source = if length allResults == 0 
                      then Left $ Error Nothing "No results at all"
@@ -56,17 +64,17 @@ funcBlock ind (FuncDef name params body) = concat
 
 
 
-
-typeFunc :: String -> [TypeRef] -> String
-typeFunc name refs = 
-  concat [ "function is"
-  , capitalize name, " (resource) {\n  return " 
-  , intercalate "\n  || " $ refCheck 0 Nothing "resource" <$> refs
+-- the main recursive function to generate the type function
+typeFunc :: Bool -> String -> [TypeRef] -> String
+typeFunc strict name refs = 
+  concat [ "function "
+  , funcName strict name, "(data) {\n  return " 
+  , intercalate "\n  || " $ refCheck strict 0 Nothing "data" <$> refs
   , ";"
   , "\n}"
   ]
   where
-    isReq (Field r _ _) = r
+    isReq (Field r _ _) = r && strict
     key (Field _ n _) = n
     req = filter isReq
     primitives :: [String]
@@ -74,13 +82,10 @@ typeFunc name refs =
     addr :: Maybe String -> String -> String
     addr Nothing n = n
     addr (Just p) n = p ++ "." ++ n
-    defCheck :: Int -> String -> TypeDef -> String
-    defCheck ind parent (TypeDef fields) = concat $ (
-      [ ""
-      , parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
-      , line, "&& ", parent++".size() >= " ++ show mn
-      , line, "&& ", parent++".size() <= " ++ show mx
-      ] ++ fmap ((line0++) . fieldCheck (ind + 2) parent) fields)
+    funcName strict name = "is" ++ capitalize name ++ (if strict then "Strict" else "Partial")
+    defCheck :: Bool -> Int -> String -> TypeDef -> String
+    defCheck strict ind parent (TypeDef fields) = concat $
+      keyCheck strict ++ fmap ((line0++) . fieldCheck strict (ind + 2) parent) fields
         where
           initial = if ind==2 then "  " else " "
           line0 = ("\n" ++ indent (ind + 2))
@@ -88,34 +93,44 @@ typeFunc name refs =
           requiredKeys = fmap key . req $ fields
           mx = length fields
           mn = length . req $ fields
-    refCheck ind parent name (TypeNameRef t arrSize) = cond 
+          keyCheck True = [ ""
+                          , parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
+                          , line, "&& ", parent++".size() >= " ++ show mn
+                          , line, "&& ", parent++".size() <= " ++ show mx
+                          ]
+          keyCheck False = [ ""
+                           , line, "   ", parent++".size() >= 0"
+                           , line, "&& ", parent++".size() <= " ++ show mx
+                           ]
+    refCheck strict ind parent name (TypeNameRef t arrSize) = cond -- if strict then cond else optCond
       where
         listCond = _addr ++ " is list"
-        -- arrCond size = if size == "" then isList else isList ++ " && " ++ _addr ++ ".size()<="++size
         cond = if t `elem` primitives then prim arrSize else func
-        -- prim = if arrSize/=Nothing then () else _addr ++ " is " ++ t
-        -- prim = maybe (_addr ++ " is " ++ t) arrCond arrSize
+        optCond = "!" ++ _addr ++ ".keys().hasAny(['" ++ name ++ "']) || " ++ cond
         prim :: (Maybe Int)->String
-        prim Nothing = _addr ++ " is " ++ t
+        prim Nothing  
+                     | t=="null" = _addr ++ " == null "   
+                     | t=="float" = "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
+                     | otherwise = _addr ++ " is " ++ t
         prim (Just n) = listCond ++ (if n == 0 then "" else "\n" ++ indent (ind+1) ++  " && "  ++ arrElemCheck n)
         sizeCheck i = 
            "(" ++ _addr ++ ".size() <= " ++ show i ++ " || " ++ _addr ++ "[" ++ show (i-1) ++ "] is " ++ t ++ ")"
         arrElemCheck n = intercalate ("\n" ++ indent (ind+1) ++ " && ") [ sizeCheck i | i <- [1..n] ]
-        func = "is" ++ capitalize t ++ "(" ++ _addr ++ ")"
+        func = funcName strict t ++ "(" ++ _addr ++ ")"
         _addr = addr parent name 
-    refCheck ind parent name (InlineTypeRef def) = 
-      defCheck (ind) (addr parent name) def
+    refCheck strict ind parent name (InlineTypeRef def) = 
+      defCheck strict ind (addr parent name) def
 
-    fieldCheck :: Int -> String -> Field -> String
-    fieldCheck ind parent (Field r n refs) = if r 
+    fieldCheck :: Bool -> Int -> String -> Field -> String
+    fieldCheck strict ind parent (Field r n refs) = if r && strict
       then "  && " ++ formattedRefs
-      else "  && ("++line++"!"++parent++".hasAny(['"++n++"'])"++line++"|| "++ formattedRefs ++ line0 ++ ")"
+      else "  && ("++line++"!"++parent++".keys().hasAny(['"++n++"'])"++line++"|| "++ formattedRefs ++ line0 ++ ")"
         where
           formattedRefs = 
             if length refs == 1
             then rs
             else "(" ++ line ++ "   " ++ rs ++ line ++")"
-          rs = intercalate (line ++"|| ") $ refCheck (ind) (Just parent) n <$> refs
+          rs = intercalate (line ++"|| ") $ refCheck True (ind) (Just parent) n <$> refs
           linei = "\n" ++ indent (ind)
           line0 = "\n" ++ indent (ind + 2)
           line = "\n" ++ indent (ind + 4)
@@ -123,15 +138,14 @@ typeFunc name refs =
     
 
 gen (TopLevelFunc def) = funcBlock 0 def
-gen (TopLevelType name refs) = --"type " ++ name ++ " = " ++ (typeRefList 0 refs)
-  typeFunc name refs 
---typeFunc :: String -> TypeDef -> String
+gen (TopLevelType name refs) = typeFunc True name refs ++"\n" ++ typeFunc False name refs 
 gen (TopLevelPath def) = pathBlock 0 def
   where
     pathBlock ind (PathDef parts refs bodyItems) =
       joinLines . filter (/="") $
         [ indent ind ++ "match /" ++ pathHead parts ++ " {"
-        , pathTypeFunc ind refs
+        , pathTypeFunc True ind refs
+        , pathTypeFunc False ind refs
         , pathBody ind (augmentWithType bodyItems refs)
         , indent ind ++ "}"
         ]
@@ -140,8 +154,9 @@ gen (TopLevelPath def) = pathBlock 0 def
     -- do nothing if no refs provided
     -- augment each if bodyItems contains write update or create
     -- add a write otherwise
-    pathTypeCond = "is__pathType(request.resource.data)"
-    pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
+    pathTypeCond strict = "is" ++ pathTypeFuncName ++ qualifier ++ "(request.resource.data)" 
+      where qualifier = if strict then "Strict" else "Partial"
+    pathTypeDir = PathBodyDir (PathDirective ["write"] (pathTypeCond True)) 
     augmentWithType bodyItems [] = bodyItems
     augmentWithType [] refs = [ pathTypeDir ]
     augmentWithType bodyItems refs = if hasWriteDirs bodyItems
@@ -151,14 +166,16 @@ gen (TopLevelPath def) = pathBlock 0 def
       then insertRefCheck item
       else item
     insertRefCheck (PathBodyDir (PathDirective ops cond)) =
-      PathBodyDir $ PathDirective ops (pathTypeCond ++ " && (" ++ cond ++ ")")
+      PathBodyDir $ PathDirective ops (pathTypeCond (isStrictPathCheck ops) ++ " && (" ++ cond ++ ")")
     insertRefCheck x = x
     hasWriteDirs = not . null . writeDirs
     writeDirs bodyItems = filter hasWriteOps bodyItems 
     hasWriteOps (PathBodyDir (PathDirective ops cond)) = 
       ops `hasAnyOf` ["write", "update", "create"]
     hasWriteOps _ = False
-    pathTypeFunc ind refs = ifNo refs "" . shiftBy (ind + 2) $ typeFunc "__pathType" refs
+    isStrictPathCheck ops = ops /= ["update"]
+    pathTypeFunc strict ind refs = ifNo refs "" . shiftBy (ind + 2) $ typeFunc strict pathTypeFuncName refs
+    pathTypeFuncName = "__PathType"
     pathHead parts = intercalate "/" $ pathPart <$> parts
     pathBody ind bodyItems = joinLines $ pathBodyItem ind <$> bodyItems
     pathBodyItem ind (PathBodyDir (PathDirective ops cond)) = 

@@ -1,4 +1,4 @@
-module TSGeneratorSpec (main, spec) where
+module TSGeneratorSpec (main, spec, stdTypes) where
 
 import Parser (trim)
 import TSGenerator
@@ -36,7 +36,7 @@ spec = do
     it "generates a simple thing" $
       g "type X = Y | {a:int}"
       `shouldBe` ru
-      [ "export type X = Y | {"
+      [ stdTypes ++ "export type X = Y | {"
       , "  a: number"
       , "}"
       ]
@@ -55,7 +55,7 @@ spec = do
       , "}"
       ]
       `shouldBe` ru
-      [ "export type X = Y | {"
+      [ stdTypes ++ "export type X = Y | {"
       , "  a: number"
       , "}"
       , "export type Compound = {"

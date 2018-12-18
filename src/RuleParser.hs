@@ -196,7 +196,7 @@ _pathDir = do
     , "update"
     , "delete" ]
   symbol ":"
-  symbol "if"
+  optional $ symbol "if"
   space
   body <- many $ sat (/=';') 
   char ';'
