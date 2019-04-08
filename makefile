@@ -14,8 +14,10 @@ tmp/try.rules: $(file)
 	stack exec fireward -- -i $(file) > tmp/try.rules
 	cat tmp/try.rules	
 
-try: tmp/try.rules
-	@#
+try: $(file)
+	test -r "$(file)"
+	stack exec fireward -- -i $(file) 
+
 
 prefix?=/usr/local/bin
 PREFIX:=$(prefix)

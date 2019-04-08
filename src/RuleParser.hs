@@ -27,6 +27,7 @@ module RuleParser
 import Parser
 import Control.Applicative (optional)
 import Data.Char (isSpace)
+import Text.Read (readMaybe)
 
 data TopLevel = TopLevelType String [TypeRef]
               | TopLevelPath PathDef
@@ -93,8 +94,17 @@ _stringD delim = do
 _string :: Parser String
 _string = _stringD '"' <|> _stringD '\''
 
+readDef :: (Read a) => a -> String -> a
+readDef def s = case reads s of
+              [(x, "")] -> x
+              _ -> def
+
 _integer :: Parser Int
-_integer = read <$> many digit
+_integer = do 
+  str <- many digit
+  let n = readDef (-1) str
+  guard (n /= -1)
+  return n
 
 _funcBody :: Parser String
 _funcBody = token $ do

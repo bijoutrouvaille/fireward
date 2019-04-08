@@ -31,6 +31,7 @@ module Parser
 , apply
 , parse
 , Parser
+, guard
 , (<|>), (>>=)
 , trim
 ) where 

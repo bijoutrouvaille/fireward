@@ -1,0 +1,3 @@
+type X = {a: string[]}
+match /test1/{a=**} is X {
+}
