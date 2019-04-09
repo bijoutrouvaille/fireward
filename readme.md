@@ -72,10 +72,14 @@ match /users/{userId} is User {
 
 Firestore rules' types don't map exactly to JavaScript, and Fireward handles them. In particular: 
 - `int` and `float` map to Typescript `number`
-- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`).
+- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`) when writing to the database.
 - `bool` in rules maps to TS `boolean`
 
 A note on lists: rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[4]`. The second variant will transpile to a 0,1,2,3 or 4-tuple of MyType, basically an array whose max size is 4. Check the top of the generated files for the exported types that represent it.
+
+#### Punctuation
+
+is important. The example above demonstrates it. Extra or missing marks will cause the file to fail compilation.
 
 ## Contributing
 
@@ -83,7 +87,7 @@ Contributions are welcome!
 
 The project uses the stack tool and puts shortcuts into the makefile.
 
-The project was born from the exercise in monadic programming (Thinking Functionally in Haskell, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
+The project was born from an exercise in monadic programming (Thinking Functionally in Haskell, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
 
 ## TODO
 
