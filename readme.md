@@ -92,7 +92,7 @@ Rules support lists, which transpile to arrays or tuples in TS. The syntax is `M
 
 #### Optional Types and `null`
 
-Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: this will allow you to define keys with value `undefined`, which Firestore may reject as an error. "Optional string" means that either the value is a string, or the key is absent from the object.
+Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: this will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
 
 #### Punctuation
 
