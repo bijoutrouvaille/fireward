@@ -24,9 +24,9 @@ Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README
 
 ```
 fireward
-  -i FILE      --input=FILE                          Input fireward file
-  -o FILE      --output=FILE                         Output firestore.rules file
-  -s FILE      --string=FILE                         Input string
+  -i FILE      --input=FILE                          Input fireward file instead of stdin
+  -o FILE      --output=FILE                         Output file instead of stdout
+  -s STRING    --string=STRING                       Input string
   -l language  --lang=language, --language=language  Output language. One of: rules, typescript.
   -V           --version                             Print version
   -h           --help                                Show help
