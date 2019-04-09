@@ -32,7 +32,7 @@ fireward
   -h           --help                                Show help
 ```
 
-`--lang` is `rules` by default, and is, therefore, optional. If `-i` is not provided, Firestore reads from `stdin`. If `-o` is not provided, Firestore outputs to stdout.
+`--lang` is `rules` by default, and is, therefore, optional. If `-i` is not provided, `stdin` is read. If `-o` is not provided, output goes to `stdout`.
 
 Example:
 
@@ -42,7 +42,7 @@ Generate typescript definitions: `fireward -i myrules.ward --lang=typescript > M
 
 ## Rules Syntax
 
-Fireward tries to keep things simple by using syntax that already exists from the two languages it compiles to: Firestore Rules and Typescript. Basic steps are: 1. Define a type 2. Assign it to a route. The .ward file is essentially the Firestore Rules file, augmented with Typescript types.
+Fireward tries to keep things simple by mostly using syntax that already exists from the two languages it compiles to: Firestore Rules and Typescript. Basic steps are: 1. Define a type 2. Assign it to a route. The .ward file is essentially the Firestore Rules file, augmented with Typescript types.
 
 Fireward will wrap the code with the boilerplate 
 ```
