@@ -1,3 +1,82 @@
-# firedoor
+# Fireward
 
-add description of firedoor here
+A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings.
+
+## Installation
+
+#### Method 1: Binary
+
+Download a release binary and put it in your `PATH`.
+
+#### Method 2: Compile Yourself
+
+Download the Haskell Stack tool, `cd` into the project directory and run `stack install`.
+
+## Usage
+
+```
+fireward
+  -i FILE      --input=FILE                          Input fireward file
+  -o FILE      --output=FILE                         Output firestore.rules file
+  -s FILE      --string=FILE                         Input string
+  -l language  --lang=language, --language=language  Output language. One of: rules, typescript.
+  -V           --version                             Print version
+  -h           --help                                Show help
+```
+
+`--lang` is `rules` by default, and is, therefore, optional. If `-i` is not provided, Firestore reads from `stdin`. If `-o` is not provided, Firestore outputs to stdout.
+
+Example:
+
+Generate rules: `fireward -i myrules.ward > firestore.rules`
+
+Generate typescript definitions: `fireward -i myrules.ward --lang=typescript > MyTypings.ts`
+
+## Rules Syntax
+
+Fireward tries to keep things simple by using syntax that already exists from the two languages it compiles to: Firestore Rules and Typescript. Basic steps are: 1. Define a type 2. Assign it to a route. The .ward file is essentially the Firestore Rules file, augmented with Typescript types.
+
+```
+type User = {
+  name: {first: string, last: string},
+  age: int
+} 
+
+function isUser(userId) { request.auth!=null && request.auth.uid == userId; }
+
+match /users/{userId} is User {    
+  allow read: if isUser(userId);
+  allow create: if isUser(userId);
+  allow udate: if isUser(userId);
+  allow delete: if isUser("admin");
+}
+
+```
+
+### Notes on Syntax
+
+#### Types
+
+Firestore rules' types don't map exactly to JavaScript, and Fireward handles them. In particular: 
+- `int` and `float` map to Typescript `number`
+- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`).
+- `bool` in rules maps to TS `boolean`
+
+A note on lists: rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[4]`. The second variant will transpile to a 0,1,2,3 or 4-tuple of MyType, basically an array whose max size is 4. Check the top of the generated files for the exported types that represent it.
+
+## Contributing
+
+Contributions are welcome!
+
+The project uses the stack tool and puts shortcuts into the makefile.
+
+The project was born from the exercise in monadic programming (Thinking Functionally in Haskell, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
+
+## TODO
+
+- Rewrite in actual Parsec
+- Add comments
+
+## License
+
+MIT github.com/bijoutrouvaille
