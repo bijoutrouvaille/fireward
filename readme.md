@@ -14,7 +14,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 #### Method 1: Binary
 
-Download a release binary and put it in your `PATH`.
+Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binary and put it in your `PATH`.
 
 #### Method 2: Compile Yourself
 
