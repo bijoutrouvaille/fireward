@@ -44,10 +44,21 @@ Generate typescript definitions: `fireward -i myrules.ward --lang=typescript > M
 
 Fireward tries to keep things simple by using syntax that already exists from the two languages it compiles to: Firestore Rules and Typescript. Basic steps are: 1. Define a type 2. Assign it to a route. The .ward file is essentially the Firestore Rules file, augmented with Typescript types.
 
+Fireward will wrap the code with the boilerplate 
+```
+service cloud.firestore {  
+  match /databases/{database}/documents {
+    ...
+  }
+}
+```
+
+### Basic Example
+
 ```
 type User = {
   name: {first: string, last: string},
-  friends: int[],
+  friends: string[],
   age: int,
   contact?: Phone | Email
 } 
