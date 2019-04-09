@@ -1,6 +1,6 @@
 # Fireward
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings.
+A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings. The idea is to be able to add automatic type validation to routes.
 
 ## Status
 
