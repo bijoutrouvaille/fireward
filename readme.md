@@ -2,6 +2,14 @@
 
 A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings.
 
+## Status
+
+The project has just been released, so it's full of bugs, which the author will try to resolve soon after they are reported. Also it has very terrible error messages, so you'll pretty much have to guess at the problems. Make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
+
+## Discussion
+
+https://groups.google.com/forum/#!forum/fireward
+
 ## Installation
 
 #### Method 1: Binary
@@ -39,15 +47,20 @@ Fireward tries to keep things simple by using syntax that already exists from th
 ```
 type User = {
   name: {first: string, last: string},
-  age: int
+  friends: int[],
+  age: int,
+  contact?: Phone | Email
 } 
+type Phone = {number: int, country: int}
+type Email = string
+
 
 function isUser(userId) { request.auth!=null && request.auth.uid == userId; }
 
 match /users/{userId} is User {    
   allow read: if isUser(userId);
   allow create: if isUser(userId);
-  allow udate: if isUser(userId);
+  allow update: if isUser(userId);
   allow delete: if isUser("admin");
 }
 

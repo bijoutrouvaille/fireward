@@ -1,0 +1,18 @@
+type User = {
+  name: {first: string, last: string},
+  friends: int[],
+  age: int,
+  contact?: Phone | Email
+} 
+type Phone = {number: int, country: int}
+type Email = string
+
+
+function isUser(userId) { request.auth!=null && request.auth.uid == userId; }
+
+match /users/{userId} is User {    
+  allow read: if isUser(userId);
+  allow create: if isUser(userId);
+  allow update: if isUser(userId);
+  allow delete: if isUser("admin");
+}
