@@ -1,6 +1,6 @@
 # Fireward
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings.
+A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings. The idea is to be able to add automatic type validation to routes.
 
 ## Status
 
@@ -88,15 +88,15 @@ Firestore rules' types don't map exactly to JavaScript, and Fireward handles the
 
 #### Lists
 
-Rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 (`MyType[4]`), for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated files for the exported types that represent it.
+Rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 (`MyType[4]`), for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated TS file for the exported types that represent it.
 
 #### Optional Types and `null`
 
-Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: this will allow you to define keys with value `undefined`, which Firestore may reject as an error. "Optional string" means that either the value is a string, or the key is absent from the object.
+Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: this will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
 
 #### Punctuation
 
-is important. The example above demonstrates it. Extra or missing marks will cause the file to fail compilation.
+is important. The example above demonstrates it. Extra or missing marks may cause the file to fail compilation.
 
 #### Route Matching, Conditions and Functions
 
