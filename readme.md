@@ -18,7 +18,7 @@ Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binar
 
 #### Method 2: Compile Yourself
 
-Download the Haskell Stack tool, `cd` into the project directory and run `stack install`.
+Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README/), `cd` into the project directory and run `stack install`.
 
 ## Usage
 
