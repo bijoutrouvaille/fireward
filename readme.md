@@ -88,7 +88,7 @@ Firestore rules' types don't map exactly to JavaScript, and Fireward handles the
 
 #### Lists
 
-Rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 (`MyType[4]`), for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated files for the exported types that represent it.
+Rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 (`MyType[4]`), for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated TS file for the exported types that represent it.
 
 #### Optional Types and `null`
 
