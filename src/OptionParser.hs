@@ -46,19 +46,19 @@ options =
         (ReqArg
             (\arg opt -> return opt { optInput = readFile arg })
             "FILE")
-        "Input fireward file"
+        "Input fireward file, instead of stdin"
  
     , Option "o" ["output"]
         (ReqArg
             (\arg opt -> return opt { optOutput = writeFile arg })
             "FILE")
-        "Output firestore.rules file"
+        "Output file, instead of stdout"
  
     , Option "s" ["string"]
         (ReqArg
             (\arg opt -> return opt { optInput = return arg })
-            "FILE")
-        "Input string"
+            "STRING")
+        "Input string, instead of stdin or file"
     , Option "l" ["lang", "language"]
         (ReqArg
             (\arg opt -> return opt { optLang = arg })
@@ -83,7 +83,7 @@ options =
     	        prg <- getProgName
                 hPutStrLn stderr (usageInfo prg options)
                 exitWith ExitSuccess))
-        "Show help"
+        "Show this help"
     ]
 
 getOptions = do
