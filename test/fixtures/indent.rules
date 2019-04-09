@@ -1,27 +1,27 @@
-function isX (resource) {
-  return resource is int
-  || resource is string
-  || resource.keys().hasAll(['a', 'b'])
-    && resource.size() >= 2
-    && resource.size() <= 2
-    && resource.a is string
+function isX(data) {
+  return data is int
+  || data is string
+  || data.keys().hasAll(['a', 'b'])
+    && data.size() >= 2
+    && data.size() <= 2
+    && data.a is string
     && (
-         resource.b.keys().hasAll(['aa', 'bb'])
-      && resource.b.size() >= 2
-      && resource.b.size() <= 2
+         data.b.keys().hasAll(['aa', 'bb'])
+      && data.b.size() >= 2
+      && data.b.size() <= 2
       && (
-           resource.b.aa is int
-        || resource.b.aa is string
+           data.b.aa is int
+        || data.b.aa is string
         )
       && (
-           resource.b.bb is string
-        || resource.b.bb is int
-        || resource.b.bb is float
-        || resource.b.bb.keys().hasAll(['n'])
-        && resource.b.bb.size() >= 1
-        && resource.b.bb.size() <= 1
-        && resource.b.bb.n is string
+           data.b.bb is string
+        || data.b.bb is int
+        || (data.b.bb is float || data.b.bb is int)
+        || data.b.bb.keys().hasAll(['n'])
+        && data.b.bb.size() >= 1
+        && data.b.bb.size() <= 1
+        && data.b.bb.n is string
         )
-      || resource.b is float
+      || (data.b is float || data.b is int)
       );
 }

@@ -29,7 +29,8 @@ gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
 r = ("Right " ++) . repA
 ru = r . trim . unlines
-
+timestamp = "Date|{isEqual: (other: any)=>boolean}"
+                 
 spec :: Spec
 spec = do
   describe "Typescript Generator" $ do
@@ -59,7 +60,7 @@ spec = do
       , "  a: number"
       , "}"
       , "export type Compound = {"
-      , "  a: number"
+      , "  a: " ++ timestamp
       , "  b: {"
       , "    ba: number"
       , "    bb: {"

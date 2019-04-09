@@ -80,9 +80,9 @@ options =
     , Option "h" ["help"]
         (NoArg
             (\_ -> do
-    	        prg <- getProgName
-                hPutStrLn stderr (usageInfo prg options)
-                exitWith ExitSuccess))
+              prg <- getProgName
+              hPutStrLn stderr (usageInfo prg options)
+              exitWith ExitSuccess))
         "Show this help"
     ]
 

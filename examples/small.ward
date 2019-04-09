@@ -1,0 +1,4 @@
+type X = {a: string}
+match /x/{id} is X {
+  allow write: if id=="123";
+}
