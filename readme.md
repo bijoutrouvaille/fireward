@@ -75,11 +75,15 @@ Firestore rules' types don't map exactly to JavaScript, and Fireward handles the
 - `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`) when writing to the database.
 - `bool` in rules maps to TS `boolean`
 
-A note on lists: rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[4]`. The second variant will transpile to a 0,1,2,3 or 4-tuple of MyType, basically an array whose max size is 4. Check the top of the generated files for the exported types that represent it.
+A note on lists: rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 `MyType[], for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated files for the exported types that represent it.
 
 #### Punctuation
 
 is important. The example above demonstrates it. Extra or missing marks will cause the file to fail compilation.
+
+#### Route Matching, Conditions and Functions
+
+For the exception of assigning a type to a route, the syntax is the identical to the Firestore rule language syntax.
 
 ## Contributing
 
