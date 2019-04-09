@@ -4,7 +4,7 @@ A successor to Firebase Bolt for writing Firestore rules. It also generates Type
 
 ## Status
 
-The project has just been released, so it's full of bugs, which the author will try to resolve soon after they are reported. Also it has very terrible error messages, so you'll pretty much have to guess at the problems. Make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
+The project has just been released, so it's full of bugs, which the author will try to resolve soon after they are reported. Also it has very terrible error messages, so you'll pretty much have to guess at the problems. Usually, you'll just need to make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
 
 ## Discussion
 
