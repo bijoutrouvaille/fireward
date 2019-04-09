@@ -96,7 +96,7 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 
 #### Punctuation
 
-is important. The example above demonstrates it. Extra or missing marks will cause the file to fail compilation.
+is important. The example above demonstrates it. Extra or missing marks may cause the file to fail compilation.
 
 #### Route Matching, Conditions and Functions
 
