@@ -100,7 +100,7 @@ is important. The example above demonstrates it. Extra or missing marks will cau
 
 #### Route Matching, Conditions and Functions
 
-For the exception of assigning a type to a route, the syntax is the identical to the Firestore rule language syntax.
+For the exception of assigning a type to a route, the syntax is identical to the Firestore rule language syntax.
 
 ## Contributing
 
@@ -108,7 +108,7 @@ Contributions are welcome!
 
 The project uses the stack tool and puts shortcuts into the makefile.
 
-The project was born from an exercise in monadic programming (Thinking Functionally in Haskell, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
+The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_, Wadler, and _Thinking Functionally in Haskell_, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
 
 ## TODO
 
