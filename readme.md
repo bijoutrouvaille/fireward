@@ -1,6 +1,6 @@
-# Fireward
+# FireWard
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates Typescript typings. The idea is to be able to add automatic type validation to routes.
+A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes.
 
 ## Status
 
@@ -38,13 +38,13 @@ Example:
 
 Generate rules: `fireward -i myrules.ward > firestore.rules`
 
-Generate typescript definitions: `fireward -i myrules.ward --lang=typescript > MyTypings.ts`
+Generate TypeScript definitions: `fireward -i myrules.ward --lang=typescript > MyTypings.ts`
 
 ## Rules Syntax
 
-Fireward tries to keep things simple by mostly using syntax that already exists from the two languages it compiles to: Firestore Rules and Typescript. Basic steps are: 1. Define a type 2. Assign it to a route. The .ward file is essentially the Firestore rules augmented with Typescript types.
+Fireward tries to keep things simple and easy to learn by mostly using the syntax that already exists in the two languages it generates: Firestore Rules and TypeScript. The basic steps in writing Fireward are: 1. Define a type with TypeScript-like syntax. 2. Assign it to routes written with Firestore Rules syntax. Therefore, the .ward file is essentially the Firestore rules augmented with TypeScript types.
 
-Fireward will wrap the code with the boilerplate 
+Fireward will wrap the code with the boilerplate: 
 ```
 service cloud.firestore {  
   match /databases/{database}/documents {
@@ -52,6 +52,7 @@ service cloud.firestore {
   }
 }
 ```
+Currently, it is an error to do so yourself.
 
 ### Basic Example
 
@@ -81,8 +82,8 @@ match /users/{userId} is User {
 
 #### Types
 
-Firestore rules' types don't map exactly to JavaScript, and Fireward handles them. In particular: 
-- `int` and `float` map to Typescript `number`
+Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
+- `int` and `float` map to TypeScript `number`
 - `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`) when writing to the database.
 - `bool` in rules maps to TS `boolean`
 
@@ -96,11 +97,15 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 
 #### Punctuation
 
-is important. The example above demonstrates it. Extra or missing marks may cause the file to fail compilation.
+is important. The example above demonstrates correct usage. Extra or missing marks may cause the file to fail compilation.
 
 #### Route Matching, Conditions and Functions
 
 For the exception of assigning a type to a route, the syntax is identical to the Firestore rule language syntax.
+
+#### Comments and Splitting Across Files
+
+are not yet supported. Both are in the immediate plans.
 
 ## Contributing
 
@@ -110,10 +115,12 @@ The project uses the stack tool and puts shortcuts into the makefile.
 
 The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_ by Wadler, and _Thinking Functionally in Haskell_, the chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
 
-## TODO
+## Roadmap
 
 - Rewrite in actual Parsec to allow for better error messages
 - Add comments
+- Allow for importing files
+- Allow for read/write conditions within types
 
 ## License
 
