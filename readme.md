@@ -108,7 +108,7 @@ Contributions are welcome!
 
 The project uses the stack tool and puts shortcuts into the makefile.
 
-The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_, Wadler, and _Thinking Functionally in Haskell_, chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
+The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_ by Wadler, and _Thinking Functionally in Haskell_, the chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
 
 ## TODO
 
