@@ -60,18 +60,21 @@ Currently, it is an error to do so yourself.
 
 ```
 type User = {
-  name: {first: string, last: string},
-  friends: string[],
+  name: {first: string, last: string}, // inline child objects
+  friends: string[], // a list of strings
   age: int,
-  contact?: Phone | Email
+  contact?: Phone | Email // a union type
 } 
 type Phone = {number: int, country: int}
 type Email = string
 
+function isUser(userId) { 
+  // return keyword optional
+  request.auth!=null && request.auth.uid == userId; 
+}
 
-function isUser(userId) { request.auth!=null && request.auth.uid == userId; }
-
-match /users/{userId} is User {    
+match /users/{userId} is User { 
+  // read, write, create, update, and delete conditions are allowed
   allow read: if isUser(userId);
   allow create: if isUser(userId);
   allow update: if isUser(userId);
@@ -109,9 +112,13 @@ is important. The example above demonstrates correct usage. Extra or missing mar
 
 For the exception of assigning a type to a route, the syntax is identical to the Firestore rule language syntax.
 
-#### Comments and Splitting Across Files
+#### Comments
 
-are not yet supported. Both are in the immediate plans.
+Line comments are supported with `//`.
+
+#### Splitting Across Files
+
+planned but not yet supported
 
 ## Contributing
 
@@ -128,7 +135,6 @@ Please unit test contributions and make sure all the tests are passing when subm
 ## Roadmap
 
 - Rewrite in actual Parsec to allow for better error messages
-- Add comments
 - Allow for importing files
 - Allow for read/write conditions within types
 - Add Windows and Linux release executables pipelines.

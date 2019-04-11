@@ -1,16 +1,19 @@
 type User = {
-  name: {first: string, last: string},
-  friends: int[],
+  name: {first: string, last: string}, // inline child objects
+  friends: string[], // a list of strings
   age: int,
-  contact?: Phone | Email
+  contact?: Phone | Email // a union type
 } 
 type Phone = {number: int, country: int}
 type Email = string
 
+function isUser(userId) { 
+  // return keyword optional
+  request.auth!=null && request.auth.uid == userId; 
+}
 
-function isUser(userId) { request.auth!=null && request.auth.uid == userId; }
-
-match /users/{userId} is User {    
+match /users/{userId} is User { 
+  // read, write, create, update, and delete conditions are allowed
   allow read: if isUser(userId);
   allow create: if isUser(userId);
   allow update: if isUser(userId);
