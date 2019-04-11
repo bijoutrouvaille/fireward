@@ -41,7 +41,18 @@ spec = do
       , "  a: number"
       , "}"
       ]
-
+    it "generates a simple array" $ do
+      g "type X = {a:string[]}" `shouldBe` ru
+        [ stdTypes ++ "export type X = {"
+        , "  a: string[]"
+        , "}"
+        ]
+    it "generates a 2-tuple array" $ do
+      g "type X = {a:string[2]}" `shouldBe` ru
+        [ stdTypes ++ "export type X = {"
+        , "  a: ArrayMax2<string>"
+        , "}"
+        ]
     it "generates a compound thing" $
       gu 
       [ "type X = Y | {a:int}"
