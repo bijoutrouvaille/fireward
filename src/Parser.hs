@@ -109,7 +109,11 @@ head (x:xs) = Just x
 optional' :: Parser [a] -> Parser [a]
 optional' p = p <|> none
 
-space = many (sat isSpace) >> return ()
+lineComment = char '/' >> char '/' >> many (sat (\c->c/='\n' && c/='\r')) >> do
+  return ()
+
+spaceSat = sat isSpace >> return ()
+space = many (spaceSat <|> lineComment ) >> return ()
 
 token :: Parser a -> Parser a
 token p = space >> p

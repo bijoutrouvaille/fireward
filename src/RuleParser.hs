@@ -90,7 +90,6 @@ _stringD delim = do
   -- where 
   --       more = 
 
-             
 _string :: Parser String
 _string = _stringD '"' <|> _stringD '\''
 
@@ -99,12 +98,13 @@ readDef def s = case reads s of
               [(x, "")] -> x
               _ -> def
 
-_integer :: Parser Int
-_integer = do 
+_natural :: Parser Int
+_natural = do  -- a natural number
   str <- many digit
   let n = readDef (-1) str
   guard (n /= -1)
   return n
+
 
 _funcBody :: Parser String
 _funcBody = token $ do
@@ -147,7 +147,7 @@ _typeRefs = manywith (symbol "|") (
 _listOp :: Parser Int
 _listOp = do
   char '['
-  size <- optional _integer
+  size <- optional _natural
   char ']'
   return $ maybe 0 id size
 _singleTypeName = do

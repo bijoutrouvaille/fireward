@@ -23,6 +23,10 @@ spec = do
       apply (sat isDigit) "1z" `shouldBe` [('1', "z")]
     it "gets a string until char" $
       apply (many $ sat (/=';')) "hello : ;" `shouldBe` [("hello : ", ";")]
+  -- describe "space" $ do
+  --   it "eats line comments" $ do
+  --     let s = many $ sat (/=';')
+  --     apply (many s) "hello // this is a comment\nbye" `shouldBe` [(["hello", "bye"], "")]
   describe "char" $ do
     it "gets char" $ property $
       \c-> apply (char c) (c:"dioscuri") === [(c, "dioscuri")]
@@ -49,7 +53,7 @@ spec = do
       apply (optional' . some $ digit) "1a" `shouldBe` [("1", "a")]
     it "returns the none if none matched" $
       apply (optional' . some $ digit) "a1" `shouldBe` [("", "a1")]
-
+  
   describe "token" $ do
     it "parses a spaced number" $
       apply (token $ some digit) "  123x" `shouldBe` [("123", "x")]

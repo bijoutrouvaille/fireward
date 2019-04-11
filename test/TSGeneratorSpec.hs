@@ -53,6 +53,19 @@ spec = do
         , "  a: ArrayMax2<string>"
         , "}"
         ]
+    it "eats line comments" $ 
+      gu
+      [ "type X = { // type X"
+      , "// a line of comment"
+      , "  a: string // a is a string"
+      , "}"
+      ] 
+      `shouldBe` ru
+      [ stdTypes ++ "export type X = {"
+      , "  a: string"
+      , "}"
+      ];
+
     it "generates a compound thing" $
       gu 
       [ "type X = Y | {a:int}"
