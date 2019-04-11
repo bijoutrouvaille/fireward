@@ -121,6 +121,7 @@ The project was born from an exercise in monadic programming (based on _Monads f
 - Add comments
 - Allow for importing files
 - Allow for read/write conditions within types
+- Add Windows and Linux release executables pipelines.
 
 ## License
 
