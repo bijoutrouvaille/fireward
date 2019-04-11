@@ -18,7 +18,9 @@ Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binar
 
 #### Method 2: Compile Yourself
 
-Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README/), `cd` into the project directory and run `stack install`.
+Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README/), `cd` into the project directory and run `stack install`. 
+
+Stack will download and install the compiler and dependencies and put the `fireward` executable into the path given by `stack path --local-bin` command, which you may want to add to your `PATH`. If you have none of Haskell tooling installed, the build may take an unsupervised 30±20 minutes.
 
 ## Usage
 
@@ -87,9 +89,13 @@ Firestore rules language' primitive types don't map exactly to JavaScript, so Fi
 - `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`) when writing to the database.
 - `bool` in rules maps to TS `boolean`
 
+#### Unions
+
+Union types are supported. Intersections are not. The usage is simple and demonstrated in the basic example above.
+
 #### Lists
 
-Rules support lists, which transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. If n is 4 (`MyType[4]`), for example, then the result will be a 0,1,2,3 or 4-tuple. Check the top of the generated TS file for the exported types that represent it.
+Firestore lists are supported and transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. For example, if n is 4 (`MyType[4]`), then the result will be a 0,1,2,3 or 4-tuple, basically, an array up to 4 in length. Check the top of the generated TS file for the exported types that represent it.
 
 #### Optional Types and `null`
 
@@ -111,9 +117,13 @@ are not yet supported. Both are in the immediate plans.
 
 Contributions are welcome!
 
-The project uses the stack tool and puts shortcuts into the makefile.
+The project uses the stack tool and puts useful shortcuts, like `make test`, into the makefile.
 
 The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_ by Wadler, and _Thinking Functionally in Haskell_, the chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
+
+### Unit testing
+
+Please unit test contributions and make sure all the tests are passing when submitting. The project makes that part easy and fun.
 
 ## Roadmap
 
