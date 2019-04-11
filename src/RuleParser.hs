@@ -146,9 +146,9 @@ _typeRefs = manywith (symbol "|") (
 
 _listOp :: Parser Int
 _listOp = do
-  symbol "["
+  char '['
   size <- optional _integer
-  symbol "]"
+  char ']'
   return $ maybe 0 id size
 _singleTypeName = do
   name <- token _varName
