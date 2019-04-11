@@ -24,6 +24,8 @@ import System.IO
   , stdin
   )
 import System.Exit (exitWith, ExitCode(..))
+import Paths_fireward (version)
+import Data.Version (showVersion)
 import Data.List (intercalate)
 import Data.Char (isSpace)
 
@@ -73,7 +75,7 @@ options =
     , Option "V" ["version"]
         (NoArg
             (\_ -> do
-                hPutStrLn stderr "Version 0.03"
+                hPutStrLn stderr ("Version " ++ showVersion version)
                 exitWith ExitSuccess))
         "Print version"
  
