@@ -111,7 +111,7 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 
 FireWard allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
 
-_Warning_: `const` current only works on primitive types. Marking a non-primitive as const will fail silently and do nothing.
+_Warning_: `const` current only works on primitive types. Marking a non-primitive as const will compile without error but do nothing.
 
 #### Punctuation
 
