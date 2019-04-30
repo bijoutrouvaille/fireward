@@ -3,6 +3,7 @@ type User = {
   friends: string[], // a list of strings
   age: int,
   contact?: Phone | Email // a union type
+  id: const string // will reject updates
 } 
 type Phone = {number: int, country: int}
 type Email = string

@@ -63,29 +63,30 @@ funcBlock ind (FuncDef name params body) = concat
     body' = trim . unlines $ (indent (ind + 2) ++) <$> lines body
 
 
-
+data FuncParam = FuncParam (Maybe String) String
 -- the main recursive function to generate the type function
 typeFunc :: String -> [TypeRef] -> String
 typeFunc name refs = 
   concat [ "function "
-  , funcName name, "(data) {\n  return " 
-  , intercalate "\n  || " $ refCheck 0 Nothing "data" <$> refs
+  , funcName name, "(data, prev) {\n  return " 
+  , intercalate "\n  || " $ refCheck 0 (FuncParam Nothing "data") (FuncParam Nothing "prev") False <$> refs
   , ";"
   , "\n}"
   ]
   where
-    isReq (Field r _ _) = r 
-    key (Field _ n _) = n
+    isReq (Field r _ _ _) = r 
+    key (Field _ n _ _) = n
     req = filter isReq
     primitives :: [String]
     primitives = words "list string bool timestamp null int float"
-    addr :: Maybe String -> String -> String
-    addr Nothing n = n
-    addr (Just p) n = p ++ "." ++ n
+    addr :: FuncParam -> String
+    addr (FuncParam Nothing n) = n
+    addr (FuncParam (Just p) n) = p ++ "." ++ n
     funcName name = "is" ++ capitalize name
-    defCheck :: Int -> String -> TypeDef -> String
-    defCheck ind parent (TypeDef fields) = concat $
-      keyCheck ++ fmap ((line0++) . fieldCheck (ind + 2) parent) fields
+
+    defCheck :: Int -> String -> String -> TypeDef -> String
+    defCheck ind parent prevParent (TypeDef fields) = concat $
+      keyCheck ++ fmap ((line0++) . fieldCheck (ind + 2) parent prevParent) fields
         where
           initial = if ind==2 then "  " else " "
           line0 = ("\n" ++ indent (ind + 2))
@@ -98,26 +99,37 @@ typeFunc name refs =
                      , line, "&& ", parent++".size() >= " ++ show mn
                      , line, "&& ", parent++".size() <= " ++ show mx
                      ]
-    refCheck ind parent name (TypeNameRef t arrSize) = cond 
+
+    refCheck :: Int -> FuncParam -> FuncParam -> Bool -> TypeRef -> String
+    refCheck ind curr prev _const (InlineTypeRef def) = 
+      defCheck ind (addr curr) (addr prev) def
+    refCheck ind pcurr@(FuncParam parent curr) pprev@(FuncParam prevParent prev) _const (TypeNameRef t arrSize) = 
+      if t `elem` primitives then prim arrSize else func
       where
         listCond = _addr ++ " is list"
-        cond = if t `elem` primitives then prim arrSize else func
-        optCond = "!" ++ _addr ++ ".keys().hasAny(['" ++ name ++ "']) || " ++ cond
-        prim :: (Maybe Int)->String
-        prim Nothing  
+        prim :: (Maybe Int) -> String
+        prim size = primType size ++ eq
+        eq = if _const then q else ""
+          where q = " && ("++p++"==null || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")"
+                p = maybe "prev" id prevParent
+        primType :: (Maybe Int) -> String -- primitive types
+        primType Nothing  
                      | t=="null" = _addr ++ " == null "   
                      | t=="float" = "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
                      | otherwise = _addr ++ " is " ++ t
-        prim (Just n) = listCond ++ (if n == 0 then "" else "\n" ++ indent (ind+1) ++  " && "  ++ arrElemCheck n)
+        primType (Just n) = listCond ++ (if n == 0 then "" else "\n" ++ indent (ind+1) ++  " && "  ++ arrElemCheck n)
         sizeCheck i = 
            "(" ++ _addr ++ ".size() <= " ++ show i ++ " || " ++ _addr ++ "[" ++ show (i-1) ++ "] is " ++ t ++ ")"
         arrElemCheck n = intercalate ("\n" ++ indent (ind+1) ++ " && ") [ sizeCheck i | i <- [1..n] ]
-        func = funcName t ++ "(" ++ _addr ++ ")"
-        _addr = addr parent name 
-    refCheck ind parent name (InlineTypeRef def) = defCheck ind (addr parent name) def
+        -- func is defined like this because firestore does not allow tertiary logic (?:) or similar.
+        func = "("++_prevParent++"==null && " ++funcwp "null"++ " || " ++ funcwp _prevParent ++ ")"
+        funcwp p = funcName t ++ "(" ++ _addr ++ ", " ++ p ++ ")"
+        _addr = addr pcurr
+        _prevAddr = addr pprev
+        _prevParent = maybe "prev" id prevParent
 
-    fieldCheck :: Int -> String -> Field -> String
-    fieldCheck ind parent (Field r n refs) = if r
+    fieldCheck :: Int -> String -> String -> Field -> String
+    fieldCheck ind parent prevParent (Field r n refs c) = if r
       then "  && " ++ formattedRefs
       else "  && ("++line++"!"++parent++".keys().hasAny(['"++n++"'])"++line++"|| "++ formattedRefs ++ line0 ++ ")"
         where
@@ -125,10 +137,12 @@ typeFunc name refs =
             if length refs == 1
             then rs
             else "(" ++ line ++ "   " ++ rs ++ line ++")"
-          rs = intercalate (line ++"|| ") $ refCheck (ind) (Just parent) n <$> refs
+          rs = intercalate (line ++"|| ") $ refCheck ind curr prev c <$> refs
           linei = "\n" ++ indent (ind)
           line0 = "\n" ++ indent (ind + 2)
           line = "\n" ++ indent (ind + 4)
+          curr = FuncParam (Just parent) n
+          prev = FuncParam (Just prevParent) n
       
     
 
@@ -148,7 +162,7 @@ gen (TopLevelPath def) = pathBlock 0 def
     -- do nothing if no refs provided
     -- augment each if bodyItems contains write update or create
     -- add a write otherwise
-    pathTypeCond = "is" ++ pathTypeFuncName ++ "(request.resource.data)" 
+    pathTypeCond = "(resource==null && is" ++ pathTypeFuncName ++ "(request.resource.data, null) || is" ++pathTypeFuncName ++ "(request.resource.data, resource.data))"
     pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
     augmentWithType bodyItems [] = bodyItems
     augmentWithType [] refs = [ pathTypeDir ]

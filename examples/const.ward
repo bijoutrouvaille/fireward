@@ -1,0 +1,12 @@
+type User = {
+  id: const string,
+  name: Name
+}
+type Name = {
+  last: const string,
+  first: string
+}
+
+match /user/{id} is User {
+  allow write: if true;
+}

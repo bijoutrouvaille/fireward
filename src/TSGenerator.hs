@@ -35,7 +35,7 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "Date|{isEqual: (other: any)=>boolean}")
+  , ("timestamp", "{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}")
   , ("bool", "boolean")
   , ("null", "null")
   ]
@@ -62,7 +62,7 @@ typeBlock :: Int -> TypeDef -> String
 typeBlock ind (TypeDef fields) = block ind $
   f <$> fields
   where
-    f (Field r name refs) = name ++ (if r then "" else "?") ++ ": " ++ typeRefList (ind + 2) refs
+    f (Field r name refs c) = name ++ (if r then "" else "?") ++ ": " ++ typeRefList (ind + 2) refs
 typeRefList :: Int -> [TypeRef] -> String
 typeRefList ind refs = 
   trim .  intercalate " | " $ ref <$> refs

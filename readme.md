@@ -1,6 +1,6 @@
 # FireWard
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes.
+A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the client, if written in TypeScript. It also has a couple of nice features to elegantly express rules for certain common situations.
 
 ## Status
 
@@ -56,7 +56,7 @@ service cloud.firestore {
 ```
 Currently, it is an error to do so yourself.
 
-### Basic Example
+### Complete Example
 
 ```
 type User = {
@@ -64,6 +64,7 @@ type User = {
   friends: string[], // a list of strings
   age: int,
   contact?: Phone | Email // a union type
+  uid: const string // const prevents editing this field later
 } 
 type Phone = {number: int, country: int}
 type Email = string
@@ -89,7 +90,7 @@ match /users/{userId} is User {
 
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
 - `int` and `float` map to TypeScript `number`
-- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but you can additionally assign a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`) when writing to the database.
+- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but when writing to the database, you can assign, in addition to a Date, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`).
 - `bool` in rules maps to TS `boolean`
 
 #### Unions
@@ -100,9 +101,17 @@ Union types are supported. Intersections are not. The usage is simple and demons
 
 Firestore lists are supported and transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. For example, if n is 4 (`MyType[4]`), then the result will be a 0,1,2,3 or 4-tuple, basically, an array up to 4 in length. Check the top of the generated TS file for the exported types that represent it.
 
+_Important_: the only way to ensure that the list of, say strings, contains strings is by using the tuple syntax above. Firestore does not have the capability to validate arbitrary size lists.
+
 #### Optional Types and `null`
 
 Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: if you are relying on TypeScript, this will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
+
+#### `const` Types
+
+FireWard allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
+
+_Warning_: `const` current only works on primitive types. Marking a non-primitive as const will fail silently and do nothing.
 
 #### Punctuation
 
@@ -138,6 +147,7 @@ Please unit test contributions and make sure all the tests are passing when subm
 - Allow for importing files
 - Allow for read/write conditions within types
 - Add Windows and Linux release executables pipelines.
+- Namespace validation functions (e.g. isX for type X)
 
 ## License
 

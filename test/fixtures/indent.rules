@@ -1,4 +1,4 @@
-function isX(data) {
+function isX(data, prev) {
   return data is int
   || data is string
   || data.keys().hasAll(['a', 'b'])

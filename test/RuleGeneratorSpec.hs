@@ -73,18 +73,18 @@ spec = do
     it "generates a function from a type" $
       g "type X = Z | ZZ | {a:A, b?:B|BB, c:{ca:int, cb?:string}}"
       `shouldBe` ru
-      [ "function isX(data) {"
-      , "  return isZ(data)"
-      , "  || isZZ(data)"
+      [ "function isX(data, prev) {"
+      , "  return (prev==null && isZ(data, null) || isZ(data, prev))"
+      , "  || (prev==null && isZZ(data, null) || isZZ(data, prev))"
       , "  || data.keys().hasAll(['a', 'c'])"
       , "    && data.size() >= 2"
       , "    && data.size() <= 3"
-      , "    && isA(data.a)"
+      , "    && (prev==null && isA(data.a, null) || isA(data.a, prev))"
       , "    && ("
       , "      !data.keys().hasAny(['b'])"
       , "      || ("
-      , "         isB(data.b)"
-      , "      || isBB(data.b)"
+      , "         (prev==null && isB(data.b, null) || isB(data.b, prev))"
+      , "      || (prev==null && isBB(data.b, null) || isBB(data.b, prev))"
       , "      )"
       , "    )"
       , "    && data.c.keys().hasAll(['ca'])"
@@ -100,7 +100,7 @@ spec = do
     it "generates a check of definite size" $
       g "type X = { x: string[2] }"
       `shouldBe` ru
-      [ "function isX(data) {"
+      [ "function isX(data, prev) {"
       , "  return data.keys().hasAll(['x'])"
       , "    && data.size() >= 1"
       , "    && data.size() <= 1"
@@ -113,20 +113,20 @@ spec = do
     it "generates a path with a type" $
       g "match x is X {}" `shouldBe` ru
         [ "match /x {"
-        , "  function is__PathType(data) {"
-        , "    return isX(data);"
+        , "  function is__PathType(data, prev) {"
+        , "    return (prev==null && isX(data, null) || isX(data, prev));"
         , "  }"
-        , "  allow write: if is__PathType(request.resource.data);"
+        , "  allow write: if (resource==null && is__PathType(request.resource.data, null) || is__PathType(request.resource.data, resource.data));"
         , "}"
         ]
 
     it "generates a path with a type and custom write condition" $
       g "match x is X { allow create: if true; }" `shouldBe` ru
         [ "match /x {"
-        , "  function is__PathType(data) {"
-        , "    return isX(data);"
+        , "  function is__PathType(data, prev) {"
+        , "    return (prev==null && isX(data, null) || isX(data, prev));"
         , "  }"
-        , "  allow create: if is__PathType(request.resource.data) && (true);"
+        , "  allow create: if (resource==null && is__PathType(request.resource.data, null) || is__PathType(request.resource.data, resource.data)) && (true);"
         , "}"
         ]
     -- it "generates a definite array" $

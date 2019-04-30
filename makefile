@@ -15,6 +15,7 @@ tmp/try.rules: $(file)
 	cat tmp/try.rules	
 
 try: $(file)
+	stack build
 	test -r "$(file)"
 	stack exec fireward -- -i $(file) 
 

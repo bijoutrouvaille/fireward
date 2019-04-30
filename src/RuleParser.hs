@@ -56,7 +56,16 @@ data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
 -- TypeNameRef name (Maybe array-size)
 data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeRef TypeDef deriving (Show, Eq)
-data Field = Field Bool String [TypeRef] deriving (Show, Eq)
+-- Field Required Name [TypeRef] Constant
+-- data Field = Field Bool String [TypeRef] Bool deriving (Show, Eq)
+data Field = Field
+           { required :: Bool
+           , fieldName :: String
+           , typeRefs :: [TypeRef]
+           , constant :: Bool
+           } deriving (Show, Eq)
+
+           -- , constant: Bool
 
 _alpha = lower <|> upper
 _alphaNum = _alpha <|> digit
@@ -160,8 +169,9 @@ _field = do
   name <- token _varName
   opt <- optional $ symbol "?"
   symbol ":"
+  isConst <- optional $ symbol "const"
   types <- _typeRefs
-  return $ Field (opt == Nothing) name types
+  return $ Field (opt == Nothing) name types (isConst /= Nothing)
 
 _topLevelType :: Parser TopLevel
 _topLevelType = do 
