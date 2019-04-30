@@ -92,12 +92,8 @@ _stringD :: Char -> Parser String
 _stringD delim = do
   char delim
   a <- many $ (_const ('\\':[delim]) <|> (:[]) <$> sat (/=delim))
-  -- a <- (_getWhile (/=delim))
   char delim
   return $ concat (([delim]:a) ++ [[delim]])
-  -- return a
-  -- where 
-  --       more = 
 
 _string :: Parser String
 _string = _stringD '"' <|> _stringD '\''
@@ -111,7 +107,7 @@ _natural :: Parser Int
 _natural = do  -- a natural number
   str <- many digit
   let n = readDef (-1) str
-  guard (n /= -1)
+  guardWith "expected an integer" (n /= -1)
   return n
 
 
@@ -239,6 +235,8 @@ _topLevel = (TopLevelPath <$> _path)
         <|> _topLevelType 
         <|> TopLevelFunc <$> _funcDef
 
+-- every :: String -> ParserResult [TopLevel]
 
-parseRules :: String -> [([TopLevel], String)]
-parseRules = apply (many _topLevel) . trim
+-- parseRules :: String -> [([TopLevel], String)]
+parseRules :: String -> ParserResult [TopLevel]
+parseRules = apply (everyWith "Expected either a function, path or type definition" _topLevel ) 

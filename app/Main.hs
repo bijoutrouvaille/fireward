@@ -39,14 +39,14 @@ wrapRules r = intercalate "\n"
   , "}"
   ]
 -- rulesM = return . wrapRules
-out output (Left e) = hPutStrLn stderr (showErr e)
+out output (Left e) = hPutStrLn stderr e
 out output (Right v) = output v
 
 generate lang
   | lang == "typescript" = TSGenerator.generate
   | lang == "ts" = TSGenerator.generate
   | lang == "rules" = fmap wrapRules . RuleGenerator.generate 
-  | otherwise = const . Left . Error Nothing $ 
+  | otherwise = const . Left $ 
       "Specified language \""++lang++"\"not recognized."
 
 main :: IO ()
