@@ -1,0 +1,10 @@
+{
+    "name": "Fireward",
+    "platforms": [
+        "Web",
+        "iOS",
+        "Android"
+    ],
+    "content": "readme.md",
+    "related": [ ]
+}

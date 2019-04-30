@@ -1,10 +1,6 @@
-# FireWard
+# Fireward
 
 A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the client, if written in TypeScript. It also has a couple of nice features to elegantly express rules for certain common situations.
-
-## Status
-
-The project has just been released, so it's full of bugs, which the author will try to resolve soon after they are reported. Also it has very terrible error messages, so you'll pretty much have to guess at the problems. Usually, you'll just need to make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
 
 ## Discussion
 
@@ -109,7 +105,7 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 
 #### `const` Types
 
-FireWard allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
+Fireward allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
 
 _Warning_: `const` current only works on primitive types. Marking a non-primitive as const will compile without error but do nothing.
 
@@ -141,13 +137,18 @@ The project was born from an exercise in monadic programming (based on _Monads f
 
 Please unit test contributions and make sure all the tests are passing when submitting. The project makes that part easy and fun.
 
+## Status
+
+The project has just been released, so may have some bugs, which the author will try to resolve soon after they are reported. Also it doesn't have very good error messages, so you'll have to guess at the problems. Usually, however, you'll just need to make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
+
 ## Roadmap
 
-- Rewrite in actual Parsec to allow for better error messages
+- Add error handling to the parser
 - Allow for importing files
 - Allow for read/write conditions within types
 - Add Windows and Linux release executables pipelines.
 - Namespace validation functions (e.g. isX for type X)
+
 
 ## License
 
