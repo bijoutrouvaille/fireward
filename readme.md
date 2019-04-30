@@ -90,7 +90,7 @@ match /users/{userId} is User {
 
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
 - `int` and `float` map to TypeScript `number`
-- `timestamp` maps to `Date|{isEqual: (other: any)=>boolean}`. Snapshots will come as a `Date`, but when writing to the database, you can assign, in addition to a Date, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp`).
+- `timestamp` maps to `{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`).
 - `bool` in rules maps to TS `boolean`
 
 #### Unions
