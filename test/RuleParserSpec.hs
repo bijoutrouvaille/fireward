@@ -110,6 +110,32 @@ spec = do
         ] [ TypeNameRef "X" Nothing ] [
           PathBodyDir (PathDirective ["create"] "true")
         ])], "")
+    it "fails on just the type keyword" $ do
+      _parse "type" `shouldBe` failure ("type name missing", 0, 4)
+    it "fail when type definition is missing =" $
+      _parse "type X {}" `shouldBe` failure ("missing `=` after type name", 0, 6)
+    it "fails when there is nothing after assignment" $ do
+      _parse "type X =" `shouldBe` failure ("type `X` is missing definition", 0, 8)
+    it "allows a semicolon after type definition" $ do
+      _parse "type X = string;" `shouldBe` Right ([TopLevelType "X" [TypeNameRef "string" Nothing]], "")
+
+    it "fails on weird type def" $ do
+      _parse "type X = {fff}" `shouldBe` failure ("type `X` is missing definition", 0, 8)
+    it "fails when a field lacks a type" $ do
+      _parse "type X = {a: }" `shouldBe` failure ("field `a` lacks a type", 0, 12) 
+
+    it "fails when a function is missing a name" $ do
+      _parse "function (abc) {}" `shouldBe` failure ("missing function name", 0, 8)
+    it "fails when a function is missing parameter parens" $ do
+      _parse "function z {}" `shouldBe` failure ("function `z` is missing the parameter list", 0, 10)
+    it "fails when function is missing opening {" $ do
+      _parse "function z() }" `shouldBe` failure ("function `z` is missing an opening `{`",0,12)
+    it "fails when function is missing closing }" $ do
+      _parse "function z() {" `shouldBe` failure ("function `z` is missing a closing `}`",0,14)
+    it "fails when function body is missing" $ do
+      _parse "function z() {  \n  }" `shouldBe` failure ("function `z` is missing a body", 1,3)
+
+
   describe "escape" $ do
     it "detects escaped chars" $
       _apply (escape '\'') "\\''" `shouldBe` Right ("\\'", "'")

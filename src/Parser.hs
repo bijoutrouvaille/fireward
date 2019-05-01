@@ -93,12 +93,6 @@ instance Alternative Parser where
               pick ps@(Right x) = ps
               pick ps = ps
           in pick $ apply p s
-    -- f s = let ps = apply p s 
-    --           if first ps then apply q s 
-    --                      else ps
-
-chooseErr Nothing x = x
-chooseErr x _ = x
 
 instance Monad Parser where
   return x = Parser (\s -> Right (x, s, 0, 0))

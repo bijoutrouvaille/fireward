@@ -56,8 +56,6 @@ data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
 -- TypeNameRef name (Maybe array-size)
 data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeRef TypeDef deriving (Show, Eq)
--- Field Required Name [TypeRef] Constant
--- data Field = Field Bool String [TypeRef] Bool deriving (Show, Eq)
 data Field = Field
            { required :: Bool
            , fieldName :: String
@@ -106,7 +104,6 @@ readDef def s = case reads s of
 _natural :: Parser Int
 _natural = do  -- a natural number
   str <- some digit
-  guard (str/="")
   let n = readDef (-1) str
   guardWith "expected an integer" (n /= -1)
   return n
@@ -117,18 +114,19 @@ _funcBody = token $ do
   let notDone c = c/='}' && c/=';'
   a <- many $ _string <|> satS notDone
   optional $ symbol ";"
-  return $ concat a
+  return . trim $ concat a
 
 
 _funcDef :: Parser FuncDef
 _funcDef = do
   symbol "function"
-  name <- token _varName
-  params <- grouped "(" ")" paramList
-  symbol "{"
+  name <- require "missing function name" $ token _varName
+  params <- require ("function `"++name++"` is missing the parameter list") $ grouped "(" ")" paramList
+  require ("function `"++name++"` is missing an opening `{`") $ symbol "{"
   optional $ symbol "return"
   body <- _funcBody
-  symbol "}"
+  require ("function `"++name++"` is missing a closing `}`") $ symbol "}"
+  guardWith ("function `"++name++"` is missing a body") (length body > 0)
   return $ FuncDef name params (trim body)
   where paramList = separated "," (token _varName)
 
@@ -143,7 +141,6 @@ _terminated parser terminator = do
   return v
 _typeRefs :: Parser [TypeRef]
 _typeRefs = manywith (symbol "|") ( 
-  -- (TypeNameRef <$> withComma (token _varName)) 
   (withComma _singleTypeName)
     <|> (InlineTypeRef <$> withComma _typeDef))
   where
@@ -152,9 +149,9 @@ _typeRefs = manywith (symbol "|") (
 
 _listOp :: Parser Int
 _listOp = do
-  char '['
-  size <- optional _natural
-  char ']'
+  symbol "["
+  size <- optional $ token _natural
+  require "expected closing `]`" $ symbol "]"
   return $ maybe 0 id size
 _singleTypeName = do
   name <- token _varName
@@ -168,14 +165,17 @@ _field = do
   symbol ":"
   isConst <- optional $ symbol "const"
   types <- _typeRefs
+  guardWith ("field `"++ name ++"` lacks a type" ) (length types > 0)
   return $ Field (opt == Nothing) name types (isConst /= Nothing)
 
 _topLevelType :: Parser TopLevel
 _topLevelType = do 
   symbol "type"
-  name <- token _varName
-  symbol "="
+  name <- require "type name missing" $ token _varName
+  require "missing `=` after type name" $ symbol "="
   members <- _typeRefs
+  guardWith ("type `"++ name ++"` is missing definition" ) (length members > 0)
+  optional $ symbol ";"
   return $ TopLevelType name members
 
 _pathStatic :: Parser PathPart
