@@ -88,13 +88,12 @@ gen tops = result where
   g (TopLevelType name refs) = topLevelType name refs
   g _ = ""
 
+
 generate :: String -> Either String String
 generate s = result $ parseRules s where
-  result (Left (e,l,c)) = Left (e ++ "\n  on " ++printLoc l c) -- $ Error Nothing "Indeterministic nonesense."
+  result (Left Nothing) = Left ("Unexpected parser error.")
+  result (Left (Just (e,l,c))) = Left (e ++ "\n  on " ++printLoc l c)
   result (Right (tops, "", _, _)) = gen tops
-  result (Right (tops, unparsed, l, c)) = Left ("Unexpected input at " ++ printLoc l c)
-  -- result ((tops, ""):_) = gen tops
-  -- result ((_, rem):_) = Left $ Error (loc s rem) "Could not parse"
-  -- printLoc l c = show l ++":"++show c
+  result (Right (tops, unparsed, l, c)) = Left ("Unexpected input on " ++ printLoc l c)
   printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 

@@ -29,12 +29,12 @@ module Parser
 , somewith
 , oneOf
 , apply
-, parse
 , Parser
 , guard
 , failWith
 , guardWith
-, everyWith
+, failure
+, require
 , ParserResult
 , (<|>), (>>=)
 , trim
@@ -47,25 +47,19 @@ import Control.Monad ((>>=), return, ap, liftM, guard)
 import Control.Applicative (Alternative, (<|>), empty, many, some, optional)
 import Prelude hiding (head)
 
-type ParserError = (String, Int, Int)
-type ParserSuccess a = (a, String, Int, Int)
+type ParserError = Maybe (String, Int, Int)
+type ParserSuccess a = (a, String, Int, Int) -- (result, unparsed, line, col, required)
 type ParserResult a = Either ParserError (ParserSuccess a)
 
 newtype Parser a = Parser (String -> Either ParserError (ParserSuccess a))
--- newtype Parser a = Parser (String -> [(a, String)])
 
--- printResult :: ParserResult Either String String
--- printResult
+failure = Left . Just
 
 maybeHead [] = Nothing
 maybeHead (x:_) = Just x
 
 apply :: Parser a -> String -> ParserResult a
 apply (Parser p) s = p s
-
-parse :: Parser a -> String -> ParserResult a
-parse p = apply p
--- parse p = fmap fst . maybeHead . apply p
 
 instance Functor Parser where
   fmap = liftM
@@ -78,45 +72,55 @@ none :: Parser [a]
 none = return []
 
 failWith :: String -> Parser a
-failWith msg = Parser (\s->Left (msg, 0, 0))
+failWith msg = Parser (\s->failure (msg, 0, 0))
 
 guardWith :: String -> Bool -> Parser ()
 guardWith msg True = return ()
 guardWith msg False = failWith msg
 
-everyWith msg p = Parser q
-  where q s = res (apply (many p >>= (\r->space >> return r)) s)
-        res (Right (x, "", l, c)) = Right (x, "", l, c)
-        res (Right (x, u, l, c)) = Left (msg, l, c)
-        res error = error
+
+-- everyWith msg p = Parser q
+--   where q s = res (apply (many p >>= (\r->space >> return r)) s)
+--         res (Right (x, "", l, c, r)) = Right (x, "", l, c, r)
+--         res (Right (x, u, l, c, r)) = Left (msg, l, c)
+--         res error = error
 
 
 instance Alternative Parser where
-  empty = Parser (\s -> Left ("", 0, 0))
+  empty = Parser (\s -> Left Nothing)
   p <|> q = Parser f where
-    f s = let ps = apply p s in
-              if null ps then apply q s 
-                         else ps
+    f s = let pick (Left Nothing) = apply q s
+              pick ps@(Right x) = ps
+              pick ps = ps
+          in pick $ apply p s
+    -- f s = let ps = apply p s 
+    --           if first ps then apply q s 
+    --                      else ps
+
+chooseErr Nothing x = x
+chooseErr x _ = x
 
 instance Monad Parser where
   return x = Parser (\s -> Right (x, s, 0, 0))
-  -- p >>= q = Parser (\s -> do (x, s', l', c') <- apply p s
-  --                            (y, s'', l'', c'') <- apply (q x) s'
-  --                            return (y, s'', l'+l'', if l'' > 0 then c'' else c' + c'')
-  --                  )
   p >>= q = Parser outer
     where outer s = res (apply p s)
           res (Right (x, s', l', c')) = inner (apply (q x) s') l' c'
           res (Left error) = Left error
           inner (Right (y, s'', l'', c'')) l' c' = Right (y, s'', l'+l'', if l'' > 0 then c'' else c' + c'')
-          inner (Left (error, l'', c'')) l' c' = Left (error, l'+l'', if l'' > 0 then c'' else c' + c'')
+          inner (Left (Just (error, l'', c''))) l' c' = failure (error, l'+l'', if l'' > 0 then c'' else c' + c'')
+          inner (Left Nothing) l' c' = Left Nothing
      
+require msg p = Parser q
+  where q s = res (apply p s)
+        res (Right (x, s, l, c)) = Right (x, s, l, c) 
+        res (Left Nothing) = failure (msg, 0, 0)
+        res e = e
 
 ifLineSep c t f = if c=='\n' || c=='\r' then t else f
 
 getc :: Parser Char
 getc = Parser f where
-  f [] = Left ("End of input", 0, 0)
+  f [] = Left Nothing
   f (c:cs) = Right (c, cs, ifLineSep c 1 0 , ifLineSep c 0 1)
 
 sat :: (Char -> Bool) -> Parser Char

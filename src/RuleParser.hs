@@ -105,7 +105,8 @@ readDef def s = case reads s of
 
 _natural :: Parser Int
 _natural = do  -- a natural number
-  str <- many digit
+  str <- some digit
+  guard (str/="")
   let n = readDef (-1) str
   guardWith "expected an integer" (n /= -1)
   return n
@@ -222,11 +223,11 @@ _path :: Parser PathDef
 _path = do
   symbol "match"
   optional $ symbol "/"
-  parts <- token _pathParts
+  parts <- require "expected a path after `match`" $ token _pathParts
   className <- _pathType
-  symbol "{"
+  require "expected a `{`" $ symbol "{"
   body <- many (PathBodyPath <$> _path <|> PathBodyDir <$> _pathDir <|> PathBodyFunc <$> _funcDef)
-  symbol "}"
+  require "expected a closing `}`" $ symbol "}"
   return  $ PathDef parts className body
 
 
@@ -235,8 +236,5 @@ _topLevel = (TopLevelPath <$> _path)
         <|> _topLevelType 
         <|> TopLevelFunc <$> _funcDef
 
--- every :: String -> ParserResult [TopLevel]
-
--- parseRules :: String -> [([TopLevel], String)]
 parseRules :: String -> ParserResult [TopLevel]
-parseRules = apply (everyWith "Expected either a function, path or type definition" _topLevel ) 
+parseRules = apply (many _topLevel ) . trim

@@ -47,7 +47,8 @@ generate source = q tree
     q (Right (tops, unparsed, l, c)) = if length unparsed > 0
                                           then Left ("Could not parse on\n  on " ++ printLoc l c)
                                           else Right . trim . joinLines $ gen <$> tops
-    q (Left (error, l, c)) = Left (error ++ "\n  on " ++ printLoc l c)
+    q (Left (Just (error, l, c))) = Left (error ++ "\n  on " ++ printLoc l c)
+    q (Left Nothing) = Left ("Unexpected parser error.")
 
 funcBlock ind (FuncDef name params body) = concat 
   [ indent ind
