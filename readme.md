@@ -2,6 +2,8 @@
 
 A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the client, if written in TypeScript. It also has a couple of nice features to elegantly express rules for certain common situations.
 
+[![Mentioned in Awesome awesome-firebase](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/jthegedus/awesome-firebase)
+
 ## Discussion
 
 https://groups.google.com/forum/#!forum/fireward
