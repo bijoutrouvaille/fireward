@@ -139,7 +139,7 @@ Please unit test contributions and make sure all the tests are passing when subm
 
 ## Status
 
-The project has been recently released, and some bugs are to be expected. The author will try to resolve soon after they are reported. 
+The project has been recently released, and some bugs are to be expected. The author will try to resolve them soon after they are reported. 
 
 ## Roadmap
 
