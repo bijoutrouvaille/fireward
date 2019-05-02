@@ -23,7 +23,7 @@ repA = repN . repQ
 showN :: Show a => a -> String
 showN = repA . show
 showE (Right x) = "Right " ++ repA x
-showE (Left (Error loc x)) = "Left " ++ repA x
+showE (Left x) = "Left " ++ repA x
 g = showE . TSGenerator.generate
 gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
@@ -31,6 +31,7 @@ r = ("Right " ++) . repA
 ru = r . trim . unlines
 timestamp = "{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}"
                  
+
 spec :: Spec
 spec = do
   describe "Typescript Generator" $ do

@@ -81,16 +81,19 @@ typeRefList ind refs =
 
 topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs
 
-gen :: [TopLevel] -> Either Error String
+gen :: [TopLevel] -> Either String String
 gen tops = result where
   result = Right $ stdTypes ++ joinLines strings
   strings = g <$> tops 
   g (TopLevelType name refs) = topLevelType name refs
   g _ = ""
 
-generate :: String -> Either Error String
+
+generate :: String -> Either String String
 generate s = result $ parseRules s where
-  result [] = Left $ Error Nothing "Indeterministic nonesense."
-  result ((tops, ""):_) = gen tops
-  result ((_, rem):_) = Left $ Error (loc s rem) "Could not parse"
+  result (Left Nothing) = Left ("Unexpected parser error.")
+  result (Left (Just (e,l,c))) = Left (e ++ "\n  on " ++printLoc l c)
+  result (Right (tops, "", _, _)) = gen tops
+  result (Right (tops, unparsed, l, c)) = Left ("Unexpected input on " ++ printLoc l c)
+  printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 

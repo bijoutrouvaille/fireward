@@ -35,23 +35,20 @@ indentBy n = (indent n ++)
 
 surround :: String -> String -> String -> String
 surround b e s = concat [b,s,e]
+printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 
 -- the main exported function. calls the `gen` function internally.
-generate :: String -> Either Error String
-generate source = if length allResults == 0 
-                     then Left $ Error Nothing "No results at all"
-                     else allResults !! 0
+generate :: String -> Either String String
+generate source = q tree
   where
-    allResults :: [Either Error String]
-    allResults = fmap q tree
-    tree :: [([TopLevel], String)]
+    tree :: ParserResult [TopLevel]-- [([TopLevel], String)]
     tree = parseRules source
-    q :: ([TopLevel], String) -> Either Error String
-    q (tops, unparsed) = if length unparsed > 0
-                            then Left $ Error (loc source unparsed) "Could not parse."
-                            else Right . trim . joinLines $ gen <$> tops
-    sourceLines = lines source 
-    ast = parseRules source
+    q :: ParserResult [TopLevel] -> Either String String
+    q (Right (tops, unparsed, l, c)) = if length unparsed > 0
+                                          then Left ("Could not parse on\n  on " ++ printLoc l c)
+                                          else Right . trim . joinLines $ gen <$> tops
+    q (Left (Just (error, l, c))) = Left (error ++ "\n  on " ++ printLoc l c)
+    q (Left Nothing) = Left ("Unexpected parser error.")
 
 funcBlock ind (FuncDef name params body) = concat 
   [ indent ind
@@ -146,6 +143,7 @@ typeFunc name refs =
       
     
 
+gen :: TopLevel -> String
 gen (TopLevelFunc def) = funcBlock 0 def
 gen (TopLevelType name refs) = typeFunc name refs
 gen (TopLevelPath def) = pathBlock 0 def
