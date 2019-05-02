@@ -198,12 +198,17 @@ _pathParts :: Parser [PathPart]
 _pathParts = manywith (char '/') (_pathVar <|> _pathStatic <|> _pathWild)
 
 _pathType :: Parser [TypeRef]
-_pathType = (symbol "is" >> token _typeRefs) <|> return []
+_pathType = do
+  symbol "is"
+  refs <- token _typeRefs
+  -- guardWith "expected a path type" (length refs > 0)
+  -- guardWith "expected a path type" (refs /= [InlineTypeRef (TypeDef [])]) -- the above really does not work
+  return refs
+-- (symbol "is" >> (require "expected a path type" $ token _typeRefs)) <|> return []
 
 _pathDir :: Parser PathDirective
 _pathDir = do
   symbol "allow"
-  -- ops <-  _const "read"
   ops <- manywith (symbol ",") $ enum 
     [ "read"
     , "get"
@@ -212,9 +217,9 @@ _pathDir = do
     , "create"
     , "update"
     , "delete" ]
-  symbol ":"
+  require "path directive is missing a `:`" $ symbol ":"
   optional $ symbol "if"
-  space
+  optional space
   body <- many $ sat (/=';') 
   char ';'
   return $ PathDirective ops body
@@ -224,10 +229,11 @@ _path = do
   symbol "match"
   optional $ symbol "/"
   parts <- require "expected a path after `match`" $ token _pathParts
-  className <- _pathType
+  className <- (_pathType <|> return [])
   require "expected a `{`" $ symbol "{"
   body <- many (PathBodyPath <$> _path <|> PathBodyDir <$> _pathDir <|> PathBodyFunc <$> _funcDef)
   require "expected a closing `}`" $ symbol "}"
+  -- guardWith "expected a path type" (refs /= [InlineTypeRef (TypeDef [])]) -- the above really does not work
   return  $ PathDef parts className body
 
 

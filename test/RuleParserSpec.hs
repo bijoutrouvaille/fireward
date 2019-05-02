@@ -134,6 +134,8 @@ spec = do
       _parse "function z() {" `shouldBe` failure ("function `z` is missing a closing `}`",0,14)
     it "fails when function body is missing" $ do
       _parse "function z() {  \n  }" `shouldBe` failure ("function `z` is missing a body", 1,3)
+    it "fails when path has an `is` but no type" $ do
+      _parse "match /x is {}" `shouldBe` failure ("expected a `{`", 0, 14)
 
 
   describe "escape" $ do

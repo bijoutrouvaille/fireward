@@ -91,7 +91,7 @@ instance Alternative Parser where
   p <|> q = Parser f where
     f s = let pick (Left Nothing) = apply q s
               pick ps@(Right x) = ps
-              pick ps = ps
+              pick error = error
           in pick $ apply p s
 
 instance Monad Parser where
