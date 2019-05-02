@@ -1,8 +1,6 @@
 module Main where
 
 
-import Error (Error(..))
-import Loc (Loc(..))
 import qualified RuleGenerator 
 import qualified TSGenerator 
 
@@ -20,13 +18,6 @@ import System.Exit (exitWith, ExitCode(..))
 import Data.List (intercalate)
 import Data.Char (isSpace)
 
-showLoc Nothing = ""
-showLoc (Just (Loc l c)) = " (on line "++show l++": "++c++")"
-showErr (Error loc text) = unlines
-  [ "Error"++showLoc loc++":"
-  , text
-  ]
-
 shift n = take (n*2) $ repeat ' '
 indentBy n = unlines . fmap (shift n ++) . lines
 
@@ -38,7 +29,7 @@ wrapRules r = intercalate "\n"
   , "  }"
   , "}"
   ]
--- rulesM = return . wrapRules
+
 out output (Left e) = hPutStrLn stderr e
 out output (Right v) = output v
 
