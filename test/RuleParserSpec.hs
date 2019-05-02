@@ -137,6 +137,8 @@ spec = do
     it "fails when path has an `is` but no type" $ do
       _parse "match /x is {}" `shouldBe` failure ("expected a `{`", 0, 14)
 
+    it "allows for strings with semicolons in rule conditions" $ do
+      _parse "match /x { allow read: if x==\"123;\" && y-3=4 ; }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x"] [] [PathBodyDir (PathDirective ["read"] "x==\"123;\" && y-3=4 ")])],"")
 
   describe "escape" $ do
     it "detects escaped chars" $

@@ -111,7 +111,7 @@ _natural = do  -- a natural number
 
 _funcBody :: Parser String
 _funcBody = token $ do
-  let notDone c = c/='}' && c/=';'
+  let notDone c = c/='}' && c/=';' && c/='"'
   a <- many $ _string <|> satS notDone
   optional $ symbol ";"
   return . trim $ concat a
@@ -206,6 +206,11 @@ _pathType = do
   return refs
 -- (symbol "is" >> (require "expected a path type" $ token _typeRefs)) <|> return []
 
+_expr :: [Char] -> Parser String
+_expr end = do
+  fmap concat . many $ _string <|> satS f
+  where f c = not . elem c $ concat [end, ";'\""]--c/=';' && c/='"' && c/='}' && c/='\''
+
 _pathDir :: Parser PathDirective
 _pathDir = do
   symbol "allow"
@@ -220,8 +225,8 @@ _pathDir = do
   require "path directive is missing a `:`" $ symbol ":"
   optional $ symbol "if"
   optional space
-  body <- many $ sat (/=';') 
-  char ';'
+  body <- _expr "};" -- many $ sat (/=';') 
+  optional $ char ';'
   return $ PathDirective ops body
 
 _path :: Parser PathDef
