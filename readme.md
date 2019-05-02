@@ -109,10 +109,6 @@ Fireward allows you to declare primitive types as `const`, as in the example abo
 
 _Warning_: `const` current only works on primitive types. Marking a non-primitive as const will compile without error but do nothing.
 
-#### Punctuation
-
-is important. The example above demonstrates correct usage. Extra or missing marks may cause the file to fail compilation.
-
 #### Route Matching, Conditions and Functions
 
 For the exception of assigning a type to a route, the syntax is identical to the Firestore rule language syntax.
@@ -129,6 +125,10 @@ planned but not yet supported
 
 Contributions are welcome!
 
+Please use, test, file issues, star and share Fireward with your Firebase friends. 
+
+### Contributing Code
+
 The project uses the stack tool and puts useful shortcuts, like `make test`, into the makefile.
 
 The project was born from an exercise in monadic programming (based on _Monads for Functional Programming_ by Wadler, and _Thinking Functionally in Haskell_, the chapter on Parsing), so the parser is written from scratch. It seems to be the same in concept as Parsec, but with less functionality.
@@ -139,11 +139,12 @@ Please unit test contributions and make sure all the tests are passing when subm
 
 ## Status
 
-The project has just been released, so may have some bugs, which the author will try to resolve soon after they are reported. Also it doesn't have very good error messages, so you'll have to guess at the problems. Usually, however, you'll just need to make sure you haven't misspelled any keywords, that there is an `=` in type definitions (`type X = {...`) and that the punctuation is properly placed.
+The project has been recently released, and some bugs are to be expected. The author will try to resolve soon after they are reported. 
 
 ## Roadmap
 
-- Add error handling to the parser
+[x] Add comments
+[x] Add error handling to the parser
 - Allow for importing files
 - Allow for read/write conditions within types
 - Add Windows and Linux release executables pipelines.
