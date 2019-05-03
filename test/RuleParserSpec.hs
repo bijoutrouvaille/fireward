@@ -138,7 +138,25 @@ spec = do
       _parse "match /x is {}" `shouldBe` failure ("expected a `{`", 0, 14)
 
     it "allows for strings with semicolons in rule conditions" $ do
-      _parse "match /x { allow read: if x==\"123;\" && y-3=4 ; }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x"] [] [PathBodyDir (PathDirective ["read"] "x==\"123;\" && y-3=4 ")])],"")
+      _parse "match /x { allow read: if x==\"123;\" && y-3=4 ; }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x"] [] [PathBodyDir (PathDirective ["read"] "x==\"123;\" && y-3=4")])],"")
+
+    it "parses multiple directives without semicolon separators" $ do
+      let r = unlines
+              [ "match /x {"
+              , "  allow read: true"
+              -- , "  allow update: abc && allow" -- this causes an opaque exception. https://gitlab.haskell.org/ghc/ghc/issues/10615 ???
+              , "  function z() { true }"
+              , "  allow create: false"
+              , "  match /q {}"
+              , "}" 
+              ]
+      _parse r `shouldBe` Right ([ TopLevelPath (PathDef [PathPartStatic "x"] [] 
+        [ PathBodyDir (PathDirective ["read"] "true")
+        -- , PathBodyDir (PathDirective ["update"] "false")
+        , PathBodyFunc (FuncDef "z" [] "true")
+        , PathBodyDir (PathDirective ["create"] "false")
+        , PathBodyPath (PathDef [PathPartStatic "q"] [] [])
+        ])], "")
 
   describe "escape" $ do
     it "detects escaped chars" $

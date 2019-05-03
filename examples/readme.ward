@@ -1,7 +1,7 @@
 type User = {
   name: {first: string, last: string}, // inline child objects
-  friends: string[], // a list of strings
-  age: int,
+  friends: string[] // a list of strings
+  age: int, // commas are optional
   contact?: Phone | Email // a union type
   id: const string // will reject updates
 } 
@@ -10,7 +10,7 @@ type Email = string
 
 function isUser(userId) { 
   // return keyword optional
-  request.auth!=null && request.auth.uid == userId; 
+  request.auth!=null && request.auth.uid == userId; // semicolon is required
 }
 
 match /users/{userId} is User { 
@@ -18,5 +18,5 @@ match /users/{userId} is User {
   allow read: if isUser(userId);
   allow create: if isUser(userId);
   allow update: if isUser(userId);
-  allow delete: if isUser("admin");
+  allow delete: if isUser("admin"); // semicolon is required
 }

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 -- {-# LANGUAGE TypeSynonymInstances, OverlappingInstances #-}
 
 -- adapted from Monadic Parsing in Haskell
@@ -28,6 +29,7 @@ module Parser
 , manywith
 , somewith
 , oneOf
+, whileNot
 , apply
 , Parser
 , guard
@@ -130,6 +132,15 @@ string :: String -> Parser ()
 string "" = return ()
 string (c:cs) = do { char c; string cs; return () }
 
+whileNot :: Parser () -> Parser String
+whileNot p = many_ next
+  where next = do
+          z <- optional p
+          guard (z==Nothing)
+          getc
+        many_ p = do
+          v <- p
+          (v:) <$> (many_ p <|> return [])
 
 digit = sat isDigit
 lower = sat isLower

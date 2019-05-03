@@ -81,6 +81,11 @@ spec = do
       , " } " 
       ]) `shouldBe` Right ('3', " \n")
 
+  describe "whileNot" $ do
+    it "parses until a keyword" $ do
+      _apply (whileNot $ symbol "end") "123 hello, end" `shouldBe` Right ("123 hello,", " end")
+    it "parses alternatives until" $
+      _apply (whileNot $ symbol "end" <|> (char ';' >> return ())) "he llo;, end" `shouldBe` Right ("he llo", ";, end")
   describe "oneof" $ do
     it "parses one of" $ forAll (elements "hzu") $
       \c -> _apply (oneOf "hzu") (c:"hello") === Right (c, "hello")

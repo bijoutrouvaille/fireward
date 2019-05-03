@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module RuleParser 
 ( parseRules
 , apply
@@ -52,7 +53,6 @@ data PathBodyItem = PathBodyDir PathDirective
 
 data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
--- TopLevelType String [TypeRef]
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
 -- TypeNameRef name (Maybe array-size)
 data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeRef TypeDef deriving (Show, Eq)
@@ -63,7 +63,6 @@ data Field = Field
            , constant :: Bool
            } deriving (Show, Eq)
 
-           -- , constant: Bool
 
 _alpha = lower <|> upper
 _alphaNum = _alpha <|> digit
@@ -116,6 +115,10 @@ _funcBody = token $ do
   optional $ symbol ";"
   return . trim $ concat a
 
+_expr :: Parser () -> Parser String
+_expr terminator = do
+  let quotes = oneOf "'\"" >> return ()
+  trim <$> concat <$>  (many (_string <|> (whileNot (quotes <|> terminator))))
 
 _funcDef :: Parser FuncDef
 _funcDef = do
@@ -124,7 +127,8 @@ _funcDef = do
   params <- require ("function `"++name++"` is missing the parameter list") $ grouped "(" ")" paramList
   require ("function `"++name++"` is missing an opening `{`") $ symbol "{"
   optional $ symbol "return"
-  body <- _funcBody
+  body <- _expr $ oneOf ";}" >> return ()
+  optional $ symbol ";"
   require ("function `"++name++"` is missing a closing `}`") $ symbol "}"
   guardWith ("function `"++name++"` is missing a body") (length body > 0)
   return $ FuncDef name params (trim body)
@@ -201,15 +205,10 @@ _pathType :: Parser [TypeRef]
 _pathType = do
   symbol "is"
   refs <- token _typeRefs
-  -- guardWith "expected a path type" (length refs > 0)
-  -- guardWith "expected a path type" (refs /= [InlineTypeRef (TypeDef [])]) -- the above really does not work
   return refs
--- (symbol "is" >> (require "expected a path type" $ token _typeRefs)) <|> return []
 
-_expr :: [Char] -> Parser String
-_expr end = do
-  fmap concat . many $ _string <|> satS f
-  where f c = not . elem c $ concat [end, ";'\""]--c/=';' && c/='"' && c/='}' && c/='\''
+void :: Parser a -> Parser ()
+void p = p >> return ()
 
 _pathDir :: Parser PathDirective
 _pathDir = do
@@ -222,12 +221,17 @@ _pathDir = do
     , "create"
     , "update"
     , "delete" ]
+  guardWith "must provide at least one operation in a path directive" (length ops > 0)
   require "path directive is missing a `:`" $ symbol ":"
   optional $ symbol "if"
   optional space
-  body <- _expr "};" -- many $ sat (/=';') 
+  body <- _expr $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
   optional $ char ';'
   return $ PathDirective ops body
+
+_pathBodyFunc = PathBodyFunc <$> _funcDef
+_pathBodyPath = PathBodyPath <$> _path
+_pathBodyDir = PathBodyDir <$> _pathDir
 
 _path :: Parser PathDef
 _path = do
@@ -236,13 +240,10 @@ _path = do
   parts <- require "expected a path after `match`" $ token _pathParts
   className <- (_pathType <|> return [])
   require "expected a `{`" $ symbol "{"
-  body <- many (PathBodyPath <$> _path <|> PathBodyDir <$> _pathDir <|> PathBodyFunc <$> _funcDef)
+  body <- many $ _pathBodyDir <|> _pathBodyFunc <|> _pathBodyPath
   require "expected a closing `}`" $ symbol "}"
-  -- guardWith "expected a path type" (refs /= [InlineTypeRef (TypeDef [])]) -- the above really does not work
   return  $ PathDef parts className body
 
-
-  
 _topLevel = (TopLevelPath <$> _path) 
         <|> _topLevelType 
         <|> TopLevelFunc <$> _funcDef

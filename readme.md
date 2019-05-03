@@ -1,12 +1,22 @@
 # Fireward
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the client, if written in TypeScript. It also has a couple of nice features to elegantly express rules for certain common situations.
+A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the (TypeScript) client. It also has a couple of nice features to elegantly express rules for certain common situations.
 
 [![Mentioned in Awesome awesome-firebase](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/jthegedus/awesome-firebase)
 
 ## Discussion
 
+Questions, suggestions, etc.:
+
 https://groups.google.com/forum/#!forum/fireward
+
+## Feature Highlights
+
+- Very fast
+- Typed routes that convert to validation rule code.
+- `const` types that allow setting but prevent editing of individual fields
+- Tuple validation
+- Type unions
 
 ## Installation
 
@@ -63,7 +73,8 @@ Currently, it is an error to do so yourself.
 type User = {
   name: {first: string, last: string}, // inline child objects
   friends: string[], // a list of strings
-  age: int,
+  age: int, // commas are optional
+  verified: bool
   contact?: Phone | Email // a union type
   uid: const string // const prevents editing this field later
 } 
@@ -76,7 +87,7 @@ function isUser(userId) {
 }
 
 match /users/{userId} is User { 
-  // read, write, create, update, and delete conditions are allowed
+  // read, write, create, update, list, get and delete conditions are allowed
   allow read: if isUser(userId);
   allow create: if isUser(userId);
   allow update: if isUser(userId);
@@ -91,8 +102,8 @@ match /users/{userId} is User {
 
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
 - `int` and `float` map to TypeScript `number`
-- `timestamp` maps to `{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`).
 - `bool` in rules maps to TS `boolean`
+- `timestamp` maps to `{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`).
 
 #### Unions
 
