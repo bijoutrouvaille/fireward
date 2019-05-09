@@ -6,7 +6,7 @@ homepage:            https://github.com/trouvaille/fireward#readme
 license:             MIT
 license-file:        LICENSE
 author:              Bijou Trouvaille
-maintainer:          example@example.com
+maintainer:          github.com/bijoutrouvaille
 copyright:           2017 Bijou Trouvaille
 category:            Web
 build-type:          Simple
