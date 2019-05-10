@@ -28,7 +28,7 @@ Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binar
 
 The project is easy to compile for most platforms, requires no knowledge of Haskell, and is completed in two simple steps:
 
-1. Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README/) for your platform.
+1. Download the [Haskell Stack tool](https://docs.haskellstack.org/en/stable/README/) for your platform and put it somewhere, e.g. in your `PATH`.
 2. `cd` into the project directory and run `stack install`.
 
 Afterwards, everything is automatic. Stack will download and install the compiler and dependencies and put the `fireward` executable into the path given by `stack path --local-bin` command. You may want to add that path to your `PATH` variable. The download and build may take 30±20 minutes.
