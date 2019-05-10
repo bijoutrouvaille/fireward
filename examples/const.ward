@@ -1,6 +1,6 @@
 type User = {
   id: const string,
-  name: Name
+  name: const Name // will currently do nothing
 }
 type Name = {
   last: const string,
