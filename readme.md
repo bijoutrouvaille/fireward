@@ -1,6 +1,6 @@
 # Fireward
 
-A language and compiler for writing Firestore security rules. The compiler also generates TypeScript interfaces. The main idea is to be able to add idiomatic type validation to routes, as if they had strict type-checking. It also has a couple of nice features to elegantly express rules for certain common situations.
+A language and compiler for writing Firestore security rules. The compiler also generates TypeScript interfaces. The main idea is to be able to add idiomatic type validation to routes, as if they had strict type-checking. The language also has some nice features to elegantly express rules for certain common and otherwise cumbersome situations.
 
 [![Mentioned in Awesome awesome-firebase](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/jthegedus/awesome-firebase)
 
