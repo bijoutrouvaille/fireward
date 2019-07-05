@@ -18,6 +18,9 @@ library
   exposed-modules:     Parser
                        , RuleParser
                        , RuleGenerator
+                       , Combinators
+                       , ExprParser
+                       , ExprPrinter
                        , OptionParser
                        , TSGenerator
                        , Loc

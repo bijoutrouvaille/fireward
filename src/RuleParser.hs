@@ -29,6 +29,7 @@ import Parser
 import Control.Applicative (optional)
 import Data.Char (isSpace)
 import Text.Read (readMaybe)
+import Combinators
 
 data TopLevel = TopLevelType String [TypeRef]
               | TopLevelPath PathDef
@@ -64,49 +65,11 @@ data Field = Field
            } deriving (Show, Eq)
 
 
-_alpha = lower <|> upper
-_alphaNum = _alpha <|> digit
-_varStart = _alpha <|> oneOf "_$"
-_varName = do
-  c <- _varStart
-  rest <- many (_alphaNum <|> oneOf "_$")
-  return (c:rest)
-
-separated = manywith . symbol
-
-escape :: Char -> Parser String
-escape c = do
-  char '\\'
-  r <- sat (==c)
-  return ('\\':[r])
 
 
 {-
 - str = "(all - {"})*"
 -}
-_getWhile p = many $ sat p
-_stringD :: Char -> Parser String
-_stringD delim = do
-  char delim
-  a <- many $ (_const ('\\':[delim]) <|> (:[]) <$> sat (/=delim))
-  char delim
-  return $ concat (([delim]:a) ++ [[delim]])
-
-_string :: Parser String
-_string = _stringD '"' <|> _stringD '\''
-
-readDef :: (Read a) => a -> String -> a
-readDef def s = case reads s of
-              [(x, "")] -> x
-              _ -> def
-
-_natural :: Parser Int
-_natural = do  -- a natural number
-  str <- some digit
-  let n = readDef (-1) str
-  guardWith "expected an integer" (n /= -1)
-  return n
-
 
 _funcBody :: Parser String
 _funcBody = token $ do
@@ -114,6 +77,8 @@ _funcBody = token $ do
   a <- many $ _string <|> satS notDone
   optional $ symbol ";"
   return . trim $ concat a
+
+      
 
 _expr :: Parser () -> Parser String
 _expr terminator = do
@@ -139,10 +104,6 @@ _typeDef = grouped "{" "}" $ do
   members <- many _field
   return $ TypeDef members
   
-_terminated parser terminator = do
-  v <- parser
-  terminator
-  return v
 _typeRefs :: Parser [TypeRef]
 _typeRefs = manywith (symbol "|") ( 
   (withComma _singleTypeName)
@@ -206,9 +167,6 @@ _pathType = do
   symbol "is"
   refs <- token _typeRefs
   return refs
-
-void :: Parser a -> Parser ()
-void p = p >> return ()
 
 _pathDir :: Parser PathDirective
 _pathDir = do
