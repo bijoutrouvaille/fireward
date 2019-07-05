@@ -1,0 +1,7 @@
+type Name = { first: string, last?: string }
+type User = { name: Name | string }
+
+match /users/{id} is User {
+  allow read: true;
+  allow write: false;
+}

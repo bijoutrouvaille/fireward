@@ -1,6 +1,6 @@
 # Fireward
 
-A successor to Firebase Bolt for writing Firestore rules. It also generates TypeScript typings. The idea is to be able to add automatic type validation to routes, both in the rules and on the (TypeScript) client. It also has a couple of nice features to elegantly express rules for certain common situations.
+A language and compiler for writing Firestore security rules. The compiler also generates TypeScript interfaces. The main idea is to be able to add idiomatic type validation to routes, as if they had strict type-checking. It also has a couple of nice features to elegantly express rules for certain common situations.
 
 [![Mentioned in Awesome awesome-firebase](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/jthegedus/awesome-firebase)
 
@@ -12,7 +12,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 ## Feature Highlights
 
-- Very fast
+- Very fast compilation
 - Typed routes that convert to validation rule code.
 - `const` types that allow setting but prevent editing of individual fields
 - Tuple validation
@@ -67,31 +67,42 @@ service cloud.firestore {
 ```
 Currently, it is an error to do so yourself.
 
+### Simple Example
+
+```
+type Name = { first: string, last?: string }
+type User = { name: Name | string }
+
+match /users/{id} is User {
+  allow read: true;
+  allow write: false;
+}
+```
+
 ### Complete Example
 
 ```
 type User = {
-  name: {first: string, last: string}, // inline child objects
-  friends: string[], // a list of strings
-  age: int, // commas are optional
+  name: { first: string, last: string }, // inline nested objects
+  friends: string[], // a list of strings (string type not validated)
+  tags: string[4], // a list of strings, max size 4 (string type IS validated)
+  age?: int, // optional type
   verified: bool
-  contact?: Phone | Email // a union type
+  contact: Phone | Email // a union type
   uid: const string // const prevents editing this field later
 } 
-type Phone = {number: int, country: int}
+type Phone = { number: int, country: int }
 type Email = string
 
-function isUser(userId) { 
+function isLoggedInUser(userId) { 
   // return keyword optional
-  request.auth!=null && request.auth.uid == userId; 
+  return request.auth!=null && request.auth.uid == userId; 
 }
 
 match /users/{userId} is User { 
   // read, write, create, update, list, get and delete conditions are allowed
-  allow read: if isUser(userId);
-  allow create: if isUser(userId);
-  allow update: if isUser(userId);
-  allow delete: if isUser("admin");
+  allow read, create, update: if isLoggedInUser(userId);
+  allow delete: false;
 }
 
 ```
