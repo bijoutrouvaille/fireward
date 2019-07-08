@@ -6,6 +6,8 @@ module ExprPrinter (
 import ExprParser
 import Data.List (intercalate)
 
+commajoin = intercalate ", "
+
 printExpr :: Expr -> String
 printExpr (ExprGrp expr) = "(" ++ printExpr expr ++ ")"
 printExpr (ExprBin op left right) = printExpr left ++ " " ++ show op ++ " " ++ printExpr right
@@ -18,5 +20,12 @@ printExpr (ExprInt num) = show num
 printExpr (ExprBool True) = "true"
 printExpr (ExprBool False) = "false"
 printExpr (ExprNull) = "null"
+printExpr (ExprIndexed e i r) = printExpr e ++ "[" ++ printExpr i ++ printIxRange r ++ "]"
+printExpr (ExprPath p) = "(" ++ p ++ ")"
+printExpr (ExprList es) = "[" ++ (commajoin [ printExpr e | e <- es ]) ++ "]"
+printExpr (ExprMap kvs) = "{ " ++ (commajoin [ printKeyVal kv | kv <- kvs]) ++ " }"
 
+printKeyVal (s, e) = s ++ ": " ++ printExpr e
+printIxRange Nothing = ""
+printIxRange (Just r) = ":" ++ printExpr r
 printArr sep es = intercalate sep [ printExpr e | e <- es ]

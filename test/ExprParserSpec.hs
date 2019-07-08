@@ -13,9 +13,14 @@ import ExprPrinter
 
 p = printExpr
 
+pos c l = show c ++ ":" ++ show l
+etxt e c l = e ++ " " ++ pos c l
+err (Just (e, c, l)) = etxt e c l
+err Nothing = "Nothing"
+
 ex e = print tree where
            tree = parse e
-           print (Left err) = show err
+           print (Left e) = err e
            print (Right x) = printExpr x
 
 parse s = d $ apply expr s where
@@ -43,7 +48,7 @@ spec = do
     it "parses an inner group" $
       ex " 1 +(2) + 3" `shouldBe`  "1 + (2) + 3"
     it "parses a strict eq" $
-      ex "3===4" `shouldBe` "3 === 4"
+      ex "3===4" `shouldBe` "symbol === not allowed. 0:4"
     it "parses a dot access" $
       ex "hello.world == 3" `shouldBe` "hello.world == 3" 
     it "parses a function call with 1 param" $
@@ -60,6 +65,48 @@ spec = do
       ex "f(g(a || a.b.c))" `shouldBe` "f(g(a || a.b.c))" 
     it "parses a function call with 1 func param" $
       ex "f(g())" `shouldBe` "f(g())" 
+    it "parses a unary op bang" $
+      ex "!3 || 4" `shouldBe` "!3 || 4"
+    it "parses a unary op +" $
+      ex "+3 + +4" `shouldBe` "+3 + +4" 
+    it "errs on an unexpected operator ?" $
+      ex "3 + ?4" `shouldBe` "could not parse right side of operator + 0:3"
+    it "fails on bad operators" $
+      ex "4++" `shouldBe` "symbol ++ not allowed. 0:3"
+    it "+++ fails" $
+      ex "+++4" `shouldBe` "symbol ++ not allowed. 0:2" 
+    it "parses a simple index" $
+      ex "x[4]" `shouldBe` "x[4]"
+    it "parses a complex index" $
+      ex "a.b.c(hello)[a.b || !c.d + 5]" `shouldBe` "a.b.c(hello)[a.b || !c.d + 5]"
+    it "parses an index inside index" $
+      ex "x[f + x[4]]" `shouldBe` "x[f + x[4]]"
+    it "errs on missing index bracket" $
+      ex "f(x[3)" `shouldBe` "index missing closing bracket `]` 0:5"
+    it "parses index range" $
+      ex "x[4:7]" `shouldBe` "x[4:7]"
+    it "parses expr index range" $
+      ex "x[f(a.b) : g(p( n + 7))]" `shouldBe` "x[f(a.b):g(p(n + 7))]"
+    it "parses a simple path" $
+      ex "(/docs)" `shouldBe` "(/docs)"
+    it "parses a path with variable" $ 
+      ex "(/docs/$(abc)/123)" `shouldBe` "(/docs/$(abc)/123)"
+    it "parses a number list" $
+      ex "[ 1, 2  , 3 ]" `shouldBe`  "[1, 2, 3]"
+    it "parses an empty list" $
+      ex "[]" `shouldBe`  "[]"
+    it "parses an expr list" $
+      ex "[a ||b, true && f() || 5]" `shouldBe`  "[a || b, true && f() || 5]"
+    it "fails on missing list bracket" $
+      ex "f(f.g([ 1, 2))" `shouldBe` "list missing closing bracket `]` 0:12"
+    it "parses a map literal" $
+      ex "hello.map({ \"a\": 3})" `shouldBe` "hello.map({ \"a\": 3 })" 
+    it "parses a nested map literal" $
+      ex "hello.map({ \"a\": { \"bac\": a.b.c()} })" `shouldBe` "hello.map({ \"a\": { \"bac\": a.b.c() } })" 
+    it "parses a nested map literal" $
+      ex "hello.map({ a: { bac: a.b.c()} })[123:123]" `shouldBe` "hello.map({ \"a\": { \"bac\": a.b.c() } })[123:123]" 
+
+
 
         
     

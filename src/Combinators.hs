@@ -12,14 +12,19 @@ module Combinators (
   _natural,
   _float,
   void,
-  _terminated
+  altr,
+  _terminated,
+  _concat
 ) where
 
 import Parser
-import Control.Applicative (optional)
+import Control.Applicative (optional, empty)
 import Data.Char (isSpace)
 import Text.Read (readMaybe)
+import Data.List (intercalate)
 
+_concat :: [Parser String] -> String -> Parser String
+_concat ps sep = intercalate sep <$> sequence ps
 
 _alpha = lower <|> upper
 _alphaNum = _alpha <|> digit
@@ -38,13 +43,18 @@ escape c = do
   r <- sat (==c)
   return ('\\':[r])
 
+altr :: [Parser a] -> Parser a
+altr [] = empty
+altr (p:ps) = p <|> altr ps
 
 _getWhile p = many $ sat p
+
+
 _stringD :: Char -> Parser String
 _stringD delim = do
   char delim
   a <- many $ (_const ('\\':[delim]) <|> (:[]) <$> sat (/=delim))
-  char delim
+  require "unterminated string" $ char delim
   return $ concat (([delim]:a) ++ [[delim]])
 
 _string :: Parser String
