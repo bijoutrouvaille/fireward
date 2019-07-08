@@ -82,6 +82,8 @@ match /users/{id} is User {
 ### Complete Example
 
 ```
+rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
+
 type User = {
   name: { first: string, last: string }, // inline nested objects
   friends: string[], // a list of strings (string type not validated)

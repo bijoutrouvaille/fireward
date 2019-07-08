@@ -18,17 +18,6 @@ import System.Exit (exitWith, ExitCode(..))
 import Data.List (intercalate)
 import Data.Char (isSpace)
 
-shift n = take (n*2) $ repeat ' '
-indentBy n = unlines . fmap (shift n ++) . lines
-
-wrapRules r = intercalate "\n" 
-  [ "service cloud.firestore {"
-  , "  match /databases/{database}/documents {"
-  , ""
-  , indentBy 2 r
-  , "  }"
-  , "}"
-  ]
 
 out output (Left e) = hPutStrLn stderr e
 out output (Right v) = output v
@@ -36,7 +25,7 @@ out output (Right v) = output v
 generate lang
   | lang == "typescript" = TSGenerator.generate
   | lang == "ts" = TSGenerator.generate
-  | lang == "rules" = fmap wrapRules . RuleGenerator.generate 
+  | lang == "rules" = RuleGenerator.generate True
   | otherwise = const . Left $ 
       "Specified language \""++lang++"\"not recognized."
 

@@ -238,5 +238,9 @@ spec = do
           PathBodyFunc (FuncDef "qqq" ["a","b","c"] "123")])
         ])
       ],"")
+  describe "_topLevelOptVar" $ do
+    it "parses" $
+      _parse "fff = '2'" `shouldBe` Right ([ TopLevelOpt "fff" "'2'"], "")
+
 
 

@@ -1,3 +1,5 @@
+rules_version = '2'
+
 type User = {
   name: { first: string, last: string }, // inline nested objects
   friends: string[], // a list of strings (string type not validated)
@@ -18,5 +20,5 @@ function isLoggedInUser(userId) {
 match /users/{userId} is User { 
   // read, write, create, update, list, get and delete conditions are allowed
   allow read, create, update: if isLoggedInUser(userId);
-  allow delete: false;
+  allow delete: isLoggedInUser('admin');
 }

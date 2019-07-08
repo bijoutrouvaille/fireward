@@ -38,15 +38,21 @@ surround b e s = concat [b,s,e]
 printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 
 -- the main exported function. calls the `gen` function internally.
-generate :: String -> Either String String
-generate source = q tree
+generate :: Bool -> String -> Either String String
+generate wrap source = q tree
   where
+    finalize :: [TopLevel] -> [String] -> String
+    finalize tops lines = joinLines $ if wrap then optVars tops ++ wrapRules lines else lines
+    optVar (TopLevelOpt name val) = name ++ " = " ++ val ++ ";"
+    optVar _ = ""
+    optVars tops = optVar <$> tops 
     tree :: ParserResult [TopLevel]-- [([TopLevel], String)]
     tree = parseRules source
     q :: ParserResult [TopLevel] -> Either String String
-    q (Right (tops, unparsed, l, c)) = if length unparsed > 0
-                                          then Left ("Could not parse on\n  on " ++ printLoc l c)
-                                          else Right . trim . joinLines $ gen <$> tops
+    q (Right (tops, unparsed, l, c)) = 
+      if length unparsed > 0
+         then Left ("Could not parse on\n  on " ++ printLoc l c)
+         else Right . finalize tops $ gen <$> tops
     q (Left (Just (error, l, c))) = Left (error ++ "\n  on " ++ printLoc l c)
     q (Left Nothing) = Left ("Unexpected parser error.")
 
@@ -59,6 +65,22 @@ funcBlock ind (FuncDef name params body) = concat
   where
     body' = trim . unlines $ (indent (ind + 2) ++) <$> lines body
 
+
+wrapRules :: [String] -> [String]
+wrapRules r = 
+  [ "service cloud.firestore {"
+  , "  match /databases/{database}/documents {"
+  , ""
+  ]
+  ++ indented ++
+  [ ""
+  , "  }"
+  , "}"
+  ]
+  where 
+    indented = indentLinesBy2 r :: [String]
+    indentLinesBy2 = fmap (shift 2 ++)
+    shift n = take (n*2) $ repeat ' '
 
 data FuncParam = FuncParam (Maybe String) String
 -- the main recursive function to generate the type function
@@ -144,6 +166,7 @@ typeFunc name refs =
     
 
 gen :: TopLevel -> String
+gen (TopLevelOpt name val) = "" -- this will be generated after wrapping the code
 gen (TopLevelFunc def) = funcBlock 0 def
 gen (TopLevelType name refs) = typeFunc name refs
 gen (TopLevelPath def) = pathBlock 0 def

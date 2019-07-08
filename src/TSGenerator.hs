@@ -35,7 +35,7 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}")
+  , ("timestamp", "Date|{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}")
   , ("bool", "boolean")
   , ("null", "null")
   ]

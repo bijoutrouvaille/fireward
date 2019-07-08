@@ -29,7 +29,7 @@ gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
 r = ("Right " ++) . repA
 ru = r . trim . unlines
-timestamp = "{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}"
+timestamp = "Date|{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}"
                  
 
 spec :: Spec

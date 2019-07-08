@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module RuleParser 
 ( parseRules
 , apply
@@ -13,6 +12,7 @@ module RuleParser
 , _funcDef
 , _funcBody
 , _string
+, _topLevelOptVar
 , escape
 , FuncDef (..)
 , TypeDef (..)
@@ -34,6 +34,7 @@ import Combinators
 data TopLevel = TopLevelType String [TypeRef]
               | TopLevelPath PathDef
               | TopLevelFunc FuncDef
+              | TopLevelOpt String String
   deriving (Show, Eq)
 
 type PathOp = String
@@ -70,6 +71,16 @@ data Field = Field
 {-
 - str = "(all - {"})*"
 -}
+
+_topLevelOptVar = do
+  name <- token _var
+  symbol "="
+  optional space
+  val <- require "configuration option value is not provided" $ _string <|> some digit
+  optional space
+  optional $ symbol ";"
+  return $ TopLevelOpt name val
+  where _var = _concat [ some $ _alpha <|> oneOf "_", many $ _alphaNum <|> oneOf "_" ] ""
 
 _funcBody :: Parser String
 _funcBody = token $ do
@@ -202,7 +213,8 @@ _path = do
   require "expected a closing `}`" $ symbol "}"
   return  $ PathDef parts className body
 
-_topLevel = (TopLevelPath <$> _path) 
+_topLevel = _topLevelOptVar
+        <|> (TopLevelPath <$> _path) 
         <|> _topLevelType 
         <|> TopLevelFunc <$> _funcDef
 
