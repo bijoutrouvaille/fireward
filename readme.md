@@ -35,12 +35,14 @@ Afterwards, everything is automatic. Stack will download and install the compile
 
 #### Method 3: Use docker image
 
-Generate Firestore rules
+Install Docker, then use like this:
+
+To generate Firestore rules
 ```bash
 cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
 ```
 
-Generate TypeScript rules
+To generate TypeScript rules
 ```bash
 cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
 ```
