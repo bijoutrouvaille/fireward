@@ -35,12 +35,12 @@ Afterwards, everything is automatic. Stack will download and install the compile
 
 #### Method 3: Use docker image
 
-Example use to generate firebase rules
+Generate firebase rules
 ```bash
 cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
 ```
 
-Example use to generate typescript rules
+Generate typescript rules
 ```bash
 cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
 ```
