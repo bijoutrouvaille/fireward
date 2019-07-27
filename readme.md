@@ -37,7 +37,7 @@ Afterwards, everything is automatic. Stack will download and install the compile
 
 Example use to generate firebase rules
 ```bash
-cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward > generated.txt
+cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
 ```
 
 Example use to generate typescript rules
