@@ -39,12 +39,12 @@ Install Docker, then use like this:
 
 To generate Firestore rules
 ```bash
-cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
+cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
 ```
 
 To generate TypeScript rules
 ```bash
-cat definitions.ward | docker run --rm -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
+cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
 ```
 
 
