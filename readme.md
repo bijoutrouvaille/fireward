@@ -107,6 +107,7 @@ type User = {
   verified: bool
   contact: Phone | Email // a union type
   uid: const string // const prevents editing this field later
+  permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
 } 
 type Phone = { number: int, country: int }
 type Email = string
