@@ -33,6 +33,21 @@ The project is easy to compile for most platforms, requires no knowledge of Hask
 
 Afterwards, everything is automatic. Stack will download and install the compiler and dependencies and put the `fireward` executable into the path given by `stack path --local-bin` command. You may want to add that path to your `PATH` variable. The automatic download and build process will take about 5 minutes, if you have decent bandwidth and processing power.
 
+#### Method 3: Use docker image
+
+Install Docker, then use like this:
+
+To generate Firestore rules
+```bash
+cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fireward > generated.rules
+```
+
+To generate TypeScript rules
+```bash
+cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
+```
+
+
 ## Usage
 
 ```
