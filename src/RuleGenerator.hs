@@ -97,7 +97,7 @@ typeFunc name refs =
     key (Field _ n _ _) = n
     req = filter isReq
     primitives :: [String]
-    primitives = words "list string bool timestamp null int float"
+    primitives = words "list string bool timestamp null int float map"
     addr :: FuncParam -> String
     addr (FuncParam Nothing n) = n
     addr (FuncParam (Just p) n) = p ++ "." ++ n

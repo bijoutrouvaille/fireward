@@ -38,6 +38,7 @@ natives =
   , ("timestamp", "Date|{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}")
   , ("bool", "boolean")
   , ("null", "null")
+  , ("map", "Record<string, unknown>")
   ]
 
 

@@ -4,6 +4,7 @@ type UserAccount = {
 type User = {
   name: {first:string, last?: string}
   account: UserAccount
+  permissions: map
 }
 
 function validEmail(resource) {
