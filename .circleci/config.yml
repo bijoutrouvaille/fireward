@@ -16,6 +16,7 @@ orbs:
 
 jobs:
   build-windows:
+    resource_class: small
     executor:
       name: win/vs2019
       shell: bash.exe
