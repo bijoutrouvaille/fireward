@@ -22,6 +22,7 @@ import System.IO
   , hPutStrLn
   , stderr
   , stdin
+  , stdout
   )
 import System.Exit (exitWith, ExitCode(..))
 import Paths_fireward (version)
@@ -75,7 +76,7 @@ options =
     , Option "V" ["version"]
         (NoArg
             (\_ -> do
-                hPutStrLn stderr ("Version " ++ showVersion version)
+                hPutStrLn stdout (showVersion version)
                 exitWith ExitSuccess))
         "Print version"
  

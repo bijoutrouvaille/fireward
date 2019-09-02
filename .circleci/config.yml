@@ -1,0 +1,83 @@
+# version: 2.1
+#
+# orbs:
+#   win: circleci/windows@1.0.0
+#
+# jobs:
+#   build:
+#     executor: win/vs2019
+#     steps:
+#       - checkout
+#       - run: stack --help
+version: 2.1
+
+orbs:
+  win: circleci/windows@1.0.0
+
+jobs:
+  build-windows:
+    executor:
+      name: win/vs2019
+      shell: bash.exe
+    steps:
+      - checkout
+      - run:
+          - echo 'Building windows'
+          - curl https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
+          - unzip stackwin.zip
+          - cp stackwin/stack.exe "$APPDATA/local/bin"
+          - stack install
+          - mkdir -p /tmp/workspace/build
+          - stack.exe test
+          - stack.exe build
+          - cp $(stack path --dist-dir)/build/fireward/fireward.exe /tmp/workspace/build/fireward.exe
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - build
+
+  build-macos:
+    macos:
+       xcode: 11.0.0
+    steps:
+      - checkout
+      - run: 
+        - echo 'building mac OS'
+        - curl -sSL https://get.haskellstack.org/ | sh
+        - stack test
+        - stack build
+        - mkdir -p /tmp/workspace/build
+        - cp $(stack path --dist-dir)/build/fireward/fireward /tmp/workspace/build/fireward-mac
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - build
+  build-linux:
+    requires:
+      - build-windows
+      - build-macos
+    docker:
+      - image: fpco/stack-build:lts
+    steps:
+      - checkout
+      - run: 
+        - echo 'building linux'
+        - curl -sSL https://get.haskellstack.org/ | sh
+        - stack test
+        - stack build
+        - stack install
+        - mkdir -p /tmp/workspace/build
+        - cp $(stack path --dist-dir)/build/fireward/fireward /tmp/workspace/build/fireward-linux
+        - cp /tmp/workspace/build/* ./npm-bin/
+        - cd npm-bin
+        - npm version "$(firebase -V)"
+        - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+        - npm publish
+      - attach_workspace:
+          at: /tmp/workspace
+workflows:
+  build-and-deploy:
+    jobs:
+    - build-windows
+    - build-macos
+    - build-linux 
