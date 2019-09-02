@@ -53,9 +53,6 @@ jobs:
           paths:
             - build
   build-linux:
-    requires:
-      - build-windows
-      - build-macos
     docker:
       - image: fpco/stack-build:lts
     steps:
@@ -80,4 +77,8 @@ workflows:
     jobs:
     - build-windows
     - build-macos
-    - build-linux 
+    - build-linux:
+        requires:
+          - build-windows
+          - build-macos
+
