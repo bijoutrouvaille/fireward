@@ -66,6 +66,9 @@ deploy:
   file: $(stack path --local-bin)/fireward$OSEXT
   on:
     repo: bijoutrouvaille/fireward
+    branches:
+      only:
+        - relesases
 
 git:
   quiet: true
