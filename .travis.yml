@@ -11,7 +11,7 @@ cache:
   - "$TRAVIS_BUILD_DIR\\.stack-work"
 branches:
   only:
-  - releases
+  - master
 matrix:
   include:
   - env: BUILD=stack ARGS="" OSEXT=".exe"
@@ -68,9 +68,8 @@ deploy:
   file: $(stack path --local-bin)/fireward$OSEXT
   on:
     repo: bijoutrouvaille/fireward
-    branches:
-      only:
-        - releases
+    tags: true
+    all_branches: true
 
 git:
   quiet: true
