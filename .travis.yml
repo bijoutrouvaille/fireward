@@ -7,6 +7,8 @@ cache:
   - "$TRAVIS_BUILD_DIR/.stack-work"
   - "$TRAVIS_BUILD_DIR\\.stack-work"
   - "$APPDATA\\Roaming\\stack"
+  - "$APPDATA\\Local\\Programs\\stack"
+  - "$TRAVIS_BUILD_DIR\\.stack-work"
 branches:
   only:
   - releases
@@ -68,7 +70,7 @@ deploy:
     repo: bijoutrouvaille/fireward
     branches:
       only:
-        - relesases
+        - releases
 
 git:
   quiet: true
