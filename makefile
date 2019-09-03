@@ -30,7 +30,8 @@ install:
 
 tag:
 	stack build	
-	git tag "$(stack exec fireward -- -V)"
+	stack test
+	git tag "$(shell stack exec fireward -- -V)"
 
 release:
 	make tag
