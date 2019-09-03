@@ -7,7 +7,7 @@ cache:
   - "$TRAVIS_BUILD_DIR/.stack-work"
 branches:
   only:
-  - releases
+  - master
 matrix:
   include:
   - env: BUILD=stack ARGS=""
