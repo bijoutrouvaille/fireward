@@ -36,6 +36,8 @@ before_install:
     cd stackwin 
     travis_retry curl -L https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
     unzip stackwin.zip
+    mkdir -p "$APPDATA\\local\\bin"
+    export PATH="$APPDATA\\local\\bin":$PATH
     cp stack.exe "$APPDATA\\local\\bin"
     cd ..
   else
