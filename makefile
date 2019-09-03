@@ -31,8 +31,8 @@ install:
 tag:
 	stack build	
 	stack test
-	git tag "$(shell stack exec fireward -- -V)"
+	git tag -a "$(shell stack exec fireward -- -V)"
 
 release:
 	make tag
-	git push origin master
+	git push origin master --follow-tags
