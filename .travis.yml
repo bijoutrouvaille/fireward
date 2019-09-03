@@ -1,0 +1,68 @@
+language: node_js
+cache:
+  directories:
+  - "$HOME/.ghc"
+  - "$HOME/.cabal"
+  - "$HOME/.stack"
+  - "$TRAVIS_BUILD_DIR/.stack-work"
+branches:
+  only:
+  - releases
+matrix:
+  include:
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default osx"
+    os: osx
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default windows"
+    os: windows
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default"
+    addons:
+      apt:
+        packages:
+        - libgmp-dev
+
+before_install:
+- unset CC
+- CABALARGS=""
+- if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
+- export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
+- mkdir -p ~/.local/bin
+- |
+  if [ "$TRAVIS_OS_NAME" = "osx" ]
+  then
+    travis_retry curl --insecure -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+  elif [ "$TRAVIS_OS_NAME" = "windows" ]
+  then
+    curl https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
+    unzip stackwin.zip
+    cp stackwin/stack.exe "$APPDATA/local/bin"
+  else
+    travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  fi
+
+install:
+- export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
+
+script:
+- stack --no-terminal install --bench --no-run-benchmarks --haddock --no-haddock-deps
+
+before_deploy:
+- git config --local user.name "bijoutrouvaille"
+- git config --local user.email "bijoutrouvaille+oss@gmail.com"
+- export TRAVIS_TAG=${TRAVIS_TAG:-$TRAVIS_OS_NAME-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+- git tag $TRAVIS_TAG
+
+deploy:
+  provider: releases
+  api_key:
+    secure: ltA1aV0OlIHc6Hv5YaCATYGz6+vT43L/RU2tS8oWCy38fTjesPUz7KozjOg4FOghapGOq9hF3h3kAELIK3XfF/gSzN/O93NRwqT8SRJgzUwDumj8UQDrZFwiUK5f62wuPKuahkES+70EJrg0ZwcYnq+CkGAMo+N3y5uJYxlhU7v57gpnPIlbTK/afoFBbF6HTJkVxd8QZD04bn5hU6SkU1Y3bLl57RTGrzcsvr1In8p7ViOh4I0EPMZy3xUrmP+wNiv0XOt2CqgXEl526q5w0mdRVpcefxt2z0bxFoLYAXBPj6EwmlRI+Ogv14FNXVtTrqP43A8SoR7sXo1+dEQNxLvmIoc6sLhqXDuDdH9/CY/NuifV1gOtCBJTPZ11DAaJsDOPZY1KYRSN5ZiXfk1xn/hBIjXlIo5lm9EoPmG0BZmcP49V34x+4as4/9KMo7tQFTnf6+ZOnQs/aa98SG0RxeojMF908vtfwj1AXJqTXGRtv020oL2UOVNHiyGHIgWGGnEm+Bq6aIvnX3DDoCk9iDOug0y9zl2h/bo0nxo67tQvLDwHEN2JcsKsUIFc3clvPBQSHX6HThkxvKzrWM1FEAVgGMD4tcby8SbL7S1rxEPuMUA6SpLNNiFyy3SKBd0zZV2BGEE/oIjSxpwn4pAQ/jG8JjM9XCpzBn/ZyO6PSRE=
+  file_glob: true
+  file: $(stack path --local-bin)/fireward*
+  on:
+    repo: bijoutrouvaille/fireward
+
+git:
+  quiet: true
+  depth: 1

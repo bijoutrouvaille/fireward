@@ -60,4 +60,4 @@ test-suite fireward-test
 
 source-repository head
   type:     git
-  location: https://github.com/bijoutrouvaille/firedoor
+  location: https://github.com/bijoutrouvaille/fireward
