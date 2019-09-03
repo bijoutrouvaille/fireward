@@ -28,10 +28,11 @@ LOCAL_PATH:=$(shell stack path --local-bin)
 install: 
 	stack install && cp $(LOCAL_PATH)/$(EXEC) $(prefix)/
 
+VERSION=$(shell stack exec fireward -- -V)
 tag:
 	stack build	
 	stack test
-	git tag -a "$(shell stack exec fireward -- -V)"
+	git tag -a "$(VERSION)"
 
 release:
 	make tag
