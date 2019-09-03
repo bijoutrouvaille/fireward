@@ -6,23 +6,24 @@ cache:
   - "$HOME/.stack"
   - "$TRAVIS_BUILD_DIR/.stack-work"
   - "$TRAVIS_BUILD_DIR\\.stack-work"
+  - "$APPDATA\\Roaming\\stack"
 branches:
   only:
-  - master
+  - releases
 matrix:
   include:
   - env: BUILD=stack ARGS="" OSEXT=".exe"
     compiler: ": #stack default windows"
     os: windows
-  # - env: BUILD=stack ARGS=""
-  #   compiler: ": #stack default osx"
-  #   os: osx
-  # - env: BUILD=stack ARGS=""
-  #   compiler: ": #stack default"
-  #   addons:
-  #     apt:
-  #       packages:
-  #       - libgmp-dev
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default osx"
+    os: osx
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default"
+    addons:
+      apt:
+        packages:
+        - libgmp-dev
 
 before_install:
 - unset CC
@@ -40,6 +41,7 @@ before_install:
     mkdir -p "$APPDATA\\local\\bin"
     export PATH="$APPDATA\\local\\bin":$PATH
     cp stack.exe "$APPDATA\\local\\bin"
+    stack path
     cd ..
   else
     travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
