@@ -20,7 +20,7 @@ cache:
 # - export OSTAG="$TRAVIS_OS_NAME-$TRAVIS_TAG"
 # - [ -n "$TRAVIS_TAG" ] && git tag $OSTAG
 
-stage: github
+# stage: github
 
 
 matrix:
@@ -83,9 +83,9 @@ jobs:
     script:
       - |
         cd npm-bin
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-linux.tar | tar x > fireward-linux
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-osx.tar | tar x > fireward-osx
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-windows.tar | tar x > fireward.exe
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-linux.tar | tar x > fireward-linux
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-osx.tar | tar x > fireward-osx
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-windows.tar | tar x > fireward.exe
         npm version "$TRAVIS_TAG"
         echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
         npm publish
@@ -94,7 +94,8 @@ jobs:
 
 
 stages:
-  - github
+  # - github
+  - test
   - npmjs
 
 git:
