@@ -2,8 +2,7 @@
 
 stack --no-terminal install --bench --no-run-benchmarks 
 if [ "$TRAVIS_OS_NAME" = "windows" ]; then
-  tar --force-local -cf "$(stack path --local-bin)\\${DEPLOY_FILE}.tar" "$(stack path --local-bin)\\fireward.exe"
+  cp "$(stack path --local-bin)\\fireward.exe" "$(stack path --local-bin)\\${DEPLOY_FILE}" 
 else
-  tar -cf "$(stack path --local-bin)/${DEPLOY_FILE}.tar" "$(stack path --local-bin)/fireward"
+  cp "$(stack path --local-bin)\\fireward" "$(stack path --local-bin)\\${DEPLOY_FILE}"
 fi
-# zip $(stack path --local-bin)/${DEPLOY_FILE} $(stack path --local-bin)/fireward$OSEXT 

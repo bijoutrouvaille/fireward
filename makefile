@@ -43,11 +43,12 @@ release:
 	make tag
 	git push origin master --follow-tags
 
-publish:
-	cd npm-bin
-	curl -L https://github.com/bijoutrouvaille/fireward/releases/$(V)/fireward-linux.tar | tar x > fireward-linux
-	curl -L https://github.com/bijoutrouvaille/fireward/releases/$(V)/fireward-osx.tar | tar x > fireward-osx
-	curl -L https://github.com/bijoutrouvaille/fireward/releases/$(V)/fireward-windows.tar | tar x > fireward.exe
-	npm version "$(shell stack exec fireward -- -V)"
+v?=$(V)
+publish: 
+	cd npm-bin &&\
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward-linux > fireward-linux && \
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward-osx > fireward-osx && \
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward.exe > fireward.exe && \
+	npm version "$(v)" && \
 	npm publish
 

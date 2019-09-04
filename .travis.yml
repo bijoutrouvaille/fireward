@@ -10,16 +10,6 @@ cache:
   - "$APPDATA\\Local\\Programs\\stack"
   - "$TRAVIS_BUILD_DIR\\.stack-work"
 
-
-
-
-# before_deploy:
-#   - echo "TAGGED AS" $TRAVIS_TAG
-# - git config --local user.name "bijoutrouvaille"
-# - git config --local user.email "bijoutrouvaille+oss@gmail.com"
-# - export OSTAG="$TRAVIS_OS_NAME-$TRAVIS_TAG"
-# - [ -n "$TRAVIS_TAG" ] && git tag $OSTAG
-
 matrix:
   include:
   - env: OSEXT=".exe" DEPLOY_FILE="fireward.exe"
@@ -31,7 +21,6 @@ matrix:
       apt:
         packages:
         - libgmp-dev
-        - zip
 
 
 install: source ./travis/getstack.sh
@@ -42,11 +31,11 @@ deploy:
   draft: true
   api_key:
     secure: ltA1aV0OlIHc6Hv5YaCATYGz6+vT43L/RU2tS8oWCy38fTjesPUz7KozjOg4FOghapGOq9hF3h3kAELIK3XfF/gSzN/O93NRwqT8SRJgzUwDumj8UQDrZFwiUK5f62wuPKuahkES+70EJrg0ZwcYnq+CkGAMo+N3y5uJYxlhU7v57gpnPIlbTK/afoFBbF6HTJkVxd8QZD04bn5hU6SkU1Y3bLl57RTGrzcsvr1In8p7ViOh4I0EPMZy3xUrmP+wNiv0XOt2CqgXEl526q5w0mdRVpcefxt2z0bxFoLYAXBPj6EwmlRI+Ogv14FNXVtTrqP43A8SoR7sXo1+dEQNxLvmIoc6sLhqXDuDdH9/CY/NuifV1gOtCBJTPZ11DAaJsDOPZY1KYRSN5ZiXfk1xn/hBIjXlIo5lm9EoPmG0BZmcP49V34x+4as4/9KMo7tQFTnf6+ZOnQs/aa98SG0RxeojMF908vtfwj1AXJqTXGRtv020oL2UOVNHiyGHIgWGGnEm+Bq6aIvnX3DDoCk9iDOug0y9zl2h/bo0nxo67tQvLDwHEN2JcsKsUIFc3clvPBQSHX6HThkxvKzrWM1FEAVgGMD4tcby8SbL7S1rxEPuMUA6SpLNNiFyy3SKBd0zZV2BGEE/oIjSxpwn4pAQ/jG8JjM9XCpzBn/ZyO6PSRE=
-  file: $(stack path --local-bin)/${DEPLOY_FILE}.tar
+  file: $(stack path --local-bin)/${DEPLOY_FILE}
   on:
     repo: bijoutrouvaille/fireward
-    # tags: true
-    # all_branches: true
+    tags: true
+    all_branches: true
 
 # jobs:
 #   include: 
