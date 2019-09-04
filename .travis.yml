@@ -10,42 +10,6 @@ cache:
   - "$APPDATA\\Local\\Programs\\stack"
   - "$TRAVIS_BUILD_DIR\\.stack-work"
 
-matrix:
-  include:
-  - env: BUILD=stack ARGS="" OSEXT=".exe" DEPLOY_FILE="fireward.exe"
-    compiler: ": #stack default windows"
-    os: windows
-  - env: BUILD=stack ARGS="" DEPLOY_FILE="fireward-osx"
-    compiler: ": #stack default osx"
-    os: osx
-  - env: BUILD=stack ARGS="" DEPLOY_FILE="fireward-linux"
-    compiler: ": #stack default"
-    addons:
-      apt:
-        packages:
-        - libgmp-dev
-
-before_install:
-- unset CC
-- if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
-- export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
-- mkdir -p ~/.local/bin
-- |
-  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    travis_retry curl --insecure -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
-  elif [ "$TRAVIS_OS_NAME" = "windows" ]; then
-    mkdir -p stackwin
-    cd stackwin 
-    travis_retry curl -L https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
-    unzip stackwin.zip
-    mkdir -p "$APPDATA\\local\\bin"
-    export PATH="$APPDATA\\local\\bin":$PATH
-    cp stack.exe "$APPDATA\\local\\bin"
-    stack path
-    cd ..
-  else
-    travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-  fi
 
 
 
@@ -60,6 +24,45 @@ before_install:
 jobs:
   include: 
   - stage: github
+
+
+    matrix:
+      include:
+      - env: BUILD=stack ARGS="" OSEXT=".exe" DEPLOY_FILE="fireward.exe"
+        compiler: ": #stack default windows"
+        os: windows
+      - env: BUILD=stack ARGS="" DEPLOY_FILE="fireward-osx"
+        compiler: ": #stack default osx"
+        os: osx
+      - env: BUILD=stack ARGS="" DEPLOY_FILE="fireward-linux"
+        compiler: ": #stack default"
+        addons:
+          apt:
+            packages:
+            - libgmp-dev
+
+    before_install:
+    - unset CC
+    - if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
+    - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
+    - mkdir -p ~/.local/bin
+    - |
+      if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        travis_retry curl --insecure -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+      elif [ "$TRAVIS_OS_NAME" = "windows" ]; then
+        mkdir -p stackwin
+        cd stackwin 
+        travis_retry curl -L https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
+        unzip stackwin.zip
+        mkdir -p "$APPDATA\\local\\bin"
+        export PATH="$APPDATA\\local\\bin":$PATH
+        cp stack.exe "$APPDATA\\local\\bin"
+        stack path
+        cd ..
+      else
+        travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+      fi
+
     install:
     - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
     script: 
@@ -80,9 +83,9 @@ jobs:
     script:
       - |
         cd npm-bin
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG}/fireward-linux.tar | tar x > fireward-linux
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG}/fireward-osx.tar | tar x > fireward-osx
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG}/fireward-windows.tar | tar x > fireward-windows
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-linux.tar | tar x > fireward-linux
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-osx.tar | tar x > fireward-osx
+        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG:fail}/fireward-windows.tar | tar x > fireward.exe
         npm version "$TRAVIS_TAG"
         echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
         npm publish
