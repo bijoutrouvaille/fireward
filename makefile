@@ -32,7 +32,7 @@ VERSION=$(shell stack exec fireward -- -V)
 
 buildtest:
 	stack build	
-	stack test
+	# stack test
 
 tag:
 	git tag -a "$(shell stack exec fireward -- -V)"

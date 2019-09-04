@@ -20,9 +20,6 @@ cache:
 # - export OSTAG="$TRAVIS_OS_NAME-$TRAVIS_TAG"
 # - [ -n "$TRAVIS_TAG" ] && git tag $OSTAG
 
-# stage: github
-
-
 matrix:
   include:
   - env: OSEXT=".exe" DEPLOY_FILE="fireward.exe"
@@ -35,32 +32,10 @@ matrix:
         packages:
         - libgmp-dev
 
-before_install:
-  - unset CC
-  - if [ "x$GHCVER" = "xhead" ]; then CABALARGS=--allow-newer; fi
-  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
-  - mkdir -p ~/.local/bin
-  - |
-    if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-      travis_retry curl --insecure -L https://get.haskellstack.org/stable/osx-x86_64.tar.gz | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
-    elif [ "$TRAVIS_OS_NAME" = "windows" ]; then
-      mkdir -p stackwin
-      cd stackwin 
-      travis_retry curl -L https://get.haskellstack.org/stable/windows-x86_64.zip > stackwin.zip
-      unzip stackwin.zip
-      mkdir -p "$APPDATA\\local\\bin"
-      export PATH="$APPDATA\\local\\bin":$PATH
-      cp stack.exe "$APPDATA\\local\\bin"
-      cd ..
-    else
-      travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-    fi
 
-# install:
-#   - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
-script: 
-  - stack --no-terminal install --bench --no-run-benchmarks 
-  - tar -cf $(stack path --local-bin)/${DEPLOY_FILE}.tar $(stack path --local-bin)/fireward$OSEXT 
+install: source ./travis/getstack.sh
+script: source ./travis/buildfile.sh
+
 deploy:
   provider: releases
   draft: true
@@ -72,26 +47,27 @@ deploy:
     tags: true
     all_branches: true
 
-jobs:
-  include: 
-  - stage: npmjs
-    language: node_js
-    script:
-      - |
-        cd npm-bin
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-linux.tar | tar x > fireward-linux
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-osx.tar | tar x > fireward-osx
-        curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-windows.tar | tar x > fireward.exe
-        npm version "$TRAVIS_TAG"
-        echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-        npm publish
-
-
-
-
-stages:
-  - test
-  - npmjs
+# jobs:
+#   include: 
+#   - stage: npmjs
+#     name: npmdeploy
+#     language: node_js
+#     script:
+#       - |
+#         cd npm-bin
+#         curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-linux.tar | tar x > fireward-linux
+#         curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-osx.tar | tar x > fireward-osx
+#         curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-windows.tar | tar x > fireward.exe
+#         npm version "$TRAVIS_TAG"
+#         echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+#         npm publish
+#
+#
+#
+#
+# stages:
+#   - githubr
+#   - npmjs
 
 git:
   quiet: true
