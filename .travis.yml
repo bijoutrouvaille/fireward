@@ -12,12 +12,9 @@ cache:
 
 matrix:
   include:
-  - env: OSEXT=".exe" DEPLOY_FILE="fireward.exe"
-    os: windows
-  - env: DEPLOY_FILE="fireward-osx"
-    os: osx
-  - env: DEPLOY_FILE="fireward-linux"
-    addons:
+  - os: windows
+  - os: osx
+  - addons:
       apt:
         packages:
         - libgmp-dev
@@ -31,7 +28,7 @@ deploy:
   draft: true
   api_key:
     secure: ltA1aV0OlIHc6Hv5YaCATYGz6+vT43L/RU2tS8oWCy38fTjesPUz7KozjOg4FOghapGOq9hF3h3kAELIK3XfF/gSzN/O93NRwqT8SRJgzUwDumj8UQDrZFwiUK5f62wuPKuahkES+70EJrg0ZwcYnq+CkGAMo+N3y5uJYxlhU7v57gpnPIlbTK/afoFBbF6HTJkVxd8QZD04bn5hU6SkU1Y3bLl57RTGrzcsvr1In8p7ViOh4I0EPMZy3xUrmP+wNiv0XOt2CqgXEl526q5w0mdRVpcefxt2z0bxFoLYAXBPj6EwmlRI+Ogv14FNXVtTrqP43A8SoR7sXo1+dEQNxLvmIoc6sLhqXDuDdH9/CY/NuifV1gOtCBJTPZ11DAaJsDOPZY1KYRSN5ZiXfk1xn/hBIjXlIo5lm9EoPmG0BZmcP49V34x+4as4/9KMo7tQFTnf6+ZOnQs/aa98SG0RxeojMF908vtfwj1AXJqTXGRtv020oL2UOVNHiyGHIgWGGnEm+Bq6aIvnX3DDoCk9iDOug0y9zl2h/bo0nxo67tQvLDwHEN2JcsKsUIFc3clvPBQSHX6HThkxvKzrWM1FEAVgGMD4tcby8SbL7S1rxEPuMUA6SpLNNiFyy3SKBd0zZV2BGEE/oIjSxpwn4pAQ/jG8JjM9XCpzBn/ZyO6PSRE=
-  file: $(stack path --local-bin)/${DEPLOY_FILE}
+  file: ${DEPLOY_FILE}
   on:
     repo: bijoutrouvaille/fireward
     tags: true
