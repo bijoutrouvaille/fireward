@@ -29,11 +29,15 @@ install:
 	stack install && cp $(LOCAL_PATH)/$(EXEC) $(prefix)/
 
 VERSION=$(shell stack exec fireward -- -V)
-tag:
+
+buildtest:
 	stack build	
 	stack test
-	git tag -a "$(VERSION)"
+
+tag:
+	git tag -a "$(shell stack exec fireward -- -V)"
 
 release:
+	make buildtest
 	make tag
 	git push origin master --follow-tags
