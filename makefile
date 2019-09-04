@@ -41,3 +41,12 @@ release:
 	make buildtest
 	make tag
 	git push origin master --follow-tags
+
+publish:
+	cd npm-bin
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-linux.tar | tar x > fireward-linux
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-osx.tar | tar x > fireward-osx
+	curl -L https://github.com/bijoutrouvaille/fireward/releases/${TRAVIS_TAG-fail}/fireward-windows.tar | tar x > fireward.exe
+	npm version "$(shell stack exec fireward -- -V)"
+	npm publish
+
