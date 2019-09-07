@@ -20,6 +20,10 @@ https://groups.google.com/forum/#!forum/fireward
 
 ## Installation
 
+#### Method 0: NPM
+
+`npm install fireward`
+
 #### Method 1: Binary
 
 Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binary and put it in your `PATH`.
