@@ -49,6 +49,9 @@ publish:
 	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward-linux > fireward-linux && \
 	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward-osx > fireward-osx && \
 	curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$(v)/fireward.exe > fireward.exe && \
+	chmod 755 fireward-linux
+	chmod 755 fireward-osx
+	chmod 755 fireward.exe
 	npm version "$(v)" && \
 	npm publish
 

@@ -5,3 +5,6 @@
 /.stack-work
 .DS_Store
 /fireward
+npm-bin/fireward-linux 
+npm-bin/fireward-osx 
+npm-bin/fireward.exe
