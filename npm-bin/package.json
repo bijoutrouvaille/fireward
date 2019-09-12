@@ -1,8 +1,8 @@
 {
   "name": "fireward",
-  "version": "0.0.25b",
+  "version": "0.0.25f",
   "description": "A simple and readable language for Firestore security rules, similar to Firebase Bolt.",
-  "main": "index.js",
+  "bin": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

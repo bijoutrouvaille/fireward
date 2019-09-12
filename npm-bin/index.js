@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var spawn = require('child_process').spawn;
 
 var path = require('path');
@@ -6,7 +8,7 @@ const bin =
   process.platform === 'darwin'
     ? path.join(__dirname, 'fireward-mac') :
   process.platform === 'linux' && process.arch === 'x64'
-    ? path.join(__dirname, 'fireward-linux) :
+    ? path.join(__dirname, 'fireward-linux') :
   process.platform === 'win32' &&  process.arch === 'x64'
     ? path.join(__dirname, 'fireward.exe') :
   null;
