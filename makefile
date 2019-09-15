@@ -40,6 +40,7 @@ tag:
 
 release:
 	make buildtest
+	git push origin master # prevent travis from building anything but the tag
 	make tag
 	git push origin master --follow-tags
 

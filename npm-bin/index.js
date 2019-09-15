@@ -6,7 +6,7 @@ var path = require('path');
 
 const bin =
   process.platform === 'darwin'
-    ? path.join(__dirname, 'fireward-mac') :
+    ? path.join(__dirname, 'fireward-osx') :
   process.platform === 'linux' && process.arch === 'x64'
     ? path.join(__dirname, 'fireward-linux') :
   process.platform === 'win32' &&  process.arch === 'x64'
