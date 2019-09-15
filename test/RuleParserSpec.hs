@@ -40,6 +40,10 @@ spec = do
                             TopLevelType "A" [InlineTypeRef (TypeDef [Field True "a" [TypeNameRef "Null" Nothing] False])], 
                             TopLevelType "B" [InlineTypeRef (TypeDef [Field True "b" [TypeNameRef "Null" Nothing] False])]
                           ], "")
+    it "parses a type with all optional fields" $
+      _parse "type X = { x?: string }" `shouldBe` Right ([TopLevelType "X" [
+        InlineTypeRef (TypeDef [Field {required = False, fieldName = "x", typeRefs = [TypeNameRef "string" Nothing], constant = False}])]]
+      ,"")
     it "parses a pathStatic in pathParts" $
       _apply _pathParts "hello" `shouldBe` Right ([PathPartStatic "hello"],"")
     it "parses a pathVar in pathParts" $

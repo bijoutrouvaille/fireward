@@ -114,8 +114,8 @@ typeFunc name refs =
           mx = length fields
           mn = length . req $ fields
           keyCheck = [ ""
-                     , parent++".keys().hasAll(['",  intercalate "', '" requiredKeys, "'])"
-                     , line, "&& ", parent++".size() >= " ++ show mn
+                     , if length requiredKeys > 0 then parent++".keys().hasAll(['" ++  intercalate "', '" requiredKeys ++ "'])" ++ line ++ "&& " else ""
+                     , parent++".size() >= " ++ show mn
                      , line, "&& ", parent++".size() <= " ++ show mx
                      ]
 
