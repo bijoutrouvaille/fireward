@@ -197,12 +197,16 @@ The project has been recently released, and some bugs are to be expected. The au
 
 ## Roadmap
 
-[x] Add comments
-[x] Add error handling to the parser
-- Allow for importing files
-- Allow for read/write conditions within types
-- Add Windows and Linux release executables pipelines.
-- Namespace validation functions (e.g. isX for type X)
+- [x] Add comments
+- [x] Add error handling to the parser
+- [x] Add Windows and Linux release executables pipelines.
+- [ ] Allow for importing files
+- [ ] Allow for read/write conditions within types (validations)
+- [ ] Namespace validation functions (e.g. isX for type X)
+- [ ] End-to-end tests with the Firestore emulator
+- [ ] Expression variables
+- [ ] String literal types
+- [ ] Type intersections
 
 
 ## License
