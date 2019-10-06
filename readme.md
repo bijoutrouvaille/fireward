@@ -25,7 +25,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 `npm install -g fireward` 
 
-Should work for Windows, MacOS and most Linux system.
+Should work for Windows, MacOS and most Linux systems.
 
 #### Method 1: Binary
 
