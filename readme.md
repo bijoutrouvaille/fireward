@@ -25,10 +25,6 @@ https://groups.google.com/forum/#!forum/fireward
 
 `npm install -g fireward` 
 
-This will download and install the precompiled binaries for MacOS, Windows and generic Linux, along with a JavaScript wrapper that will select the appropriate binary to your system. Then you should be able to use the executable as normal, e.g. `fireward -i rules.ward`. The whole package takes up around 10MB.
-
-The files are compiled by courtesy of https://travis-ci.org.
-
 #### Method 1: Binary
 
 Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binary and put it in your `PATH`.
