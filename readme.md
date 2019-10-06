@@ -25,6 +25,8 @@ https://groups.google.com/forum/#!forum/fireward
 
 `npm install -g fireward` 
 
+Should work for Windows, MacOS and most Linux system.
+
 #### Method 1: Binary
 
 Download a [release](https://github.com/bijoutrouvaille/fireward/releases) binary and put it in your `PATH`.
