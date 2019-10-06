@@ -25,9 +25,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 `npm install -g fireward` 
 
-This will download and install the precompiled binaries for MacOS, Windows and generic Linux, along with a JavaScript wrapper that will select the appropriate binary to your system. Then you should be able to use the executable as normal, e.g. `fireward -i rules.ward`. The whole package takes up around 10MB.
-
-The files are compiled by courtesy of https://travis-ci.org.
+Should work for Windows, MacOS and most Linux systems.
 
 #### Method 1: Binary
 
@@ -197,12 +195,16 @@ The project has been recently released, and some bugs are to be expected. The au
 
 ## Roadmap
 
-[x] Add comments
-[x] Add error handling to the parser
-- Allow for importing files
-- Allow for read/write conditions within types
-- Add Windows and Linux release executables pipelines.
-- Namespace validation functions (e.g. isX for type X)
+- [x] Add comments
+- [x] Add error handling to the parser
+- [x] Add Windows and Linux release executables pipelines.
+- [ ] Allow for importing files
+- [ ] Allow for read/write conditions within types (validations)
+- [ ] Namespace validation functions (e.g. isX for type X)
+- [ ] End-to-end tests with the Firestore emulator
+- [ ] Expression variables
+- [ ] String literal types
+- [ ] Type intersections
 
 
 ## License
