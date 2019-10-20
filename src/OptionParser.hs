@@ -66,12 +66,7 @@ options =
         (ReqArg
             (\arg opt -> return opt { optLang = arg })
             "language")
-        "Output language. One of: rules, typescript."
- 
-    -- , Option "v" ["verbose"]
-    --     (NoArg
-    --         (\opt -> return opt { optVerbose = True }))
-    --     "Enable verbose messages"
+        "Output language. One of: rules, typescript (or ts)."
  
     , Option "V" ["version"]
         (NoArg
@@ -99,10 +94,3 @@ getOptions = do
     opts <- foldl (>>=) (return startOptions) actions
     return (opts, actions, nonOptions, errors)
  
-    -- let Options { optVerbose = verbose
-    --             , optInput = input
-    --             , optOutput = output   } = opts
-    --
-    -- when verbose (hPutStrLn stderr "Hello!")
-    --
-    -- input >>= output
