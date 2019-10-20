@@ -18,6 +18,8 @@ https://groups.google.com/forum/#!forum/fireward
 - Tuple validation
 - Type unions
 - Comments
+- A strong unit test suite
+- End-to-end tests with emulator
 
 ## Installation
 
@@ -54,6 +56,11 @@ To generate TypeScript rules
 cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fireward -c "--lang=typescript" > generated.ts
 ```
 
+## Project Status
+
+The project has been used in medium-sized projects, in production. It has been built with reliability in mind, which is realized through an extensive unit test suite, an integration test suite, and the uncompromizing type safety of Haskell.
+
+The repository has a committed maintainer, and bugs are fixed quickly. Please be encouraged to use FireWard for your professional work.
 
 ## Usage
 
@@ -62,7 +69,7 @@ fireward
   -i FILE      --input=FILE                          Input fireward file instead of stdin
   -o FILE      --output=FILE                         Output file instead of stdout
   -s STRING    --string=STRING                       Input string
-  -l language  --lang=language, --language=language  Output language. One of: rules, typescript.
+  -l language  --lang=language, --language=language  Output language. One of: rules, typescript (or ts).
   -V           --version                             Print version
   -h           --help                                Show help
 ```
@@ -199,9 +206,7 @@ Is done from the `integration` directory.
 
 The tests are writted with mocha and typescript. Put fixture ward files in the `integration/wards` folder.
 
-## Status
 
-The project has been recently released, and some bugs are to be expected. The author will try to resolve them soon after they are reported. 
 
 ## Roadmap
 
@@ -211,7 +216,7 @@ The project has been recently released, and some bugs are to be expected. The au
 - [x] End-to-end tests with the Firestore emulator
 - [ ] Allow for importing files
 - [ ] Allow for read/write conditions within types (validations)
-- [ ] Namespace validation functions (e.g. isX for type X)
+- [ ] Namespace validation functions (e.g. isX for type X should have a better namespace)
 - [ ] Expression variables
 - [ ] String literal types
 - [ ] Type intersections
