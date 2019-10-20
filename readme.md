@@ -60,7 +60,7 @@ cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fir
 
 Fireward has been used in medium-sized projects, in production. It has been built with reliability in mind, which is realized through an extensive unit test suite, an integration test suite, and the uncompromizing type safety of Haskell.
 
-The repository has a committed maintainer, and bugs are fixed quickly. Please be encouraged to use FireWard for your professional work.
+The repository has a committed maintainer, and bugs are fixed quickly. Please be encouraged to use Fireward for your professional work.
 
 ## Usage
 
