@@ -189,6 +189,16 @@ The project was born from an exercise in monadic programming (based on _Monads f
 
 Please unit test contributions and make sure all the tests are passing when submitting. The project makes that part easy and fun.
 
+### Integration testing
+
+Is done from the `integration` directory. 
+
+- You must have firebase-tools installed globally and firestore emulator set up by running `firebase setup:emulators:firestore`. 
+- Run the tests with `npm test` command. 
+- You do not need to launch the emulator. The test runner will automatically do that for you.
+
+The tests are writted with mocha and typescript. Put fixture ward files in the `integration/wards` folder.
+
 ## Status
 
 The project has been recently released, and some bugs are to be expected. The author will try to resolve them soon after they are reported. 
@@ -198,10 +208,10 @@ The project has been recently released, and some bugs are to be expected. The au
 - [x] Add comments
 - [x] Add error handling to the parser
 - [x] Add Windows and Linux release executables pipelines.
+- [x] End-to-end tests with the Firestore emulator
 - [ ] Allow for importing files
 - [ ] Allow for read/write conditions within types (validations)
 - [ ] Namespace validation functions (e.g. isX for type X)
-- [ ] End-to-end tests with the Firestore emulator
 - [ ] Expression variables
 - [ ] String literal types
 - [ ] Type intersections
