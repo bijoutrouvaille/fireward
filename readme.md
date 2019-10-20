@@ -58,9 +58,9 @@ cat definitions.ward | docker run --rm -i -a stdout -a stdin bijoutrouvaille/fir
 
 ## Project Status
 
-The project has been used in medium-sized projects, in production. It has been built with reliability in mind, which is realized through an extensive unit test suite, an integration test suite, and the uncompromizing type safety of Haskell.
+Fireward has been used in medium-sized projects, in production. It has been built with reliability in mind, which is realized through an extensive unit test suite, an integration test suite, and the uncompromizing type safety of Haskell.
 
-The repository has a committed maintainer, and bugs are fixed quickly. Please be encouraged to use FireWard for your professional work.
+The repository has a committed maintainer, and bugs are fixed quickly. Please be encouraged to use Fireward for your professional work.
 
 ## Usage
 
@@ -84,7 +84,7 @@ Generate TypeScript definitions: `fireward -i myrules.ward --lang=typescript > M
 
 ## Rules Syntax
 
-Fireward tries to keep things simple and easy to learn by mostly using the syntax that already exists in the two languages it generates: Firestore Rules and TypeScript. The basic steps in writing Fireward are: 1. Define a type with TypeScript-like syntax. 2. Assign it to routes written with Firestore Rules syntax. Therefore, the .ward file is essentially the Firestore rules augmented with TypeScript types.
+Fireward tries to keep things simple and easy to learn by mostly using the syntax that already exists in the two languages it generates: Firestore Rules and TypeScript. The basic steps in writing Fireward are: 1. Define a type with TypeScript-like syntax. 2. Assign it to routes written with Firestore Rules syntax. Therefore, the .ward file is essentially Firestore rules augmented with TypeScript types.
 
 Fireward will wrap the code with the boilerplate: 
 ```
