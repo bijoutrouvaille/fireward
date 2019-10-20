@@ -8,3 +8,7 @@
 npm-bin/fireward-linux 
 npm-bin/fireward-osx 
 npm-bin/fireward.exe
+node_modules
+.vscode
+integration/firebase-debug.log
+integration/firestore-debug.log

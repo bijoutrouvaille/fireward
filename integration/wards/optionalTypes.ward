@@ -1,0 +1,13 @@
+
+type Name = { first: string, last?: string }
+
+type OptionalTypesExample = {
+  str?: string,
+  num?: float,
+  sub?: Name
+}
+
+match /example/{x} is OptionalTypesExample {
+  allow read: true;
+  allow write: true;
+}

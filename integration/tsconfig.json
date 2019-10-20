@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "resolveJsonModule": true
+  },
+  
+  "include": ["/**/*.ts"],
+  "exclude": ["node_modules", ".git"]
+}

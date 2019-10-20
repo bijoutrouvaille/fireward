@@ -27,7 +27,7 @@ showN :: Show a => a -> String
 showN = repA . show
 showE (Right x) = "Right " ++ repA x
 showE (Left x) = "Left " ++ repA x
--- showE (Left Nothing) = "Left Nothing"
+
 g = showE . RuleGenerator.generate False
 gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
@@ -75,6 +75,7 @@ spec = do
     --    , "}"
     --    ]
 
+
     it "generates a type for all optional fields" $
       gu [ "type Z = {"
          , "  a?: string"
@@ -83,6 +84,7 @@ spec = do
          [ "function isZ(data, prev) {"
          , "  return data.size() >= 0"
          , "    && data.size() <= 1"
+         , "    && data.hasOnly(['a'])"
          , "    && ("
          , "      !data.keys().hasAny(['a'])"
          , "      || data.a is string"
@@ -109,6 +111,7 @@ spec = do
       , "  || data.keys().hasAll(['a', 'c'])"
       , "    && data.size() >= 2"
       , "    && data.size() <= 3"
+      , "    && data.hasOnly(['a', 'b', 'c'])"
       , "    && (prev==null && isA(data.a, null) || isA(data.a, prev))"
       , "    && ("
       , "      !data.keys().hasAny(['b'])"
@@ -120,6 +123,7 @@ spec = do
       , "    && data.c.keys().hasAll(['ca'])"
       , "      && data.c.size() >= 1"
       , "      && data.c.size() <= 2"
+      , "      && data.c.hasOnly(['ca', 'cb'])"
       , "      && data.c.ca is int"
       , "      && ("
       , "        !data.c.keys().hasAny(['cb'])"
@@ -134,6 +138,7 @@ spec = do
       , "  return data.keys().hasAll(['x'])"
       , "    && data.size() >= 1"
       , "    && data.size() <= 1"
+      , "    && data.hasOnly(['x'])"
       , "    && data.x is list"
       , "    && (data.x.size() <= 1 || data.x[0] is string)"
       , "    && (data.x.size() <= 2 || data.x[1] is string);"
@@ -159,13 +164,9 @@ spec = do
         , "  allow create: if (resource==null && is__PathType(request.resource.data, null) || is__PathType(request.resource.data, resource.data)) && (true);"
         , "}"
         ]
-    -- it "generates a definite array" $
-    --   g "match 
     it "indents a complex file" $ do
-      door <- readFile "test/fixtures/indent.door"
+      door <- readFile "test/fixtures/indent.ward"
       _rule <- readFile "test/fixtures/indent.rules"
       let rule = take ((length _rule) - 1) _rule
       res <- return (g door)
       g door `shouldBe` r rule
-      -- (trace (showN res)) (return 1)
-      -- shouldBe 1 1

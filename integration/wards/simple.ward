@@ -1,0 +1,8 @@
+type Name = { first: string, last?: string }
+type User = { name: Name | string }
+
+match /users/{userId} is User {
+  allow read: true;
+  allow create: true;
+  allow update: request.auth.uid!=null && request.auth.uid==userId;
+}

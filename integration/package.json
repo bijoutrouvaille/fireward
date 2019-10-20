@@ -1,0 +1,21 @@
+{
+  "name": "fireward-integration-tests",
+  "version": "1.0.0",
+  "description": "Using the firestore simulator to test generated rules.",
+  "main": "index.js",
+  "scripts": {
+    "test": "FIRESTORE_EMULATOR_HOST=localhost:8981 ts-mocha 'test/**/*.spec.ts' -w --watch-extensions ts,ward"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@firebase/testing": "^0.13.4",
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
+    "ts-mocha": "^6.0.0",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.7.0-beta"
+  }
+}

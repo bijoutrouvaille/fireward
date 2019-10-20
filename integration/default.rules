@@ -1,0 +1,35 @@
+
+
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isName(data, prev) {
+  return data.keys().hasAll(['first'])
+    && data.size() >= 1
+    && data.size() <= 2
+    && data.first is string
+    && (
+      !data.keys().hasAny(['last'])
+      || data.last is string
+    );
+}
+    function isUser(data, prev) {
+  return data.keys().hasAll(['name'])
+    && data.size() >= 1
+    && data.size() <= 1
+    && (
+         (prev==null && isName(data.name, null) || isName(data.name, prev))
+      || data.name is string
+      );
+}
+    match /users/{id} {
+  function is__PathType(data, prev) {
+    return (prev==null && isUser(data, null) || isUser(data, prev));
+  }
+  allow read: if true;
+  allow write: if (resource==null && is__PathType(request.resource.data, null) || is__PathType(request.resource.data, resource.data)) && (false);
+}
+
+  }
+}

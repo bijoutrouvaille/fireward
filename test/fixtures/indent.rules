@@ -4,11 +4,13 @@ function isX(data, prev) {
   || data.keys().hasAll(['a', 'b'])
     && data.size() >= 2
     && data.size() <= 2
+    && data.hasOnly(['a', 'b'])
     && data.a is string
     && (
          data.b.keys().hasAll(['aa', 'bb'])
       && data.b.size() >= 2
       && data.b.size() <= 2
+      && data.b.hasOnly(['aa', 'bb'])
       && (
            data.b.aa is int
         || data.b.aa is string
@@ -20,6 +22,7 @@ function isX(data, prev) {
         || data.b.bb.keys().hasAll(['n'])
         && data.b.bb.size() >= 1
         && data.b.bb.size() <= 1
+        && data.b.bb.hasOnly(['n'])
         && data.b.bb.n is string
         )
       || (data.b is float || data.b is int)

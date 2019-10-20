@@ -1,0 +1,10 @@
+{
+  "firestore": {
+    "rules": "default.rules"
+  },
+  "emulators": {
+    "firestore": {
+      "port": "8981"
+    }
+  }
+}

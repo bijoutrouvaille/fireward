@@ -117,6 +117,7 @@ typeFunc name refs =
                      , if length requiredKeys > 0 then parent++".keys().hasAll(['" ++  intercalate "', '" requiredKeys ++ "'])" ++ line ++ "&& " else ""
                      , parent++".size() >= " ++ show mn
                      , line, "&& ", parent++".size() <= " ++ show mx
+                     , line, "&& " ++ parent ++ ".keys().hasOnly(['" ++ intercalate "', '" (fmap fieldName fields) ++ "'])"
                      ]
 
     refCheck :: Int -> FuncParam -> FuncParam -> Bool -> TypeRef -> String
