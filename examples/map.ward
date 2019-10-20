@@ -1,0 +1,7 @@
+type User = {
+  permissions: map
+}
+
+match /users/{id} is User {
+  allow write: true
+}
