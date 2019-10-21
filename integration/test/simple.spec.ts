@@ -3,7 +3,7 @@ import {expect} from 'chai';
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
 import {User, Name} from '../wards/simple';
-import {isEmulatorReady} from './../emulator'
+import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'simple';
 type App = ReturnType<typeof firebase.initializeTestApp>;

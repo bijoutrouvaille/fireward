@@ -1,8 +1,8 @@
 import {spawn, execSync} from 'child_process';
 import * as fs from 'fs';
-import json = require('./firebase.json');
+import json = require('../firebase.json');
 
-const PID_FILE = 'emu.pid';
+const EXE = './node_modules/.bin/firebase';
 const port = (process.env['FIRESTORE_EMULATOR_HOST']||'').trim().split(':')[1] || json.emulators.firestore.port;
 
 let ready = false;
@@ -34,7 +34,7 @@ function start() {
     process.exit(1);
   }
 
-  const proc = spawn(`/usr/local/bin/firebase`, `emulators:start --only firestore`.split(' '), {
+  const proc = spawn(EXE, `emulators:start --only firestore`.split(' '), {
     stdio: 'pipe'
   });
   proc.stdout.on('data', (data) => {
@@ -45,7 +45,6 @@ function start() {
     }
   });
 
-  fs.writeFileSync(PID_FILE, proc.pid, 'utf8')
 
   proc.stderr.on('data', (data) => {
     console.log(`EMULATOR  stderr: ${data}`);
