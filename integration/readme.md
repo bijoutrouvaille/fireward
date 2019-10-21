@@ -27,7 +27,7 @@ Having `NodeJS` and the `stack` tool installed, you'll need to first set up the 
 
 - Copy simple.spec.ts into <my-ward>.spec.ts.
 - Create <my-ward>.ward in the `wards` directory.
-- Search+replace `simple` in simple.ts with <my-ward>
+- Search+replace `simple` in simple.spec.ts with <my-ward>
 - write your tests
 
 
