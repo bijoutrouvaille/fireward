@@ -1,3 +1,5 @@
+rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
+
 type UserAccount = {
   email: string
 }
