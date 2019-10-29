@@ -4,8 +4,9 @@ module RuleGenerator (
 
 -- Definitions:
 -- _type functions_ are functions that check to make sure that the data resource confirms to the type structure.
--- 
---
+-- _type refs_ are references to types. E.g. in `{name: FullName}` FullName is a reference to a type.
+-- _type defs_ are definitions of types. E.g. the whole `{name: FullName}` is a definition.
+-- _inline type defs_ are defined inline. E.g. in `{name: {first: string, last: string}}` {first: string, last: string} is inline.
 
 import Parser
 import RuleParser
@@ -16,7 +17,6 @@ import Data.List (findIndices, intercalate, stripPrefix)
 import Data.Char (toUpper)
 import Data.Maybe (maybe)
 import CodePrinter
--- import LogicPrinter  (Expr(..), Op(..), printLogic)
   
 getOr l n f = if length l < n 
                  then Right (l!!n) 
@@ -48,7 +48,6 @@ generate wrap source = q tree
   where
     finalize :: [TopLevel] -> CodePrinter -> String
     finalize tops lines = printCode 0 $ do
-      --if wrap then optVars tops ++ withBoilderplate (unlines lines) else lines
       if wrap then do
         _print "service cloud.firestore {"
         _indent
@@ -83,47 +82,16 @@ generate wrap source = q tree
 
 
 funcBlock (FuncDef name params body) = _function name params (_print body)
--- funcBlock ind (FuncDef name params body) = concat 
---   [ indent ind
---   , "function "
---   , name
---   , "(", intercalate ", " params, ") { return ", body', "; }"
---   ]
---   where
---     body' = trim . unlines $ (indent (ind + 2) ++) <$> lines body
-
-
--- withBoilderplate :: String -> [String]
--- withBoilderplate code = 
---   [ "service cloud.firestore {"
---   , "  match /databases/{database}/documents {"
---   , ""
---   ]
---   ++ indented ++
---   [ ""
---   , "  }"
---   , "}"
---   ]
---   where 
---     r = lines code
---     indented = indentLinesBy2 r :: [String]
---     indentLinesBy2 = fmap (shift 2 ++)
---     shift n = take (n*2) $ repeat ' '
 
 typeFuncName typeName = "is____" ++ capitalize typeName
 
 data FuncParam = FuncParam (Maybe String) String
+--
 -- the main recursive function to generate the type function
 typeFunc :: String -> [TypeRef] -> CodePrinter
 typeFunc name refs = 
   let refCheckList = refCheck (FuncParam Nothing "data") (FuncParam Nothing "prev") False <$> refs 
   in _function (typeFuncName name) ["data", "prev"] (_linesWith _or refCheckList)
-  -- concat [ "function "
-  -- , funcName name, "(data, prev) {\n  return " 
-  -- , intercalate "\n  || " $ refCheck 0 (FuncParam Nothing "data") (FuncParam Nothing "prev") False <$> refs
-  -- , ";"
-  -- , "\n}"
-  -- ]
   where
     isReq (Field r _ _ _) = r 
     key (Field _ n _ _) = n
@@ -131,22 +99,14 @@ typeFunc name refs =
     addr :: FuncParam -> String
     addr (FuncParam Nothing n) = n
     addr (FuncParam (Just p) n) = p ++ "." ++ n
-    -- funcName name = "is" ++ capitalize name
 
     defCheck :: String -> String -> TypeDef -> CodePrinter
     defCheck parent prevParent (TypeDef fields) = do --concat $
       keyPresenceCheck
       _return
       _and
-      -- _print _and
-      -- _return
       _linesWith _and fieldChecks
-      
-      -- keyPresenceCheck ++ fieldChecks--(fmap ((line0 ++ " && ") ++) fieldChecks)
         where
-          -- initial = if ind==2 then "  " else " "
-          -- line0 = ("\n" ++ indent (ind + 2))
-          -- line = ("\n" ++ indent (ind + 4))
           requiredKeys = fmap key . onlyRequired $ fields
           mx = length fields
           mn = length . onlyRequired $ fields
@@ -161,14 +121,6 @@ typeFunc name refs =
               , _hasOnly parent (fieldName <$> fields)
               ]
 
-                    -- concat [ ""
-                    --  , if length requiredKeys > 0 
-                    --       then _hasAll parent requiredKeys-- parent++".keys().hasAll(['" ++  intercalate "', '" requiredKeys ++ "'])" ++ line ++ "&& " 
-                    --       else ""
-                    --  , line, "&& ",_sizeBetween parent mn mx --parent++".size() >= " ++ show mn
-                    --  -- , line, "&& ", _sizeLtw parent mx --parent++".size() <= " ++ show mx
-                    --  , line, "&& ", _hasOnly parent (fieldName <$> fields)-- parent ++ ".keys().hasOnly(['" ++ intercalate "', '" (fmap fieldName fields) ++ "'])"
-                    --  ]
 
     refCheck :: FuncParam -> FuncParam -> Bool -> TypeRef -> CodePrinter
     refCheck curr prev _const (InlineTypeDef def) = 
@@ -177,30 +129,22 @@ typeFunc name refs =
       if t `elem` primitives then primType arrSize else func
       where
         listCond = _addr ++ " is list"
-        -- prim :: (Maybe Int) -> CodePrinter
-        -- prim size = _print $ primType size
-        -- eq = if _const then q else ""
-        --   where q = "(" ++ p ++ "==null || !" ++ p ++ ".keys().hasAll(['" ++ curr ++ "']) || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")\n" ++ indent (ind + 2) ++ "&& "
-        --         p = maybe "prev" id prevParent
+
         primType :: (Maybe Int) -> CodePrinter -- primitive types
         primType Nothing  
                      | t=="null" = _print $ _addr ++ " == null "   
                      | t=="float" = _print $ "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
                      | otherwise = _print $ _addr ++ " is " ++ t
-        primType (Just n) = do--listCond ++ (if n == 0 then "" else "\n" ++ indent (ind+1) ++  " && "  ++ arrElemCheck n)
+        primType (Just n) = do
           _print listCond          
           _printIf (n > 0) $ do
-            -- _indent
             _return
             _and
             arrElemCheck n
-            -- _deindent
-            -- _return
 
         sizeCheck i = 
            "(" ++ _sizeLte _addr i ++ " || " ++ _addr ++ "[" ++ show (i-1) ++ "] is " ++ t ++ ")"
         arrElemCheck n = do
-          --intercalate ("\n" ++ indent (ind+1) ++ " && ") [ sizeCheck i | i <- [1..n] ]
           _linesWith _and [ _print $ sizeCheck i | i <- [1..n] ]
 
         -- func is defined like this because firestore does not allow tertiary logic (?:) or similar.
@@ -229,10 +173,6 @@ typeFunc name refs =
         _deindent
         _return
         _print ")"
-      -- _return
-      -- if r
-      -- then constCheck ++ formattedRefs
-      -- else line0 ++ constCheck ++ notDefined parent key ++ line ++ "|| " ++ formattedRefs ++ line0
       where
         formattedRefs =
           if length refs == 1
@@ -245,19 +185,11 @@ typeFunc name refs =
                _deindent
                _line $ _print ")"
 
-          -- if length refs == 1
-          -- then rs
-          -- else "(" ++ line ++ "   " ++ rs ++ line ++")"
         notDefined parent key = "!" ++ _hasAny parent [key]
         rs = _linesWith _or (refCheck curr prev c <$> refs)
-        -- rs = intercalate (line ++"|| ") $ refCheck ind curr prev c <$> refs
-        -- linei = "\n" ++ indent (ind)
-        -- line0 = "\n" ++ indent (ind + 2)
-        -- line = "\n" ++ indent (ind + 4)
         curr = FuncParam (Just parent) n
         prev = FuncParam (Just prevParent) n
-        constCheck = check -- if c then check else "" -- const type check
-          -- where check = "&& (" ++ parent ++ "==null || !" ++ parent ++ ".keys().hasAll(['" ++ n ++ "']) || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")\n" ++ indent (ind + 2) ++ "&& "
+        constCheck = check -- const type check
           where check = "(" ++ prevParent ++ "==null || !" ++ _hasAll prevParent [n] ++ " || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")"
                 _prevAddr = addr prev
                 _addr = addr curr
@@ -284,15 +216,7 @@ gen (TopLevelPath def) = pathBlock def
       _return
       _print "}"
 
-      -- _pathBlock (pathHead parts) (pathTypeFunc refs) (pathBody) 
-      -- joinLines . filter (/="") $
-      --   [ indent ind ++ "match /" ++ pathHead parts ++ " {"
-      --   , pathTypeFunc ind refs
-      --   , pathBody ind (augmentWithType bodyItems refs)
-      --   , indent ind ++ "}"
-      --   ]
     ifNo xs i e = if length xs == 0 then i else e
-    -- shiftBy ind s = joinLines $ (indent ind++) <$> lines s
     pathTypeCond = "(resource==null && " 
                     ++ typeFuncName pathTypeName ++ "(request.resource.data, null) || " 
                     ++ typeFuncName pathTypeName ++ "(request.resource.data, resource.data))"
