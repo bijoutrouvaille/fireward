@@ -1,6 +1,7 @@
 module LogicPrinter
   ( Expr(..)
   , Op(..)
+  , printLogic
   ) where
 
 import Data.Char (toUpper)
@@ -39,6 +40,7 @@ p ind (Term op es)
     s = intercalate (line ind' ++ show op ++ " ") $ p (ind + shift') <$> es
     parens = length es > 1 && op==Or
 
+printLogic = p
 {-
 assiciativity :: bool
 precedence :: int

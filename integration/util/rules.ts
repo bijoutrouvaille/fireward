@@ -24,7 +24,8 @@ export const loadRules = function loadRules(wardFile: string, app = firebase.app
   const wardName = `./wards/${name}.ward`;
   const tsName = `./wards/${name}.ts`;
 
-  const rules = execSync(`fireward -i ${wardName}`, {encoding: 'utf8'});
+  const rules = execSync(`stack exec fireward -- -i ${wardName}`, {encoding: 'utf8'});
+  // if (name=='simple') console.log(rules);
   const ts = execSync(`fireward -i ${wardName} -l typescript`, {encoding: 'utf8'});
   const prevTs = tryRead(tsName);
   if (ts && ts.trim()!==prevTs?.trim()) {

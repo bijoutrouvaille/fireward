@@ -1,0 +1,48 @@
+type StrTest = { 
+  test: const string
+  name: string
+}
+type IntTest = {
+  test: const int
+  name: string
+}
+type FloatTest = {
+  test: const float
+  name: string
+}
+type BoolTest = {
+  test: const bool
+  name: string
+}
+type MapTest = {
+  test: const map
+  name: string
+}
+type OptTest = {
+  test?: const string
+  name: string
+}
+match /str/{x} is StrTest {
+  allow read: true;
+  allow write: true;
+}
+match /int/{x} is IntTest {
+  allow read: true;
+  allow write: true;
+}
+match /float/{x} is FloatTest {
+  allow read: true;
+  allow write: true;
+}
+match /bool/{x} is BoolTest {
+  allow read: true;
+  allow write: true;
+}
+match /map/{x} is MapTest {
+  allow read: true;
+  allow write: true;
+}
+match /opt/{x} is OptTest {
+  allow read: true;
+  allow write: true;
+}

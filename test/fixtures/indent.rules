@@ -1,30 +1,27 @@
-function isX(data, prev) {
+function is____X(data, prev) {
   return data is int
   || data is string
   || data.keys().hasAll(['a', 'b'])
-    && data.size() >= 2
-    && data.size() <= 2
-    && data.keys().hasOnly(['a', 'b'])
-    && data.a is string
+  && data.size() >= 2 && data.size() <= 2
+  && data.keys().hasOnly(['a', 'b'])
+  && data.a is string
+  && (
+    data.b.keys().hasAll(['aa', 'bb'])
+    && data.b.size() >= 2 && data.b.size() <= 2
+    && data.b.keys().hasOnly(['aa', 'bb'])
     && (
-         data.b.keys().hasAll(['aa', 'bb'])
-      && data.b.size() >= 2
-      && data.b.size() <= 2
-      && data.b.keys().hasOnly(['aa', 'bb'])
-      && (
-           data.b.aa is int
-        || data.b.aa is string
-        )
-      && (
-           data.b.bb is string
-        || data.b.bb is int
-        || (data.b.bb is float || data.b.bb is int)
-        || data.b.bb.keys().hasAll(['n'])
-        && data.b.bb.size() >= 1
-        && data.b.bb.size() <= 1
-        && data.b.bb.keys().hasOnly(['n'])
-        && data.b.bb.n is string
-        )
-      || (data.b is float || data.b is int)
-      );
+      data.b.aa is int
+      || data.b.aa is string
+    )
+    && (
+      data.b.bb is string
+      || data.b.bb is int
+      || (data.b.bb is float || data.b.bb is int)
+      || data.b.bb.keys().hasAll(['n'])
+      && data.b.bb.size() >= 1 && data.b.bb.size() <= 1
+      && data.b.bb.keys().hasOnly(['n'])
+      && data.b.bb.n is string
+    )
+    || (data.b is float || data.b is int)
+  );
 }

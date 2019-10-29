@@ -18,6 +18,8 @@ library
   exposed-modules:     Parser
                        , RuleParser
                        , RuleGenerator
+                       , RuleLang
+                       , CodePrinter
                        , Combinators
                        , ExprParser
                        , ExprPrinter
@@ -50,6 +52,7 @@ test-suite fireward-test
   other-modules:      ExprParserSpec
                     , LocSpec
                     , LogicPrinterSpec
+                    , RuleLangSpec
                     , OptionParserSpec
                     , ParserSpec
                     , RuleGeneratorSpec

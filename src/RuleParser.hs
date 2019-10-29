@@ -57,7 +57,7 @@ data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
 -- TypeNameRef name (Maybe array-size)
-data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeRef TypeDef deriving (Show, Eq)
+data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeDef TypeDef deriving (Show, Eq)
 data Field = Field
            { required :: Bool
            , fieldName :: String
@@ -118,7 +118,7 @@ _typeDef = grouped "{" "}" $ do
 _typeRefs :: Parser [TypeRef]
 _typeRefs = manywith (symbol "|") ( 
   (withComma _singleTypeName)
-    <|> (InlineTypeRef <$> withComma _typeDef))
+    <|> (InlineTypeDef <$> withComma _typeDef))
   where
     comma = optional $ symbol ","
     withComma p = _terminated p comma

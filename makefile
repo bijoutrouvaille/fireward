@@ -47,3 +47,12 @@ release:
 v?=$(V)
 publish: 
 	cd npm-bin && ./publish.sh
+workExe:=$(shell stack path --dist-dir)/build/fireward/fireward
+
+watch-complex:
+	watch -i 1 make .test-complex
+.test-complex: $(workExe)
+	@stack build
+	touch .test-complex
+	$(workExe) -i ./test/fixtures/indent.ward
+

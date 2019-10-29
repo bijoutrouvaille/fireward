@@ -78,7 +78,7 @@ typeRefList ind refs =
                                             -- else intercalate " | " [ "["++intercalate ", " [ name | j <- [0..i]]++"]"
                                             --        | i <- [0..size-1]
                                                  -- ]
-    ref (InlineTypeRef def) = typeBlock ind def
+    ref (InlineTypeDef def) = typeBlock ind def
 
 topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs
 

@@ -1,0 +1,18 @@
+type ListTest = {
+  test: string[]
+}
+type OptListTest = {
+  test?: string[]
+}
+type MapTest = {
+  test: map
+}
+match /map/{x} is MapTest {
+  allow write: true;
+}
+match /olist/{x} is OptListTest {
+  allow write: true;
+}
+match /list/{x} is ListTest {
+  allow write: true;
+}
