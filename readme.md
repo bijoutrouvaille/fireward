@@ -214,9 +214,9 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Add error handling to the parser
 - [x] Add Windows and Linux release executables pipelines.
 - [x] End-to-end tests with the Firestore emulator
+- [x] Namespace validation functions (e.g. `isX` for `type X` should have a better name space). Done: now: `is____X`.
 - [ ] Allow for importing files
 - [ ] Allow for read/write conditions within types (validations)
-- [ ] Namespace validation functions (e.g. isX for type X should have a better namespace)
 - [ ] Expression variables
 - [ ] String literal types
 - [ ] Type intersections
