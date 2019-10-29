@@ -49,13 +49,13 @@ generate wrap source = q tree
     finalize :: [TopLevel] -> CodePrinter -> String
     finalize tops lines = printCode 0 $ do
       if wrap then do
+        optVars tops
+        _return
         _print "service cloud.firestore {"
         _indent
         _return
         _print "match /databases/{database}/documents {"
         _indent
-        _return
-        optVars tops
         _return
         lines
         _deindent
@@ -66,10 +66,12 @@ generate wrap source = q tree
         _print "}"
         else lines
 
+    isOptVar (TopLevelOpt _ _) = True
+    isOptVar _ = False
     optVar (TopLevelOpt name val) = _print $ name ++ " = " ++ val ++ ";"
     optVar _ = _print ""
-    optVars tops = _lines $ optVar <$> tops 
-    tree :: ParserResult [TopLevel]-- [([TopLevel], String)]
+    optVars tops = _lines . fmap optVar . filter isOptVar $ tops --optVar <$> tops 
+    tree :: ParserResult [TopLevel]
     tree = parseRules source
     q :: ParserResult [TopLevel] -> Either String String
     q (Right (tops, unparsed, l, c)) = 
