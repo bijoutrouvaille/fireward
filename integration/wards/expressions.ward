@@ -14,9 +14,9 @@ function z(v) {
   return v=='hello';
 }
 match /e/{x} {
-  allow write: if 1+2==2 && z(x);
+  allow write: if 1+2==3 && z(x);
 }
 
 match /f/{x} {
-  allow write: if 1+2==2 && x.matches('^he..o');
+  allow write: if 3+2==5 && x.matches('^he..o');
 }

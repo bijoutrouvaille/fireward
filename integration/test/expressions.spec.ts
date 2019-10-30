@@ -36,41 +36,41 @@ describe(WARD_NAME, function(){
       const data = {}
       await firebase.assertSucceeds(app.firestore().collection(`a`).doc(uid).set(data));
     })
-    // it(`fails write for impossible "a"!="a" || "b"!="b"`, async function(){
-      
-    //   const data = {}
-    //   await firebase.assertFails(app.firestore().collection(`b`).doc(uid).set(data));
-    // })
-    // it(`succeeds write for compound rule`, async function(){
-      
-    //   const data = {test: 'f'}
-    //   await firebase.assertSucceeds(app.firestore().collection(`c`).doc(uid).set(data));
+    it(`fails write for impossible "a"!="a" || "b"!="b"`, async function(){
 
-    // })
-    // it(`fails write for compound rule`, async function(){
-      
-    //   const data = {test: 'g'}
-    //   await firebase.assertFails(app.firestore().collection(`c`).doc(uid).set(data));
+      const data = {}
+      await firebase.assertFails(app.firestore().collection(`b`).doc(uid).set(data));
+    })
+    it(`succeeds write for compound rule`, async function(){
 
-    // })
-    // it(`succeeds write for indexed element [1,2,3][1]==2`, async function(){
-      
-    //   const data = {test: 'f'}
-    //   await firebase.assertSucceeds(app.firestore().collection(`d`).doc(uid).set(data));
+      const data = {test: 'f'}
+      await firebase.assertSucceeds(app.firestore().collection(`c`).doc(uid).set(data));
 
-    // })
-    // it(`succeeds write for a function call`, async function(){
-      
-    //   const data = {test: 'f'}
-    //   await firebase.assertSucceeds(app.firestore().collection(`e`).doc('hello').set(data));
+    })
+    it(`fails write for compound rule`, async function(){
 
-    // })
-    // it(`succeeds write for a regex match`, async function(){
-      
-    //   const data = {test: 'f'}
-    //   await firebase.assertSucceeds(app.firestore().collection(`f`).doc('hello').set(data));
+      const data = {test: 'g'}
+      await firebase.assertFails(app.firestore().collection(`c`).doc(uid).set(data));
 
-    // })
+    })
+    it(`succeeds write for indexed element [1,2,3][1]==2`, async function(){
+
+      const data = {test: 'f'}
+      await firebase.assertSucceeds(app.firestore().collection(`d`).doc(uid).set(data));
+
+    })
+    it(`succeeds write for a function call`, async function(){
+
+      const data = {test: 'f'}
+      await firebase.assertSucceeds(app.firestore().collection(`e`).doc('hello').set(data));
+
+    })
+    it(`succeeds write for a regex match`, async function(){
+
+      const data = {test: 'f'}
+      await firebase.assertSucceeds(app.firestore().collection(`f`).doc('hello').set(data));
+
+    })
   })
   
 })
