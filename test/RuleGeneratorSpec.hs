@@ -76,7 +76,7 @@ spec = do
     --    , "}"
     --    ]
 
-
+    
     it "generates a type for all optional fields" $
       gu [ "type Z = {"
          , "  a?: string"

@@ -43,6 +43,10 @@ spec = do
       ex "true || false" `shouldBe` "true || false"
     it "parses || and &&" $
       ex "1 || 2 && 3" `shouldBe` "1 || 2 && 3"
+    it "parses equality" $ do
+      ex "1==1" `shouldBe` "1 == 1"
+    it "parses as operand" $ do
+      ex "1==1 && 2==2" `shouldBe` "1 == 1 && 2 == 2"
     it "parses grouped expr" $
       ex "(1 + 2 == 4) || 5 || 6" `shouldBe` "(1 + 2 == 4) || 5 || 6" 
     it "parses an inner group" $
@@ -105,6 +109,18 @@ spec = do
       ex "hello.map({ \"a\": { \"bac\": a.b.c()} })" `shouldBe` "hello.map({ \"a\": { \"bac\": a.b.c() } })" 
     it "parses a nested map literal" $
       ex "hello.map({ a: { bac: a.b.c()} })[123:123]" `shouldBe` "hello.map({ \"a\": { \"bac\": a.b.c() } })[123:123]" 
+    it "parses a ' string" $
+      ex "x('ff gg')" `shouldBe` "x('ff gg')"
+    it "parses a \" string" $
+      ex "x(\"ff gg\")" `shouldBe` "x(\"ff gg\")"
+    it "parses a \" string with semicolon" $
+      ex "x(\"ff;gg\")" `shouldBe` "x(\"ff;gg\")"
+    it "parses a string equality" $ 
+      ex "\"111\" == \"222\"" `shouldBe` "\"111\" == \"222\""
+    it "parses a string equality" $ 
+      ex "\"111\" == \"222\"" `shouldBe` "\"111\" == \"222\""
+    it "parses an expression with inner semicolons" $ do
+      ex "x==\"123;\" && y-3==4 ;" `shouldBe` "x == \"123;\" && y - 3 == 4"
 
 
 

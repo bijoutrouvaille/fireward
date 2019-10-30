@@ -224,7 +224,7 @@ expr = do
         left <- possiblyIndexed
         optional baddies
         op <- optional $ altr [ symbol (show o) >> return o | o <- allbinops ]
-        let rightP op = require ("could not parse right side of operator " ++ show op) binOrExpr
+        let rightP op = require ("could not parse right side of operator " ++ show op) (token binOrExpr)
         let result Nothing = return left
             result (Just op) = ExprBin op left <$> rightP op
         result op

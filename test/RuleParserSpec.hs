@@ -74,7 +74,7 @@ spec = do
     -- data PathDirective = PathDirective [PathOp] PathCondition
     it "parses a path directive" $
       _apply _pathDir "allow read: if 1<3 && true;" `shouldBe` 
-        Right (PathDirective [ "read" ] "1<3 && true", "")
+        Right (PathDirective [ "read" ] "1 < 3 && true", "")
       
 
 
@@ -88,7 +88,7 @@ spec = do
                      PathPartStatic "stat",
                      PathPartVar "var",
                      PathPartWild "wild"
-                   ] [] [PathBodyDir (PathDirective ["read"] "1>2 && 3<4")])
+                   ] [] [PathBodyDir (PathDirective ["read"] "1 > 2 && 3 < 4")])
                  ],"")
     it "parses a field and a path" $
       _parse (unlines 
@@ -103,7 +103,7 @@ spec = do
                     PathPartVar "var",
                     PathPartWild "wild" 
                   ] [] [
-                    PathBodyDir (PathDirective ["read"] "1>2 && 3<4")
+                    PathBodyDir (PathDirective ["read"] "1 > 2 && 3 < 4")
                   ])
                  ],"")
 
@@ -123,7 +123,14 @@ spec = do
     it "allows a semicolon after type definition" $ do
       _parse "type X = string;" `shouldBe` Right ([TopLevelType "X" [TypeNameRef "string" Nothing]], "")
 
-    it "fails on weird type def" $ do
+    it "parses regex" $ do
+      _parse "match /x/x { allow write: if name.match('test'); }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x",PathPartStatic "x"] [] [PathBodyDir (PathDirective ["write"] "name.match('test')")])],"")
+    it "parses a regex call with other condition" $ do
+      _parse "match /f/{x} {\n  allow write: if 1+2==2 && x.match('^he..o'); \n}" `shouldBe` 
+        Right ([TopLevelPath (PathDef [PathPartStatic "f",PathPartVar "x"] [] [PathBodyDir (PathDirective ["write"] "1 + 2 == 2 && x.match('^he..o')")])],"")
+                                             --Right([], "")
+
+    it "fails on a property without a definition" $ do
       _parse "type X = {fff}" `shouldBe` failure ("type `X` is missing definition", 0, 8)
     it "fails when a field lacks a type" $ do
       _parse "type X = {a: }" `shouldBe` failure ("field `a` lacks a type", 0, 12) 
@@ -141,8 +148,17 @@ spec = do
     it "fails when path has an `is` but no type" $ do
       _parse "match /x is {}" `shouldBe` failure ("expected a `{`", 0, 14)
 
+    it "parses a string" $ do
+      (_apply _string "\"abc\"") `shouldBe` Right ("\"abc\"", "")
+    it "parses a string with semicolons" $ do
+      (_apply _string "\"abc;\"") `shouldBe` Right ("\"abc;\"", "")
+    it "parses a string with foreign quotes" $ do
+      (_apply _string "\"abc'\"") `shouldBe` Right ("\"abc'\"", "")
+    it "parses a string with own but escaped quotes" $ do
+      (_apply _string "\"abc\\\"\"") `shouldBe` Right ("\"abc\\\"\"", "")
+
     it "allows for strings with semicolons in rule conditions" $ do
-      _parse "match /x { allow read: if x==\"123;\" && y-3=4 ; }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x"] [] [PathBodyDir (PathDirective ["read"] "x==\"123;\" && y-3=4")])],"")
+      _parse "match /x { allow read: if x==\"123;\" && y-3==4 ; }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x"] [] [PathBodyDir (PathDirective ["read"] "x == \"123;\" && y - 3 == 4")])],"")
 
     it "parses multiple directives without semicolon separators" $ do
       let r = unlines

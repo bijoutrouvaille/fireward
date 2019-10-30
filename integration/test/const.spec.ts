@@ -10,6 +10,7 @@ const WARD_NAME = 'const';
 type App = ReturnType<typeof firebase.initializeTestApp>;
 let app: App;
 
+
 before(async function(){
   this.timeout('10s')
   await isEmulatorReady();

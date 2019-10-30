@@ -2,6 +2,9 @@ import {readFileSync, writeFileSync} from 'fs';
 import {execSync} from 'child_process';
 import firebase = require('@firebase/testing');
 type App = ReturnType<typeof firebase.initializeTestApp>;
+const isWin = process.platform.toLocaleLowerCase().includes('windows');
+const execPath = '../'+execSync(`stack path --dist-dir`, {encoding: 'utf8'}).trim() + `/build/fireward/fireward` 
+  + (isWin ? '.exe' : '');
 
 const tryRead = (path: string) => {
   try {
@@ -24,9 +27,8 @@ export const loadRules = function loadRules(wardFile: string, app = firebase.app
   const wardName = `./wards/${name}.ward`;
   const tsName = `./wards/${name}.ts`;
 
-  const rules = execSync(`stack exec fireward -- -i ${wardName}`, {encoding: 'utf8'});
-  // if (name=='simple') console.log(rules);
-  const ts = execSync(`fireward -i ${wardName} -l typescript`, {encoding: 'utf8'});
+  const rules = execSync(execPath + ` -i ${wardName}`, {encoding: 'utf8'});
+  const ts = execSync(execPath + ` -i ${wardName} -l typescript`, {encoding: 'utf8'});
   const prevTs = tryRead(tsName);
   if (ts && ts.trim()!==prevTs?.trim()) {
     writeFileSync(tsName, ts, {encoding: 'utf8'});

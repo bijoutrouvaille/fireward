@@ -30,6 +30,8 @@ import Control.Applicative (optional)
 import Data.Char (isSpace)
 import Text.Read (readMaybe)
 import Combinators
+import qualified ExprParser (expr) 
+import qualified ExprPrinter (printExpr) 
 
 data TopLevel = TopLevelType String [TypeRef]
               | TopLevelPath PathDef
@@ -91,10 +93,14 @@ _funcBody = token $ do
 
       
 
-_expr :: Parser () -> Parser String
-_expr terminator = do
-  let quotes = oneOf "'\"" >> return ()
-  trim <$> concat <$>  (many (_string <|> (whileNot (quotes <|> terminator))))
+_expr :: Parser String
+_expr = do
+  e <- ExprParser.expr
+  return $ ExprPrinter.printExpr e
+-- _expr :: Parser () -> Parser String
+-- _expr terminator = do
+  -- let quotes = oneOf "'\"" >> return ()
+  -- trim <$> concat <$>  (many (_string <|> (whileNot (quotes <|> terminator))))
 
 _funcDef :: Parser FuncDef
 _funcDef = do
@@ -103,7 +109,8 @@ _funcDef = do
   params <- require ("function `"++name++"` is missing the parameter list") $ grouped "(" ")" paramList
   require ("function `"++name++"` is missing an opening `{`") $ symbol "{"
   optional $ symbol "return"
-  body <- _expr $ oneOf ";}" >> return ()
+  body' <- optional _expr -- $ oneOf ";}" >> return ()
+  let body = maybe "" id body'
   optional $ symbol ";"
   require ("function `"++name++"` is missing a closing `}`") $ symbol "}"
   guardWith ("function `"++name++"` is missing a body") (length body > 0)
@@ -194,7 +201,7 @@ _pathDir = do
   require "path directive is missing a `:`" $ symbol ":"
   optional $ symbol "if"
   optional space
-  body <- _expr $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
+  body <- _expr -- $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
   optional $ char ';'
   return $ PathDirective ops body
 

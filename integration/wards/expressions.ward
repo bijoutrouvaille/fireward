@@ -1,0 +1,22 @@
+match /a/{x} {
+  allow write: if 1==1 || 2==2;
+}
+match /b/{x} {
+  allow write: if "a"!="a" || "b"!="b";
+}
+match /c/{x} is {test: string} {
+  allow write: if request.resource.data.test=="f" && 1==1;
+}
+match /d/{x} is {test: string} {
+  allow write: if [1,2,3][1]==2;
+}
+function z(v) {
+  return v=='hello';
+}
+match /e/{x} {
+  allow write: if 1+2==2 && z(x);
+}
+
+match /f/{x} {
+  allow write: if 1+2==2 && x.matches('^he..o');
+}

@@ -108,7 +108,7 @@ instance Monad Parser where
      
 require msg p = Parser q
   where q s = res (apply p s)
-        res (Right (x, s, l, c)) = Right (x, s, l, c) 
+        res val@(Right _) = val
         res (Left Nothing) = failure (msg, 0, 0)
         res e = e
 
