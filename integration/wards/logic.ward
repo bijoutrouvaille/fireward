@@ -6,3 +6,22 @@ match /users/{userId} is User {
   allow create: true;
   allow update: request.auth!=null && request.auth.uid==userId;
 }
+
+match /dir/{userId} {
+  allow read
+  allow write: false;
+}
+match /paths/{x} {
+  allow read: if exists(/test/$(a)/$(b())/$(b(a)))
+}
+match /test/test {
+  allow read: if data().keys().hasAll(['a', 'b', 'c']);
+}
+
+function test (a,b) {
+  return true
+}
+
+match /test/test {
+  allow read: if test(true, 'asdf');
+}

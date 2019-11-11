@@ -10,8 +10,10 @@ commajoin = intercalate ", "
 
 printExpr :: Expr -> String
 printExpr (ExprGrp expr) = "(" ++ printExpr expr ++ ")"
-printExpr (ExprBin op left right) = printExpr left ++ " " ++ show op ++ " " ++ printExpr right
-printExpr (ExprCall funcName exprs) = funcName ++ "(" ++ printArr ", " exprs ++ ")"
+printExpr (ExprBin op left right) = if op==OpDot 
+                                       then printExpr left ++ show op ++ printExpr right
+                                       else printExpr left ++ " " ++ show op ++ " " ++ printExpr right
+printExpr (ExprCall call) = printFuncCall call -- funcName ++ "(" ++ printArr ", " exprs ++ ")"
 printExpr (ExprVar var) = var
 printExpr (ExprUn op expr) = show op ++ printExpr expr
 printExpr (ExprStr s) = s-- "\"" ++ s ++ "\""
@@ -21,9 +23,15 @@ printExpr (ExprBool True) = "true"
 printExpr (ExprBool False) = "false"
 printExpr (ExprNull) = "null"
 printExpr (ExprIndexed e i r) = printExpr e ++ "[" ++ printExpr i ++ printIxRange r ++ "]"
-printExpr (ExprPath p) = "(" ++ p ++ ")"
+printExpr (ExprPath parts) = "(/" ++ intercalate "/" (fmap printPathPart parts) ++ ")"
 printExpr (ExprList es) = "[" ++ (commajoin [ printExpr e | e <- es ]) ++ "]"
 printExpr (ExprMap kvs) = "{ " ++ (commajoin [ printKeyVal kv | kv <- kvs]) ++ " }"
+
+printPathPart (PathPartString s) = s
+printPathPart (PathPartVar n) = "$("++n++")"
+printPathPart (PathPartCall f) = "$(" ++ printFuncCall f ++ ")"
+
+printFuncCall (FuncCall funcName exprs) = funcName ++ "(" ++ printArr ", " exprs ++ ")"
 
 printKeyVal (s, e) = s ++ ": " ++ printExpr e
 printIxRange Nothing = ""

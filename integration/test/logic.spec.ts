@@ -52,5 +52,11 @@ describe(WARD_NAME, function(){
       await app.firestore().collection(`users`).doc(uid).set(user);
       await firebase.assertFails(app.firestore().collection('users').doc(uid).delete())
     })
+    it(`allows read of a directive without a body`, async function() {
+      await firebase.assertSucceeds(app.firestore().collection('dir').doc(uid).get())
+    })
+    it(`denies write of a directive with 'false' body`, async function() {
+      await firebase.assertFails(app.firestore().collection('dir').doc(uid).set({}))
+    })
   })
 })

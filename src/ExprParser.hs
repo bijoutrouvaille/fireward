@@ -3,6 +3,8 @@ module ExprParser (
   Expr(..),
   BinOp(..),
   UnOp(..),
+  PathPart(..),
+  FuncCall(..)
 ) where
 
 {-
@@ -81,11 +83,11 @@ instance Show BinOp where
   show OpLt = "<"
   show OpLte = "<="
 
-
-
+data FuncCall = FuncCall String [Expr] deriving (Show, Eq)
+data PathPart = PathPartString String | PathPartVar String | PathPartCall FuncCall deriving (Show, Eq)
 data Expr = ExprGrp Expr 
           | ExprBin BinOp Expr Expr 
-          | ExprCall String [Expr] 
+          | ExprCall FuncCall
           | ExprVar String 
           | ExprUn UnOp Expr 
           | ExprStr String 
@@ -94,7 +96,7 @@ data Expr = ExprGrp Expr
           | ExprBool Bool 
           | ExprNull
           | ExprIndexed Expr Expr (Maybe Expr)
-          | ExprPath String
+          | ExprPath [PathPart]
           | ExprList [Expr]
           | ExprMap [(String, Expr)]
           deriving (Show, Eq)
@@ -136,31 +138,40 @@ expr = do
       require "expected a closing ')'" $ symbol ")"
       return $ ExprGrp e
 
-    pathvar :: Parser String
+    pathvar :: Parser PathPart
     pathvar = do 
       let _head = _alpha <|> oneOf "_"
       let _tail = digit <|> _head
       let _name = _concat [some _head, many _tail] ""
+      let _const = PathPartVar <$> _name
+      let _call = PathPartCall <$> funcCall
       symbol "$(" 
-      name <- require "path variable $(...) missing a name" _name
-      require "missing closing paren on var $(" $ symbol ")"
-      return $ "$(" ++ name ++ ")"
+      val <- require "path variable $(...) missing a name" (_call <|> _const)
+      require "missing closing paren on $(" $ symbol ")"
+      return val
+      -- return $ PathPartVar name
 
-
-    rawpath :: Parser Expr
-    rawpath = do
+    rawpathlit :: Parser Expr
+    rawpathlit = do
       let sep = symbol "/"
        
-      let lit = some $ _alpha <|> digit <|> oneOf "_-" 
-      let parts = somewith sep (token pathvar <|> token lit)
-      let pathstr = ("/"++) . intercalate "/" <$> parts
+      let lit = fmap PathPartString . some $ _alpha <|> digit <|> oneOf "_-" 
+      -- let parts = somewith sep (token pathvar <|> token lit)
+      -- let pathstr = ("/"++) . intercalate "/" <$> parts
 
-      symbol "("
       token sep
-      p <- require "path must contain at least 1 part" pathstr
-      require "raw path is missing a closing paren `)`" $ symbol ")"
+      parts <- somewith sep (token pathvar <|> token lit)
+      -- p <- require "path must contain at least 1 part" pathstr
+      guardWith "path must contain at least 1 part" (length parts > 0)
 
-      return $ ExprPath p
+      return $ ExprPath parts
+      
+    pathlit :: Parser Expr
+    pathlit = do
+      symbol "("
+      p <- rawpathlit
+      require "raw path is missing a closing paren `)`" $ symbol ")"
+      return p
 
     baddies = 
       altr [ symbol b >> failWith ("symbol " ++ b ++ " not allowed.") 
@@ -188,7 +199,7 @@ expr = do
 
     listlit = do
       symbol "["
-      e <- manywith (symbol ",") _expr
+      e <- manywith (symbol ",") (token _expr)
       require "list missing closing bracket `]`" $ symbol "]"
       return $ ExprList e
 
@@ -206,12 +217,21 @@ expr = do
         keyval = (,) <$> token key <*> val
 
 
+    funcCall = token $ do
+      optional space
+      namePath <- somewith (symbol ".") _varName
+      let name = intercalate "." namePath
+      symbol "("
+      params <- manywith (symbol ",") (token funcParam)
+      require "function call expected a closing paren `)`" $ symbol ")"
+      return $ FuncCall name params
+      where funcParam = rawpathlit <|> _expr
 
     unit = binOrExpr where
       atom = baddies 
         <|> maplit 
         <|> listlit 
-        <|> rawpath 
+        <|> pathlit 
         <|> unop 
         <|> gp 
         <|> num 
@@ -246,15 +266,9 @@ expr = do
       optional space
       x <- somewith (symbol ".") _varName
       return $ ExprVar (intercalate "." x) 
-
     func = token $ do
-      optional space
-      namePath <- somewith (symbol ".") _varName
-      let name = intercalate "." namePath
-      symbol "("
-      params <- manywith (symbol ",") _expr
-      require "function call expected a closing paren `)`" $ symbol ")"
-      return $ ExprCall name params
+      f <- funcCall
+      return $ ExprCall f
 
 
       

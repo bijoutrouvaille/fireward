@@ -198,12 +198,17 @@ _pathDir = do
     , "update"
     , "delete" ]
   guardWith "must provide at least one operation in a path directive" (length ops > 0)
-  require "path directive is missing a `:`" $ symbol ":"
-  optional $ symbol "if"
-  optional space
-  body <- _expr -- $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
-  optional $ char ';'
-  return $ PathDirective ops body
+  e <- optional explicit
+  let dir = PathDirective ops $ maybe "true" id e
+  optional $ symbol ";"
+  return dir
+  where 
+    explicit = do
+      symbol ":"
+      optional $ symbol "if"
+      optional space
+      body <- _expr -- $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
+      return body
 
 _pathBodyFunc = PathBodyFunc <$> _funcDef
 _pathBodyPath = PathBodyPath <$> _path

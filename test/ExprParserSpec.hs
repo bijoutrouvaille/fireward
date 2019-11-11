@@ -97,6 +97,8 @@ spec = do
       ex "(/docs/$(abc)/123)" `shouldBe` "(/docs/$(abc)/123)"
     it "parses a number list" $
       ex "[ 1, 2  , 3 ]" `shouldBe`  "[1, 2, 3]"
+    it "parses a string list" $
+      ex "['a', 'b', 'c']" `shouldBe`  "['a', 'b', 'c']"
     it "parses an empty list" $
       ex "[]" `shouldBe`  "[]"
     it "parses an expr list" $
@@ -121,7 +123,10 @@ spec = do
       ex "\"111\" == \"222\"" `shouldBe` "\"111\" == \"222\""
     it "parses an expression with inner semicolons" $ do
       ex "x==\"123;\" && y-3==4 ;" `shouldBe` "x == \"123;\" && y - 3 == 4"
-
+    it "parses issue 11 func call" $ do
+      ex "exists(/test/$(a)/$(b())/$(b(a)))" `shouldBe` "exists((/test/$(a)/$(b())/$(b(a))))"
+    it "parses (issue 11) array within a func call" $ do
+      ex "data().keys().hasAll(['a', 'b', 'c'])" `shouldBe` "data().keys().hasAll(['a', 'b', 'c'])"
 
 
         
