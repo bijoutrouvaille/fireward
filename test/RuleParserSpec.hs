@@ -225,6 +225,9 @@ spec = do
           Field True "four" [TypeNameRef "P" Nothing, TypeNameRef "X" Nothing] False
         ])] False
       ])]],"")
+    it "parses a function that returns a string" $ 
+      _parse "function q(a) { return 'p' }" `shouldBe` Right ([TopLevelFunc (FuncDef "q" ["a"] "'p'")], "")
+
     it "parses a function a type and a path" $
       _parse (unlines [
         "type Zxx = { ",

@@ -99,6 +99,8 @@ spec = do
       ex "[ 1, 2  , 3 ]" `shouldBe`  "[1, 2, 3]"
     it "parses a string list" $
       ex "['a', 'b', 'c']" `shouldBe`  "['a', 'b', 'c']"
+    it "parses a catenation with string" $
+      ex "'a' + b" `shouldBe` "'a' + b"
     it "parses an empty list" $
       ex "[]" `shouldBe`  "[]"
     it "parses an expr list" $

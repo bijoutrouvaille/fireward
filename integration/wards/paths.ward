@@ -1,0 +1,24 @@
+
+function q(a) { return 'qq' }
+
+match /refz/{x} {
+  allow write;
+  allow read;
+}
+match /exists/{x} {
+  allow write: if exists(/databases/$(database)/documents/$(x)/$(q(x)))
+}
+match /paths/{x} {
+  allow read: if exists(/test/$(a)/$(b())/$(b(a)))
+}
+match /test/test {
+  allow read: if data().keys().hasAll(['a', 'b', 'c']);
+}
+
+function test (a,b) {
+  return true
+}
+
+match /test/test {
+  allow read: if test(true, 'asdf');
+}

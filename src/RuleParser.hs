@@ -58,7 +58,8 @@ data PathBodyItem = PathBodyDir PathDirective
 data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
--- TypeNameRef name (Maybe array-size)
+
+-- TypeNameRef name-of-the-type (Maybe array-size) -- Nothing if not array or not array not finite
 data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeDef TypeDef deriving (Show, Eq)
 data Field = Field
            { required :: Bool
@@ -67,12 +68,6 @@ data Field = Field
            , constant :: Bool
            } deriving (Show, Eq)
 
-
-
-
-{-
-- str = "(all - {"})*"
--}
 
 _topLevelOptVar = do
   name <- token _var
@@ -97,24 +92,29 @@ _expr :: Parser String
 _expr = do
   e <- ExprParser.expr
   return $ ExprPrinter.printExpr e
--- _expr :: Parser () -> Parser String
--- _expr terminator = do
-  -- let quotes = oneOf "'\"" >> return ()
-  -- trim <$> concat <$>  (many (_string <|> (whileNot (quotes <|> terminator))))
 
 _funcDef :: Parser FuncDef
 _funcDef = do
   symbol "function"
   name <- require "missing function name" $ token _varName
-  params <- require ("function `"++name++"` is missing the parameter list") $ grouped "(" ")" paramList
-  require ("function `"++name++"` is missing an opening `{`") $ symbol "{"
+  params <- require ("function `"++name++"` is missing the parameter list") $ 
+    grouped "(" ")" paramList
+  require ("function `"++name++"` is missing an opening `{`") $ 
+    symbol "{"
+
   optional $ symbol "return"
-  body' <- optional _expr -- $ oneOf ";}" >> return ()
+  body' <- optional $ token _expr 
   let body = maybe "" id body'
+
   optional $ symbol ";"
-  require ("function `"++name++"` is missing a closing `}`") $ symbol "}"
+
+  require ("function `"++name++"` is missing a closing `}`") $ 
+    symbol "}"
+
   guardWith ("function `"++name++"` is missing a body") (length body > 0)
+
   return $ FuncDef name params (trim body)
+
   where paramList = separated "," (token _varName)
 
 _typeDef :: Parser TypeDef
@@ -207,7 +207,7 @@ _pathDir = do
       symbol ":"
       optional $ symbol "if"
       optional space
-      body <- _expr -- $ (void $ oneOf "};") <|> symbol "allow" <|> symbol "function" <|> symbol "match"
+      body <- token _expr 
       return body
 
 _pathBodyFunc = PathBodyFunc <$> _funcDef
