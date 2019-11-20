@@ -91,20 +91,28 @@ spec = do
       ex "x[4:7]" `shouldBe` "x[4:7]"
     it "parses expr index range" $
       ex "x[f(a.b) : g(p( n + 7))]" `shouldBe` "x[f(a.b):g(p(n + 7))]"
+
+    -- PATHS
     it "parses a simple path" $
       ex "(/docs)" `shouldBe` "(/docs)"
     it "parses a path with variable" $ 
       ex "(/docs/$(abc)/123)" `shouldBe` "(/docs/$(abc)/123)"
+    it "parses a path with dot operator" $
+      ex "(/hello/$(a.world)/1)" `shouldBe` "(/hello/$(a.world)/1)" 
+
+    -- LISTS
     it "parses a number list" $
       ex "[ 1, 2  , 3 ]" `shouldBe`  "[1, 2, 3]"
     it "parses a string list" $
       ex "['a', 'b', 'c']" `shouldBe`  "['a', 'b', 'c']"
-    it "parses a catenation with string" $
-      ex "'a' + b" `shouldBe` "'a' + b"
     it "parses an empty list" $
       ex "[]" `shouldBe`  "[]"
     it "parses an expr list" $
       ex "[a ||b, true && f() || 5]" `shouldBe`  "[a || b, true && f() || 5]"
+
+    -- MISC
+    it "parses a catenation with string" $
+      ex "'a' + b" `shouldBe` "'a' + b"
     it "fails on missing list bracket" $
       ex "f(f.g([ 1, 2))" `shouldBe` "list missing closing bracket `]` 0:12"
     it "parses a map literal" $

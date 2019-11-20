@@ -56,3 +56,5 @@ watch-complex:
 	touch .test-complex
 	$(workExe) -i ./test/fixtures/indent.ward
 
+smoke-test:
+	cat examples/smoke-test.ward | stack exec fireward

@@ -84,7 +84,8 @@ instance Show BinOp where
   show OpLte = "<="
 
 data FuncCall = FuncCall String [Expr] deriving (Show, Eq)
-data PathPart = PathPartString String | PathPartVar String | PathPartCall FuncCall deriving (Show, Eq)
+data PathPart = PathPartLit String | PathPartExpr Expr
+              deriving (Show, Eq)
 data Expr = ExprGrp Expr 
           | ExprBin BinOp Expr Expr 
           | ExprCall FuncCall
@@ -132,36 +133,23 @@ expr = do
   return e
   where 
     _expr = unit
-    gp = do
+    gp = do -- group
       symbol "("
       e <- unit
       require "expected a closing ')'" $ symbol ")"
       return $ ExprGrp e
 
-    pathvar :: Parser PathPart
-    pathvar = do 
-      let _head = _alpha <|> oneOf "_"
-      let _tail = digit <|> _head
-      let _name = _concat [some _head, many _tail] ""
-      let _const = PathPartVar <$> _name
-      let _call = PathPartCall <$> funcCall
-      symbol "$(" 
-      val <- require "path variable $(...) missing a name" (_call <|> _const)
-      require "missing closing paren on $(" $ symbol ")"
-      return val
-      -- return $ PathPartVar name
-
     rawpathlit :: Parser Expr
     rawpathlit = do
+
+      let pathExpr = PathPartExpr <$> grouped "$(" ")" _expr
+      let pathLit = fmap PathPartLit . some $ _alpha <|> digit <|> oneOf "_-" 
+
       let sep = symbol "/"
        
-      let lit = fmap PathPartString . some $ _alpha <|> digit <|> oneOf "_-" 
-      -- let parts = somewith sep (token pathvar <|> token lit)
-      -- let pathstr = ("/"++) . intercalate "/" <$> parts
 
       token sep
-      parts <- somewith sep (token pathvar <|> token lit)
-      -- p <- require "path must contain at least 1 part" pathstr
+      parts <- somewith sep (token pathLit <|> token pathExpr)
       guardWith "path must contain at least 1 part" (length parts > 0)
 
       return $ ExprPath parts

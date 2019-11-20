@@ -1,0 +1,7 @@
+// function somePath() {
+//  return /foo/bar
+// }
+
+function userExists() {
+  return exists(/users/$(request.auth.uid))
+}

@@ -27,9 +27,8 @@ printExpr (ExprPath parts) = "(/" ++ intercalate "/" (fmap printPathPart parts) 
 printExpr (ExprList es) = "[" ++ (commajoin [ printExpr e | e <- es ]) ++ "]"
 printExpr (ExprMap kvs) = "{ " ++ (commajoin [ printKeyVal kv | kv <- kvs]) ++ " }"
 
-printPathPart (PathPartString s) = s
-printPathPart (PathPartVar n) = "$("++n++")"
-printPathPart (PathPartCall f) = "$(" ++ printFuncCall f ++ ")"
+printPathPart (PathPartLit s) = s
+printPathPart (PathPartExpr e) = "$("++printExpr e++")"
 
 printFuncCall (FuncCall funcName exprs) = funcName ++ "(" ++ printArr ", " exprs ++ ")"
 
