@@ -47,8 +47,12 @@ data BinOp = OpAnd
            | OpLte
   deriving (Eq)
 
-allbinops = 
-  [ OpOr
+allbinops = -- make sure to list compound ones first, e.g. `<=` before `<`
+  [ OpGte
+  , OpLte
+  , OpNe
+  , OpEq
+  , OpOr
   , OpAnd
   , OpPlus
   , OpMinus
@@ -59,11 +63,7 @@ allbinops =
   , OpIn
   , OpMod
   , OpGt
-  , OpNe
-  , OpEq
-  , OpGte
   , OpLt
-  , OpLte
   ]
 instance Show BinOp where
   show OpOr = "||"

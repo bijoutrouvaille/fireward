@@ -57,4 +57,4 @@ watch-complex:
 	$(workExe) -i ./test/fixtures/indent.ward
 
 smoke-test:
-	cat examples/smoke-test.ward | stack exec fireward
+	cat examples/smoke-test.ward | stack exec fireward > /dev/null

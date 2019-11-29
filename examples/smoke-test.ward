@@ -1,7 +1,1823 @@
 function somePath() {
   return (/foo/bar)
 }
+// TODO uncomment
+// function somePath() {
+//  return /foo/bar
+// }
+
+// DONE uncomment
+function function_with_underscore () {
+  return (/path-with-dashes)
+}
+
+// DONE uncomment
+match /path-with-hyphens {
+  allow read: if exists(function_with_underscore()) && exists(/path-with/hyphen)
+}
+
+// DONE uncomment
+match /lte {
+  allow read: if (request.query.something <= 100)
+}
+
+// DONE uncomment
+match /gte {
+  allow read: if request.query.something >= 100
+}
+
+// DONE uncomment
+match /collection:with:colon {
+  allow read: if true;
+}
 
 function userExists() {
   return exists(/users/$(request.auth.uid))
+}
+
+function test (a,b) {
+  return true
+}
+
+match /test/test {
+  allow read: if test(true, 'asdf');
+}
+
+match /test/test {
+  allow read: if data().keys().hasAll(['a', 'b', 'c']);
+}
+
+function b () {
+  return "adsf"
+}
+
+match /test/{a} {
+  allow read: if exists(/test/$(a)/$(b())/$(b(a)))
+}
+
+match /test/{a} {
+  allow read
+}
+
+match /users/{id} {
+  allow write: if name.matches('test');
+}
+
+// https://firebase.google.com/docs/firestore/security/rules-conditions
+match /firestore_rules_conditions {
+  // True if the user is signed in or the requested data is 'public'
+  function signedInOrPublic() {
+    return request.auth.uid != null || resource.data.visibility == 'public';
+  }
+
+  match /cities/{city} {
+    allow read, write: if signedInOrPublic();
+  }
+
+  match /users/{user} {
+    allow read, write: if signedInOrPublic();
+  }
+
+  match /cities/{city} {
+    allow create: if exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true
+  }
+
+  match /cities/{city} {
+    allow update: if request.resource.data.population > 0
+      && request.resource.data.name == resource.data.name;
+  }
+}
+
+match /sage_team_cheezit {
+  // https://github.com/UMM-CSci-3601-F17/sage-team-cheezit/blob/1cdce21fd7d80874654d9f913d022753e7a07f9e/firestore.rules
+  // Licence: MIT (https://github.com/UMM-CSci-3601-F17/sage-team-cheezit/blob/1cdce21fd7d80874654d9f913d022753e7a07f9e/LICENSE)
+  match /decks/{deck} {
+    allow read: if resource.data.isPublic == true || (request.auth != null && //checks if the user is logged in
+        (request.auth.uid in resource.data.users || //checks if the user is in the users of the deck
+         request.auth.uid in get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.users)); //checks if the user is in the class that the deck is in
+
+    allow create: if request.auth != null && //checks if they are logged in
+      request.resource.data.name is string && //checks to make sure the deck name is a string
+      ((request.auth.uid in request.resource.data.users && //check that they are a user in the decks users if it is in my decks
+        request.resource.data.users[request.auth.uid].owner == true && //checks that the user is a deck owner in the users if it is in my decks
+        request.resource.data.users != null && //checks that users are being added to the deck
+        request.resource.data.name != null && //checks that a name is being added to the deck
+        request.resource.data.size() == 2) || //check that there are only 2 field values on the deck when its being added, name and users
+       (request.resource.data.classId is string && //checks if the class Id is a string
+        get(/databases/$(database)/documents/classes/$(request.resource.data.classId)).data.users[request.auth.uid].teacher == true) && //checks if the user in the class is a teacher
+       request.resource.data.classId != null && //checks that a classId is being added to the deck
+       request.resource.data.name != null && //checks that a name is being added to the deck
+       request.resource.data.size() == 2); //check that there are only 2 field values on the deck when its being added, name and classId
+
+    allow update: if request.auth != null && //checks if the user is logged in
+      request.resource.data.name is string && //checks to make sure the deck name is a string for renaming
+      ((request.auth.uid in resource.data.users && //check that they are a user in the decks users if it is in my decks
+        resource.data.users[request.auth.uid].owner == true && //checks that the user is a deck owner in the users if it is in my decks
+        (request.resource.data.users[request.auth.uid].owner == true || //checks to make sure if the user is moving a deck to my decks that its only being send to their my decks
+         get(/databases/$(database)/documents/classes/$(request.resource.data.classId)).data.users[request.auth.uid].teacher == true)) || //checks to make sure that if the user is moving a deck to a class they have to be a teacher in it
+       (resource.data.classId is string && //checks if the class Id is a string
+        get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.users[request.auth.uid].teacher == true && //checks if the user in the class is a teacher
+        (request.resource.data.users[request.auth.uid].owner == true || //checks to make sure if the user is moving a deck to my decks that its only being send to their my decks
+         get(/databases/$(database)/documents/classes/$(request.resource.data.classId)).data.users[request.auth.uid].teacher == true))); //checks to make sure that if the user is moving a deck to a class they have to be a teacher in it
+
+    allow delete: if request.auth != null && //checks if the user is logged in
+      ((request.auth.uid in resource.data.users && //check that they are a user in the decks users if it is in my decks
+        resource.data.users[request.auth.uid].owner == true) || //checks that the user is a deck owner in the users if it is in my decks
+       (resource.data.classId is string && //checks if the class Id is a string
+        get(/databases/$(database)/documents/classes/$(resource.data.classId)).data.users[request.auth.uid].teacher == true)) //checks if the user in the class is a teacher
+
+
+      match /cards/{card} {
+        function getDeck() {
+          return get(/databases/$(database)/documents/decks/$(deck)).data;
+        }
+
+        allow read: if true; //allows all people to read, this is already blocked by decks
+
+        allow create, update: if request.auth != null && //checks if the user is logged in
+          request.resource.data.synonym is list && //checks that the synonym is a list
+          request.resource.data.synonym.size() > 0 && //checks that the size of the list of synonyms is atleast 1
+          request.resource.data.antonym is list && //checks that the antonym is a list
+          request.resource.data.antonym.size() > 0 && //checks that the size of the list of antonyms is atleast 1
+          request.resource.data.general_sense is string && //checks that the general sense is a string
+          request.resource.data.general_sense.size() > 0 && //checks that the general sense is atleast 1 letter long
+          request.resource.data.example_usage is string && //checks that the example usage is a string
+          request.resource.data.example_usage.size() > 0 && //checks that the example usage is atleast 1 letter long
+          request.resource.data.word is string && //checks that the word is a string
+          request.resource.data.word.size() > 0 && //checks that the word is atleast 1 letter long
+          ((getDeck().users[request.auth.uid].owner == true) || //checks if the user owns the deck they are editing cards in
+           (request.auth.uid in get(/databases/$(database)/documents/classes/$(getDeck().classId)).data.users && //checks if the user is in the class that the cards deck is in
+            getDeck().studentEdit == true) || //checks if student editing is enabled in said deck
+           (get(/databases/$(database)/documents/classes/$(getDeck().classId)).data.users[request.auth.uid].teacher == true)); //checks if the user is a teacher in the class that the cards deck is in
+
+        allow delete: if request.auth != null && //checks if the user is logged in
+          ((getDeck().users[request.auth.uid].owner == true) || //checks if the user owns the deck they are editing cards in
+           (request.auth.uid in get(/databases/$(database)/documents/classes/$(getDeck().classId)).data.users && //checks if the user is in the class that the cards deck is in
+            getDeck().studentEdit == true) || //checks if student editing is enabled in said deck
+           (get(/databases/$(database)/documents/classes/$(getDeck().classId)).data.users[request.auth.uid].teacher == true)); //checks if the user is a teacher in the class that the cards deck is in
+      }
+  }
+  match /classes/{class} {
+    allow read: if request.auth != null && //checks if the user is logged in
+      request.auth.uid in resource.data.users; //checks if they are in the class
+
+    allow create: if request.auth != null && //checks if the user is logged in
+      request.resource.data.name is string && //checks if the class name is a string
+      request.resource.data.users.size() == 1 && //checks if only one user is being added to the new class
+      request.auth.uid in request.resource.data.users && //checks if the user creating the class is in it
+      request.resource.data.users[request.auth.uid].teacher == true; //checks if said person is set as a teacher
+
+    allow update: if request.auth != null && //checks if the user is logged in
+      (resource.data.users[request.auth.uid].teacher == true || //checks if the user is the teacher of the class
+       (request.resource.data.size() == resource.data.size() && //This is for students leaving classes, checks to make sure no fields were added or deleted
+        request.resource.data.joincode == resource.data.joincode && //checks to make sure the joincode hasn't changed
+        request.resource.data.name == resource.data.name && //checks to make sure the class name hasn't changed
+        request.resource.data.users.size() == resource.data.users.size() - 1 && //checks to make sure the user list has only reduced by one user
+        !(request.auth.uid in request.resource.data.users))|| //checks to make sure the user being deleted is the user doing it
+       (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.joincode == resource.data.joincode && //This is for students joining classes, checks to make sure the user has a joincode
+        !(request.auth.uid in resource.data.users) && //checks that the user is not already in the class
+        request.resource.data.size() == resource.data.size() && //checks to make sure no fields were added or deleted
+        request.resource.data.joincode == resource.data.joincode && //checks to make sure the joincode hasn't changed
+        request.resource.data.name == resource.data.name && //checks to make sure the class name hasn't changed
+        request.resource.data.users[request.auth.uid].teacher == false && //checks to make sure the user is not a teacher
+        request.resource.data.users.size() == resource.data.users.size() + 1 //checks to make sure the user list has only increased by one user
+       ));
+
+    //Because we have an undo button for removing students we cannot lock down teachers adding students
+    //The only place uid's can be gathered at the moment is in classes as far as we can tell which
+    //is already blocked by the join code so we are going to continue allowing teachers to add students.
+
+    allow delete: if request.auth != null && resource.data.users[request.auth.uid].teacher == true; //checks if the user is a teacher
+  }
+  match /users/{user} {
+    allow read, write: if request.auth.uid == user; //checks if the user id is the same as the document id
+  }
+}
+
+match /doocrate {
+  // https://github.com/Metaburn/doocrate/blob/936d55901a990bd1094f6e866e2ad02166f67d53/rules/firestore.rules
+  // Licence: MIT (https://github.com/Metaburn/doocrate/blob/936d55901a990bd1094f6e866e2ad02166f67d53/LICENSE)
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  //Read more about this here - https://dev.to/chinchang/restrict-specific-fields-updation-in-firebase-firestore-ohp
+  function notUpdating(field) {
+    return !(field in request.resource.data)
+      || resource.data[field] == request.resource.data[field]
+  }
+
+  // This is root level admin
+  function isSuperAdmin() {
+    return exists(/databases/$(database)/documents/super_admins/$(request.auth.uid));
+  }
+
+  function isSpecificProjectAdmin(anyProject) {
+    return exists(/databases/$(database)/documents/admins/$(request.auth.uid)/projects/$(anyProject))
+  }
+
+  function isGuide() {
+    return exists(/databases/$(database)/documents/guides/$(request.auth.uid));
+  }
+
+  function isCreator() {
+    return resource.data.creator != null &&
+      (request.auth.uid == resource.data.creator.data.id || request.auth.uid == resource.data.creator.id);
+  }
+
+  function isUserAssignee() {
+    return resource.data.assignee != null &&
+      (request.auth.uid == resource.data.assignee.data.id || request.auth.uid == resource.data.assignee.id);
+  }
+
+  function isUserAssigneeOrCreator() {
+    return isCreator() || isUserAssignee();
+  }
+
+  function isTaskUnassigned() {
+    return (request.resource.data.keys().hasAll(['assignee'])
+        && !resource.data.keys().hasAll(['assignee']));
+  }
+
+  // Check if project is public
+  // or if user has an email under the invites
+  function isUserInvited(anyProject) {
+    //return get(/databases/$(database)/documents/projects/$(anyProject)).data.isPublic ||
+    return request.auth.token.email in get(/databases/$(database)/documents/projects/$(anyProject)/invitation_lists/main).data.invites;
+  }
+
+  // Since firebase doesn't have the ability to specify what CAN be updated
+  // We need to say what CANNOT be updated - that is all of the tasks fields BUT listeners
+  function isNotUpdatingAnythingButListeners() {
+    return notUpdating('id') && notUpdating('title') && notUpdating('assignee')
+      && notUpdating('type') && notUpdating('projectName') && notUpdating('label')
+      && notUpdating('created') && notUpdating('dueDate') && notUpdating('creator')
+      && notUpdating('isDone') && notUpdating('doneDate') && notUpdating('description')
+      && notUpdating('requirements') && notUpdating('isCritical') && notUpdating('extraFields');
+  }
+
+  // Allow create for anyone who is auth
+  // Allow to update it the user is the project creator
+  match /projects/{anyProject} {
+    allow create: if isSignedIn();
+    allow read: if true; //Allow all to read the existing project
+    allow update: if isSignedIn() && isCreator() || isSuperAdmin();
+    allow delete: if isSignedIn() && isCreator() || isSuperAdmin();
+
+    match /tasks/{anyTask} {
+      allow read: if isSignedIn();
+      // Allow create: if authenticated
+      // Uncommment the canCreateTask will not allow users who already have tasks to create new tasks
+      allow create: if isSignedIn() && isUserInvited(anyProject) || isSpecificProjectAdmin(anyProject) || isSuperAdmin();
+      // Uncomment the following to allow unassigned task to be assigned by all
+      allow update: if isSignedIn() && isNotUpdatingAnythingButListeners()
+        ||
+        (isUserInvited(anyProject) && (isGuide() || isUserAssigneeOrCreator()
+                                       || isTaskUnassigned() || isNotUpdatingAnythingButListeners())
+        )
+        || isSpecificProjectAdmin(anyProject) || isSuperAdmin();
+      allow delete: if isSignedIn() && isSpecificProjectAdmin(anyProject) || (isUserInvited(anyProject) && isCreator()) || isSuperAdmin();
+    }
+
+    match /comments/{anyComment} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isUserInvited(anyProject) || isSpecificProjectAdmin(anyProject) || isSuperAdmin();
+      allow update: if isSignedIn() && isCreator();
+      allow delete: if isSignedIn() && isCreator();
+    }
+
+    match /invitation_lists/{anyInvitationList} {
+      allow create: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow read: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow update: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow delete: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+    }
+
+    match /invitations/{anyInvitation} {
+      allow create: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow read: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow update: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow delete: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+    }
+
+    match /colors/{anyColor} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
+      allow update: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow delete: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+    }
+
+    match /labels/{anyLabel} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
+      allow update: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+      allow delete: if isSignedIn() && (isSpecificProjectAdmin(anyProject) || isSuperAdmin());
+    }
+  }
+
+  match /users/{userId} {
+    allow read: if isSignedIn(); // Auth users can read
+    allow write: if userId == request.auth.uid || isSuperAdmin();
+  }
+
+  match /admins/{anyAdmin} {
+    allow read: if isSignedIn();
+    match /projects/{anyProject} {
+      allow read: if isSignedIn();
+    }
+  }
+
+  match /guides/{anyGuide} {
+    allow read: if isSignedIn();
+  }
+}
+
+match /nobox {
+  // https://github.com/Lipnevich/noxbox/blob/bbe06542bc486f1425a19ec0b97cbd85b1d0738c/functions/firestore.rules
+  // Licence: Apache Licence 2.0 (https://github.com/Lipnevich/noxbox/blob/bbe06542bc486f1425a19ec0b97cbd85b1d0738c/README.md)
+
+  match /ratings/{profileId} {
+    allow get: if request.auth.uid != null;
+  }
+
+  match /profiles/{profileId} {
+    allow get: if request.auth.uid == profileId;
+    allow create, update: if allowToProfileUpdate()
+      && request.auth.uid == profileId;
+  }
+
+  function allowToProfileUpdate(){
+    return resource.data.wallet.address == request.resource.data.wallet.address
+      && request.resource.data.id == request.auth.uid
+      // allow to add or remove link to new noxbox
+      // in case current noxbox is finished
+      && (resource.data.noxboxId == ''
+          || resource.data.noxboxId == request.resource.data.noxboxId
+          || !exists(/databases/$(database)/documents/noxboxes/$(resource.data.noxboxId))
+          || get(/databases/$(database)/documents/noxboxes/$(resource.data.noxboxId)).data.finished == true);
+  }
+
+
+  match /noxboxes/{noxboxId} {
+    allow create: if allowToCreateNoxbox() && request.resource.data.id == noxboxId;
+    allow update: if allowToNoxboxUpdate();
+
+    allow get: if allowToGetNoxbox();
+    // DONE uncomment
+    allow list: if request.query.limit <= 100 &&
+      allowToListNoxboxes();
+  }
+
+
+
+  function allowToGetNoxbox() {
+    return request.auth.uid != null
+      && (resource.data.timeRequested == 0
+          || resource.data.owner.id == request.auth.uid
+          || resource.data.party.id == request.auth.uid);
+  }
+
+  function allowToListNoxboxes() {
+    return request.auth.uid != null
+      && resource.data.finished
+      && (resource.data.payerId == request.auth.uid
+          || resource.data.performerId == request.auth.uid);
+  }
+
+  function allowToCreateNoxbox(){
+    return request.auth.uid != null
+      && request.resource.data.owner.id == request.auth.uid
+      && request.resource.data.timeCreated > 0
+      && request.resource.data.timeRemoved == 0
+      && request.resource.data.timeRequested == 0
+      && request.resource.data.timeCompleted == 0
+      && request.resource.data.timeAccepted == 0
+      && request.resource.data.timeCanceledByOwner == 0
+      && request.resource.data.timeCanceledByParty == 0
+      && request.resource.data.timeOwnerVerified == 0
+      && request.resource.data.timePartyVerified == 0
+      && request.resource.data.timeOwnerDisliked == 0
+      && request.resource.data.timeOwnerLiked == 0
+      && request.resource.data.timePartyDisliked == 0
+      && request.resource.data.timePartyLiked == 0
+      && request.resource.data.timeTimeout == 0
+      && request.resource.data.finished == false
+      && request.resource.data.role != null
+      && request.resource.data.type != null
+      && request.resource.data.price != null
+      && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.noxboxId == request.resource.data.id;
+  }
+
+
+  function allowToNoxboxUpdate(){
+    return request.auth.uid != null
+      // Constants
+      && request.resource.data.id == resource.data.id
+      && request.resource.data.role == resource.data.role
+      && request.resource.data.type == resource.data.type
+      && request.resource.data.price == resource.data.price
+      && request.resource.data.owner.id == resource.data.owner.id
+      // Only owner or party can update
+      && ((request.resource.data.owner.id == request.auth.uid
+            && (resource.data.timeRequested == 0
+              || request.resource.data.party.id == resource.data.party.id))
+          || (request.resource.data.party.id == request.auth.uid
+            &&  (resource.data.timeRequested == 0
+              || request.resource.data.party.id == resource.data.party.id)))
+      //Protect supply roles
+      && ((request.resource.data.owner.id == request.resource.data.performerId
+            && (request.resource.data.payerId == ''
+              || request.resource.data.party.id == request.resource.data.payerId)
+            && request.resource.data.role == 'supply')
+          //Protect demand roles
+          || (request.resource.data.owner.id == request.resource.data.payerId
+            && (request.resource.data.performerId == ''
+              || request.resource.data.party.id == request.resource.data.performerId)
+            && request.resource.data.role == 'demand'))
+      // Operations order
+      // DONE uncomment
+      && request.resource.data.timeRatingUpdated >= resource.data.timeRatingUpdated
+      && request.resource.data.timeOwnerDisliked >= resource.data.timeOwnerDisliked
+      && request.resource.data.timeOwnerLiked >= resource.data.timeOwnerLiked
+      && request.resource.data.timePartyDisliked >= resource.data.timePartyDisliked
+      && request.resource.data.timePartyLiked >= resource.data.timePartyLiked
+      && (request.resource.data.timeRequested == resource.data.timeRequested
+          || (resource.data.timeRequested == 0
+            && request.resource.data.party.name != ''
+            && request.resource.data.party.photo != ''
+            && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.wallet.address == request.resource.data.party.wallet.address))
+      && (request.resource.data.timeAccepted == resource.data.timeAccepted
+          || (resource.data.timeAccepted == 0
+            && resource.data.timeRequested > 0
+            && request.resource.data.owner.name != ''
+            && request.resource.data.owner.photo != ''
+            && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.wallet.address == request.resource.data.owner.wallet.address))
+      && (request.resource.data.timeTimeout == resource.data.timeTimeout
+          || (resource.data.timeTimeout == 0 && resource.data.timeAccepted == 0))
+      && (request.resource.data.timeCanceledByOwner == resource.data.timeCanceledByOwner
+          || (resource.data.timeCanceledByOwner == 0
+            && (resource.data.timeOwnerVerified == 0 || resource.data.timePartyVerified == 0)))
+      && (request.resource.data.timeCanceledByParty == resource.data.timeCanceledByParty
+          || (resource.data.timeCanceledByParty == 0
+            && (resource.data.timeOwnerVerified == 0 || resource.data.timePartyVerified == 0)))
+      && (request.resource.data.timeOwnerRejected == resource.data.timeOwnerRejected
+          || (resource.data.timeOwnerRejected == 0
+            && resource.data.timeOwnerVerified == 0))
+      && (request.resource.data.timePartyRejected == resource.data.timePartyRejected
+          || (resource.data.timePartyRejected == 0
+            && resource.data.timePartyVerified == 0))
+      && (request.resource.data.timeOwnerVerified == resource.data.timeOwnerVerified
+          || (resource.data.timeOwnerVerified == 0
+            && resource.data.timeAccepted > 0
+            && resource.data.timeOwnerRejected == 0))
+      && (request.resource.data.timePartyVerified == resource.data.timePartyVerified
+          || (resource.data.timePartyVerified == 0
+            && resource.data.timeAccepted > 0
+            && resource.data.timePartyRejected == 0))
+      && (request.resource.data.timeCompleted == resource.data.timeCompleted
+          || (resource.data.timeCompleted == 0
+            && resource.data.timeOwnerVerified > 0
+            && resource.data.timePartyVerified > 0))
+      //Photo replacement owner
+      && (request.resource.data.owner.photo == resource.data.owner.photo
+          || (request.auth.uid == resource.data.owner.id
+            && resource.data.timePartyRejected == 0
+            && resource.data.timePartyVerified == 0))
+      //Photo replacement party
+      && (resource.data.timeRequested == 0
+          || (request.resource.data.party.photo == resource.data.party.photo
+            || (request.auth.uid == resource.data.party.id
+              && resource.data.timeOwnerRejected == 0
+              && resource.data.timeOwnerVerified == 0)))
+      // Allow finish service once
+      && (request.resource.data.finished == resource.data.finished
+          || resource.data.finished == false)
+      // Party specific actions
+      && ((request.resource.data.timeRequested == resource.data.timeRequested
+            && request.resource.data.timeCanceledByParty == resource.data.timeCanceledByParty
+            && request.resource.data.timePartyRejected == resource.data.timePartyRejected
+            && request.resource.data.timePartyVerified == resource.data.timePartyVerified
+            && request.resource.data.timePartyDisliked == resource.data.timePartyDisliked
+            && (request.resource.data.timePartyLiked == resource.data.timePartyLiked
+              // on complete
+              || resource.data.timePartyLiked == 0))
+          || request.resource.data.party.id == request.auth.uid)
+      // Owner specific actions
+      && ((request.resource.data.timeAccepted == resource.data.timeAccepted
+            && request.resource.data.timeRemoved == resource.data.timeRemoved
+            && request.resource.data.timeCanceledByOwner == resource.data.timeCanceledByOwner
+            && request.resource.data.timeOwnerRejected == resource.data.timeOwnerRejected
+            && request.resource.data.timeOwnerVerified == resource.data.timeOwnerVerified
+            && request.resource.data.timeOwnerDisliked == resource.data.timeOwnerDisliked
+            && (request.resource.data.timeOwnerLiked == resource.data.timeOwnerLiked
+              // on complete
+              || resource.data.timeOwnerLiked == 0))
+          || request.resource.data.owner.id == request.auth.uid)
+      //When noxbox active NONE of termination times must be set
+      && ((request.resource.data.finished == false
+            && request.resource.data.timeCanceledByOwner == 0
+            && request.resource.data.timeCanceledByParty == 0
+            && request.resource.data.timeOwnerRejected == 0
+            && request.resource.data.timePartyRejected == 0
+            && request.resource.data.timeCompleted == 0
+            && request.resource.data.timeRemoved == 0
+            && request.resource.data.timeTimeout == 0)
+          //When noxbox was finished ONE of termination time must be set
+          || (request.resource.data.finished == true
+            && (request.resource.data.timeCanceledByOwner > 0
+              || request.resource.data.timeCanceledByParty > 0
+              || request.resource.data.timeOwnerRejected > 0
+              || request.resource.data.timePartyRejected > 0
+              || request.resource.data.timeCompleted > 0
+              || request.resource.data.timeRemoved > 0
+              || request.resource.data.timeTimeout > 0)));
+  }
+}
+
+match hirelings {
+  // https://github.com/BrotherKristoph/hirelings-api/blob/268385de42e72d6179d9677aa17a69f68a449361/firestore/firestore.rules
+  // Licence: Apache Licence 2.0 (https://github.com/BrotherKristoph/hirelings-api/blob/268385de42e72d6179d9677aa17a69f68a449361/LICENSE)
+  match /{document=**} {
+    allow read, write: if false;
+  }
+
+  match /users {
+    allow read, write: if false;
+
+    match /{userId} {
+      allow get: if request.auth.uid != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/users/$(userId));
+
+      allow list: if false;
+
+      allow update, delete: if request.auth.uid != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/users/$(userId));
+
+      allow create: if request.auth.uid != null
+        && request.auth.uid == userId
+        && exists(/databases/$(database)/documents/users/$(userId)) == false;
+    }
+  }
+
+  match /parties {
+    allow read, write: if false;
+
+    match /{party} {
+      allow create: if request.auth.uid != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && exists(/databases/$(database)/documents/parties/$(party)) == false
+        && request.resource.data.keys().hasAll([
+            'gm',
+            'balance',
+            'currentDay'
+        ])
+        && request.resource.data.gm is string
+        && request.resource.data.gm == request.auth.uid
+        && request.resource.data.balance is int
+        // DONE uncomment
+        && request.resource.data.balance >= 0
+        && request.resource.data.currentDay is int
+        && request.resource.data.currentDay == 0;
+
+      allow update: if request.auth.uid != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && exists(/databases/$(database)/documents/parties/$(party))
+        && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+        && request.resource.data.keys().hasAll([
+            'gm',
+            'balance',
+            'currentDay'
+        ])
+        && request.resource.data.gm is string
+        && request.resource.data.gm == request.auth.uid
+        && request.resource.data.balance is int
+        // DONE uncomment
+        && request.resource.data.balance >= 0
+        && request.resource.data.currentDay is int
+        && request.resource.data.currentDay >= 0;
+
+        allow delete: if request.auth.uid != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && exists(/databases/$(database)/documents/parties/$(party))
+        && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm;
+
+      allow get: if request.auth.uid != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && exists(/databases/$(database)/documents/parties/$(party))
+        && request.auth.uid == resource.data.gm;
+
+      allow list: if false;
+
+      match /hirelings {
+        allow read, write: if false;
+
+        match /{hireling} {
+          allow read: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/hirelings/$(hireling))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm;
+
+          allow create: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/hirelings/$(hireling)) == false
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+            && request.resource.data.keys().hasAll([
+                'level',
+                'name',
+                'role',
+                'abilities',
+                'currentMission'
+            ])
+            && request.resource.data.level is int
+            // DONE uncomment
+            && request.resource.data.level >= 1
+            && request.resource.data.level <= 20
+            && request.resource.data.name is string
+            && request.resource.data.role is int
+            && request.resource.data.role >= 0
+            && request.resource.data.role <= 3
+            && request.resource.data.abilities.size() >= 1
+            && request.resource.data.abilities.size() <= 3
+            && request.resource.data.currentMission is string
+            && request.resource.data.currentMission == ''
+
+            allow update: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/hirelings/$(hireling))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+            && request.resource.data.keys().hasAll([
+                'level',
+                'name',
+                'role',
+                'abilities',
+                'currentMission'
+            ])
+            && request.resource.data.level is int
+            // DONE uncomment
+            && request.resource.data.level >= 1
+            && request.resource.data.level <= 20
+            && request.resource.data.name is string
+            && request.resource.data.role is int
+            && request.resource.data.role >= 0
+            && request.resource.data.role <= 3
+            && request.resource.data.abilities.size() >= 1
+            && request.resource.data.abilities.size() <= 3
+            && request.resource.data.currentMission is string
+
+            allow delete: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/hirelings/$(hireling))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+        }
+      }
+
+      match /missions {
+        allow read, write: if false;
+
+        match /{mission} {
+          allow read: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/missions/$(mission))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm;
+
+          allow create: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/missions/$(mission)) == false
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+            && request.resource.data.keys().hasAll([
+                'level',
+                'name',
+                'length',
+                'challenges',
+                'reward',
+                'startDate',
+                'status'
+            ])
+            && request.resource.data.length is int
+            // DONE uncomment
+            && request.resource.data.length >= 1
+            && request.resource.data.level is int
+            && request.resource.data.level >= 1
+            && request.resource.data.level <= 20
+            && request.resource.data.name is string
+            && request.resource.data.reward is int
+            && request.resource.data.reward >= 0
+            && request.resource.data.startDate is int
+            && request.resource.data.startDate >= 0
+            && request.resource.data.status is int
+            && request.resource.data.status == 0
+            && request.resource.data.challenges.size() >= 0
+
+            allow update: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/missions/$(mission))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+            && request.resource.data.keys().hasAll([
+                'level',
+                'name',
+                'length',
+                'challenges',
+                'reward',
+                'startDate',
+                'status'
+            ])
+            && request.resource.data.length is int
+            // DONE uncomment
+            && request.resource.data.length >= 1
+            && request.resource.data.level is int
+            && request.resource.data.level >= 1
+            && request.resource.data.level <= 20
+            && request.resource.data.name is string
+            && request.resource.data.reward is int
+            && request.resource.data.reward >= 0
+            && request.resource.data.startDate is int
+            && request.resource.data.startDate >= 0
+            && request.resource.data.status is int
+            && request.resource.data.status >= 0
+            && request.resource.data.status <= 4
+            && request.resource.data.challenges.size() >= 0
+
+            allow delete: if request.auth.uid != null
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && exists(/databases/$(database)/documents/parties/$(party))
+            && exists(/databases/$(database)/documents/parties/$(party)/missions/$(mission))
+            && request.auth.uid == get(/databases/$(database)/documents/parties/$(party)).data.gm
+        }
+      }
+    }
+  }
+}
+
+match /biblo {
+  // Licence: MIT (https://github.com/hill84/biblo/blob/2144fce970c4a866b7f62a20142f54c833d8ca27/LICENSE.md)
+  // https://github.com/hill84/biblo/blob/2144fce970c4a866b7f62a20142f54c833d8ca27/firestore.rules
+  /// RULES ///
+  match /users/{uid} {
+    allow read;
+    allow create: if isValidUser();
+    allow update: if (isEditor() && isAdmin()) || (isValidUser() && isOwner(uid));
+    allow delete: if (isEditor() && isAdmin()) || isOwner(uid);
+
+    match /challenges/{cid} {
+      allow read;
+      allow write: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+    }
+
+    match /collectiones/{cid} {
+      allow read;
+      allow write: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+    }
+
+    match /authors/{aid} {
+      allow read;
+      allow write: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+    }
+  }
+
+  match /notifications/{uid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /{path=**}/notes/{uid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /followers/{uid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /followings/{uid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /books/{bid} {
+    allow read;
+    allow create: if isEditor() && isValidBook();
+    allow update: if isEditor() && isValidBook() && (incomingData().bid == existingData().bid);
+    allow delete: if (isEditor() && isAdmin());
+  }
+
+  match /shelves/{uid} {
+    allow read;
+    allow write: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+
+    match /books/{bid} {
+      allow read;
+      allow create: if isEditor();
+      allow update: if isEditor() && incomingData().bid == existingData().bid;
+      allow delete: if isEditor();
+    }
+  }
+
+  match /reviews/{bid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /{path=**}/reviewers/{uid} {
+    allow read;
+    allow create, update: if isEditor();
+    allow delete: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+  }
+
+  // DEPRECATED
+  match /feeds/latestReviews {
+    allow read;
+    allow write: if isEditor();
+
+    match /reviews/{bid} {
+      allow read;
+      allow create, update: if isEditor();
+      allow delete: if (isEditor() && isAdmin()) || (isEditor() && isOwner(uid));
+    }
+  }
+
+  match /authors/{aid} {
+    allow read;
+    allow create, update: if isEditor();
+    allow delete: if isEditor() && isAdmin();
+
+    match /followers/{uid} {
+      allow read;
+      allow write: if isEditor();
+    }
+  }
+
+  match /collections/{cid} {
+    allow read;
+    allow create, update: if isEditor();
+    allow delete: if isEditor() && isAdmin();
+
+    match /books/{bid} {
+      allow read;
+      allow create, update: if isEditor();
+      allow delete: if isEditor() && isAdmin();
+    }
+
+    match /followers/{uid} {
+      allow read;
+      allow write: if isEditor();
+    }
+  }
+
+  match /genres/{gid} {
+    allow read;
+    allow create, update: if isEditor();
+    allow delete: if isEditor() && isAdmin();
+
+    match /followers/{uid} {
+      allow read;
+      allow write: if isEditor();
+    }
+  }
+
+  match /quotes/{qid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /challenges/{cid} {
+    allow read;
+    allow write: if isEditor();
+  }
+
+  match /counters/{cid} {
+    allow read;
+    allow write: if isEditor() && isAdmin();
+  }
+
+  match /admin/{document=**} {
+    allow read: if isAdmin();
+    allow write: if isEditor() && isAdmin();
+  }
+
+  /// FUNCTIONS ///
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function getUserData() {
+    return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+  }
+
+  function userHasRole(role) {
+    return getUserData().roles[role] == true;
+  }
+
+  function isAdmin() {
+    return getUserData().roles['admin'] == true;
+  }
+
+  function isEditor() {
+    return getUserData().roles['editor'] == true;
+  }
+
+  function isPremium() {
+    return getUserData().roles['premium'] == true;
+  }
+
+  function userHasAnyRole(roles) {
+    return getUserData().roles.keys().hasAny(roles);
+  }
+
+  function userHasAllRoles(roles) {
+    return getUserData().roles.keys().hasAll(roles);
+  }
+
+  function isOwner(uid) {
+    return request.auth.uid == uid;
+  }
+
+  function emailVerified() {
+    return request.auth.token.email_verified;
+  }
+
+  function existingData() {
+    return resource.data;
+  }
+
+  function incomingData() {
+    return request.resource.data;
+  }
+
+  function currentUser() {
+    return request.auth;
+  }
+
+  function isValidUser() {
+    return incomingData().keys().hasAll([
+        'creationTime',
+        'uid',
+        'displayName',
+        'email',
+        'roles',
+        'stats'
+    ]);
+  }
+
+  function isValidBook() {
+    return incomingData().keys().hasAll([
+        'ISBN_13',
+        'authors',
+        'bid',
+        'EDIT',
+        'pages_num',
+        'publisher',
+        'title',
+        'title_sort',
+        'readers_num',
+        'reviews_num',
+        'ratings_num',
+        'rating_num'
+    ])
+      && incomingData().pages_num is int
+      && incomingData().readers_num is int
+      && incomingData().reviews_num is int
+      && incomingData().ratings_num is int
+      && incomingData().rating_num is int
+  }
+}
+
+match /racerunner {
+  // Licence: MIT (https://github.com/goracerunner/racerunner-web/blob/1c036d8caf9fbd7e108393b791b851890f7e3454/LICENSE)
+  // https://github.com/goracerunner/racerunner-web/blob/1c036d8caf9fbd7e108393b791b851890f7e3454/config/firestore.rules
+  //
+  // Helper functions
+  //
+
+  // Type checks
+  function isString(field) { return request.resource.data[field] is string }
+  function isNumber(field) { return request.resource.data[field] is number }
+  function isInt(field) { return request.resource.data[field] is int }
+  function isFloat(field) { return request.resource.data[field] is float }
+  function isBoolean(field) { return request.resource.data[field] is bool }
+  function isList(field) { return request.resource.data[field] is list }
+  function isMap(field) { return request.resource.data[field] is map }
+  function isPath(field) { return request.resource.data[field] is path }
+  function isTimestamp(field) { return request.resource.data[field] is timestamp }
+  function isDuration(field) { return request.resource.data[field] is duration }
+  function isLatlng(field) { return request.resource.data[field] is latlng }
+
+  // Enforce that a field is unchanged
+  function unchanged(field) {
+    return request.resource.data[field] == resource.data[field]
+  }
+
+  // Enforce that a request has all the specified fields
+  function fields(keys) {
+    return request.resource.data.keys().hasAll(keys)
+  }
+
+  // Retrieve the current data in the requested data
+  function data() {
+    return resource.data
+  }
+
+  // Retrieve the new data that will be written to the document
+  function newData() {
+    return request.resource.data
+  }
+
+
+  //
+  // Claims
+  //
+
+  // Enforce that the user has the specified claim
+  function hasClaim(claim) {
+    return claim in request.auth.token.keys() && request.auth.token[claim] == true
+  }
+
+  function hasClaimAdmin() { return hasClaim("admin") }
+  function hasClaimManager() { return hasClaim("manager") }
+
+  //
+  // Access checks
+  //
+
+  function loggedIn() {
+    return request.auth != null;
+  }
+
+  // Enforce that a request was from the user of the specified uid
+  function requestFrom(uid) {
+    return request.auth.uid == uid
+  }
+
+  // Enforce that a list field in the resource contains the requester's uid
+  function fieldListsUser(doc) {
+    return doc.hasAny([request.auth.uid])
+  }
+
+  function getData(path) {
+    return get(path("/databases/{database}/documents/" + path).bind({ "database": database })).data
+  }
+
+  //
+  // Request validations
+  //
+
+
+
+  //
+  // Users
+  //
+
+  match /users/{uid} {
+    // Allow all users to get public profiles
+    allow get: if loggedIn()
+
+      // Only allow admins to list all users
+      allow list: if loggedIn() && hasClaimAdmin()
+
+      // Only accessible by the owner and admins
+      match /protected {
+        match /details {
+          // Allow read if it is the owner or an admin
+          allow get: if loggedIn() &&
+            (requestFrom(uid) || hasClaimAdmin())
+        }
+      }
+
+    // Only accessible by admins
+    match /private {
+      match /claims {
+        allow read, write: if loggedIn() && hasClaimAdmin()
+      }
+    }
+
+    // Allow user to view list of races they are in
+    match /races/{raceId} {
+      allow read: if loggedIn() && requestFrom(uid)
+    }
+
+    match /managedRaces/{raceId} {
+      allow read: if loggedIn() && requestFrom(uid) && hasClaimManager()
+    }
+  }
+
+
+  //
+  // Races
+  //
+
+  function isRaceParticipant(raceId) {
+    return fieldListsUser(getData("races/" + raceId).participantIds)
+  }
+
+  function isRaceManager(raceId) {
+    return fieldListsUser(getData("races/" + raceId).managerIds)
+  }
+
+
+  match /races/{raceId} {
+    // Allow admins to get a race's details
+    allow read: if loggedIn() && hasClaimAdmin()
+
+      // Allow a participant/manager to get details about a race they are in
+      allow get: if loggedIn() && (isRaceParticipant(raceId) || isRaceManager(raceId))
+
+      // Allow admins to create races
+      allow create: if loggedIn() && hasClaimAdmin()
+
+      // Allow managers and admins to modify a race
+      allow update: if loggedIn() && (isRaceManager(raceId) || hasClaimAdmin())
+
+      match /registrationFields/{managerId} {
+        // Allow all participants to see registration fields
+        allow read: if loggedIn() && (isRaceParticipant(raceId) || isRaceManager(raceId))
+
+          // Allow managers to modify registration fields
+          allow write: if loggedIn() && isRaceManager(raceId)
+      }
+
+    match /registrations/{registrationId} {
+      // Allow participants to create a registration once
+      allow create: if loggedIn() && isRaceParticipant(raceId)
+
+        // Allow user to view their own registration
+        allow get: if loggedIn() && isRaceParticipant(raceId) && requestFrom(registrationId)
+
+        // Allow all managers to view and update registrations
+        allow read, update: if loggedIn() && isRaceManager(raceId)
+    }
+
+    match /managers/{managerId} {
+      // Allow managers and admins to read managers
+      allow read: if loggedIn() && (isRaceManager(raceId) || hasClaimAdmin())
+
+        // Allow admins to manage managers
+        allow write: if loggedIn() && hasClaimAdmin()
+    }
+
+    match /participants/{participantId} {
+      // Allow participants, managers and admins to read participants
+      allow read: if loggedIn() && (isRaceParticipant(raceId) || isRaceManager(raceId) || hasClaimAdmin())
+
+        // Allow managers and admins to manage participants
+        allow write: if loggedIn() && (isRaceManager(raceId) || hasClaimAdmin())
+    }
+  }
+
+
+  //
+  // Stats
+  //
+
+  match /stats/{stat} {
+    // Only allow admins to view stats
+    allow read: if loggedIn() && hasClaimAdmin()
+  }
+}
+
+match /blockframes {
+  // Licence: MIT (https://github.com/blockframes/blockframes/blob/01af5bc0358adb6c6eb2ab4f2e138b4495d67c6c/LICENSE)
+  // https://github.com/blockframes/blockframes/blob/01af5bc0358adb6c6eb2ab4f2e138b4495d67c6c/firestore.rules
+  match /{documents=**} {
+    allow read, write;
+  }
+
+  // Note: Add a verification of each document ID => {id: ID_SHOULD_BE_EQUAL_TO_PATH}
+
+  /// USERS RULES ///
+
+  match /users/{userId} {
+    allow read, update: if isSignedIn();
+    allow create: if userId() == incomingData().uid;
+  }
+
+  /// NOTIFICATIONS RULES ///
+
+  match /notifications/{notificationId} {
+    allow read: if currentUser().uid == existingData().userId;
+  }
+
+  /// ORGANIZATION RULES ///
+
+  match /orgs/{orgId} {
+    allow create: if isSignedIn();
+    allow read, update, delete: if isOrgAdmin(userId(), orgId);
+  }
+
+  /// PERMISSIONS RULES ///
+  // What about moving permissions CRUD into firebase functions
+  match /permissions/{orgId} {
+    allow read, write;
+
+    match /{documents=**} {
+      allow read, write;
+    }
+  }
+
+  /// MOVIES RULES ///
+
+  match /movies/{movieId} {
+    allow create: if orgCan('canCreate', userOrgId(), movieId)
+      && userCan('canCreate', userId(), userOrgId(), movieId);
+    allow read: if orgCan('canRead', userOrgId(), movieId)
+      && userCan('canRead', userId(), userOrgId(), movieId);
+    allow update: if orgCan('canUpdate', userOrgId(), movieId)
+      && userCan('canUpdate', userId(), userOrgId(), movieId);
+    allow delete: if orgCan('canDelete', userOrgId(), movieId)
+      && userCan('canDelete', userId(), userOrgId(), movieId);
+
+    match /{documents=**} {
+      allow read, write;
+    }
+  }
+
+  /// DELIVERIES RULES ///
+
+  match /deliveries/{deliveryId} {
+    allow create: if orgCan('canCreate', userOrgId(), deliveryId)
+      && userCan('canCreate', userId(), userOrgId(), deliveryId);
+    allow read: if orgCan('canRead', userOrgId(), deliveryId)
+      && userCan('canRead', userId(), userOrgId(), deliveryId);
+    allow update: if orgCan('canUpdate', userOrgId(), deliveryId)
+      && userCan('canUpdate', userId(), userOrgId(), deliveryId);
+    allow delete: if orgCan('canDelete', userOrgId(), deliveryId)
+      && userCan('canDelete', userId(), userOrgId(), deliveryId);
+
+    match /{documents=**} {
+      allow read, write;
+    }
+  }
+
+  /// TEMPLATES RULES ///
+
+  match /templates/{templateId} {
+    allow create: if orgCan('canCreate', userOrgId(), templateId)
+      && userCan('canCreate', userId(), userOrgId(), templateId);
+    allow read: if orgCan('canRead', userOrgId(), templateId)
+      && userCan('canRead', userId(), userOrgId(), templateId);
+    allow update: if orgCan('canUpdate', userOrgId(), templateId)
+      && userCan('canUpdate', userId(), userOrgId(), templateId);
+    allow delete: if orgCan('canDelete', userOrgId(), templateId)
+      && userCan('canDelete', userId(), userOrgId(), templateId);
+
+    match /{documents=**} {
+      allow read, write;
+    }
+  }
+
+
+  /// FUNCTIONS ///
+
+  function existingData() {
+    return resource.data;
+  }
+
+  function incomingData() {
+    return request.resource.data;
+  }
+
+  function currentUser() {
+    return request.auth;
+  }
+
+  function userId() {
+    return currentUser().uid;
+  }
+
+  function isSignedIn() {
+    return currentUser() != null;
+  }
+
+  function userOrgId() {
+    return get(/databases/$(database)/documents/users/$(userId())).data.orgId;
+  }
+
+  function isSuperAdmin(userId, orgId) {
+    return userId in getOrgPermissions(orgId).superAdmins;
+  }
+
+  function isOrgAdmin(userId, orgId) {
+    // /!\ Carefull, parentheses needed for operator precedence to work
+    return (userId in getOrgPermissions(orgId).admins)
+      || isSuperAdmin(userId, orgId);
+  }
+
+  function getOrgDocumentPermissions(orgId, docId) {
+    return get(/databases/$(database)/documents/permissions/$(orgId)/orgDocsPermissions/$(docId)).data;
+  }
+
+  function getOrgPermissions(orgId) {
+    return get(/databases/$(database)/documents/permissions/$(orgId)).data;
+  }
+
+  function getUserDocumentPermissions(orgId, docId) {
+    return get(/databases/$(database)/documents/permissions/$(orgId)/userDocsPermissions/$(docId)).data;
+  }
+
+  // Parameter "action" can either be "canCreate", "canRead", "canUpdate" or "canDelete"
+  function orgCan(action, orgId, docId) {
+    return (getOrgDocumentPermissions(orgId, docId).owner == orgId)
+      || (getOrgDocumentPermissions(orgId, docId).admin == true)
+      || (getOrgDocumentPermissions(orgId, docId)[action] == true);
+  }
+
+  function userCan(action, userId, orgId, docId) {
+    return isOrgAdmin(userId, orgId)
+      || (userId in getOrgPermissions(orgId)[action])
+      || (userId in getUserDocumentPermissions(orgId, docId).admins)
+      || (userId in getUserDocumentPermissions(orgId, docId)[action]);
+  }
+}
+
+match /social {
+  // Licence: MIT (https://github.com/red-gold/social-firebase/blob/4f27ee82f4f4c975599153f6f17c562284979a03/LICENSE)
+  // https://github.com/red-gold/social-firebase/blob/4f27ee82f4f4c975599153f6f17c562284979a03/firestore.rules
+  match /users/{userId}/circles/{circleId} {
+    allow read, write: if allAuthed(userId);
+  }
+  match /users/{userId}/videos/{circleId} {
+    allow read, write: if allAuthed(userId);
+  }
+  match /users/{userId}/videos/{videoId} {
+    allow read, write: if allAuthed(userId);
+  }
+  match /users/{userId}/images/{imageId} {
+    allow read, write: if true //allAuthed(userId);
+  }
+  match /album/{albumId}/photos/{photoId} {
+    allow read, write: if true //allAuthed(incomingData().ownerUserId);
+  }
+  match /album/{albumId}{
+    allow read, write: if true //allAuthed(incomingData().ownerUserId);
+  }
+  match /userSetting/{userId} {
+    allow read, write: if allAuthed(userId);
+  }
+  match /users/{userId}/notifications/{notifyId} {
+    allow read: if allAuthed(userId) ;
+    allow create: if isAdmin() ;
+    allow update: if allAuthed(userId) ;
+    allow delete: if allAuthed(userId) ;
+  }
+  match /verification/{userId} {
+    allow read, write: if isAdmin();
+  }
+  match /userSecret/{userId} {
+    allow read, write: if isAdmin();
+  }
+  match /userInfo/{userId} {
+    allow read: if isAuthed();
+    allow write: if allAuthed(userId) && incomingData().userId == userId;
+  }
+  match /posts/{postId} {
+    allow read: if hasPermission() || isAdmin();
+    //allow create: if isAuthed() ;
+    allow create: if incomingData().ownerUserId == request.auth.uid || isAdmin() ;
+    allow update: if existingData().ownerUserId == request.auth.uid || isAdmin() ;
+    allow delete: if existingData().ownerUserId == request.auth.uid || isAdmin() ;
+  }
+  match /posts/{postId}/votes/{voteId} {
+    allow read: if isAdmin();
+    allow create: if incomingData().userId == request.auth.uid || isAdmin() ;
+    allow update: if existingData().userId == request.auth.uid || isAdmin() ;
+    allow delete: if existingData().userId == request.auth.uid || isAdmin();
+  }
+  // DONE uncomment
+  match /graphs:users/{nodeId}{
+    allow read: if existingData().leftNode == request.auth.uid
+      || existingData().rightNode == request.auth.uid || isAdmin();
+    allow create: if incomingData().leftNode == request.auth.uid || isAdmin() ;
+    allow update: if existingData().leftNode == request.auth.uid || isAdmin() ;
+    allow delete: if existingData().leftNode == request.auth.uid || isAdmin();
+  }
+  match /feeds/{feedId}{
+    allow read: if isAdmin();
+    allow create: if incomingData().user.userId == request.auth.uid || isAdmin() ;
+    allow update: if (existingData().user.userId == request.auth.uid
+        && incomingData().user.userId == request.auth.uid
+        )|| isAdmin() ;
+    allow delete: if existingData().user.userId == request.auth.uid || isAdmin();
+  }
+  match /comments/{commentId}{
+    allow read: if isAuthed();
+    allow create: if incomingData().userId == request.auth.uid || isAdmin() ;
+    allow update: if canUpdateComment() || isAdmin() ;
+    allow delete: if get(/databases/$(database)/documents/posts/$(existingData().postId)).data.ownerUserId == request.auth.uid
+      || isAdmin()
+      || existingData().userId == request.auth.uid;
+  }
+  match /chatroom/{roomId}{
+    allow read: if request.auth.uid in existingData().connections
+      || isAdmin();
+    allow create: if request.auth.uid in incomingData().connections
+      || isAdmin();
+    allow update: if (request.auth.uid in incomingData().connections
+        && request.auth.uid in existingData().connections)
+      || isAdmin();
+    allow delete: if request.auth.uid in existingData().connections
+      || isAdmin();
+  }
+  match /chatroom/{roomId}/messages/{messageId}{
+    allow read: if request.auth.uid in get(/databases/$(database)/documents/chatroom/$(roomId)).data.connections
+      || isAdmin();
+    allow create: if request.auth.uid in get(/databases/$(database)/documents/chatroom/$(roomId)).data.connections
+      || isAdmin();
+    allow update: if request.auth.uid in get(/databases/$(database)/documents/chatroom/$(roomId)).data.connections
+      || isAdmin();
+    allow delete: if request.auth.uid in get(/databases/$(database)/documents/chatroom/$(roomId)).data.connections
+      || isAdmin();
+  }
+
+  // *** Comments ***
+  //
+  //
+  // Return true if current user can update the commnet
+  function canUpdateComment() {
+    return incomingData().userId == request.auth.uid && existingData().userId == request.auth.uid
+  }
+
+  // *** Posts ***
+  //
+  //
+  // Return true if user has access permission to the entity
+  function hasPermission() {
+    return existingData().ownerUserId == request.auth.uid ||  existingData().permission == 'Public' || request.auth.uid in existingData().accessUserList
+  }
+
+
+  // *** Authorization ***
+  //
+  //
+  // All authed accepted
+  function allAuthed(userId) {
+    return isOwner(userId) || isAdmin();
+  }
+
+
+  // Returns true if the user is the owner of the file.
+  function isOwner(uid) {
+    return request.auth.uid == uid;
+  }
+
+  // Returns true if the user is signed in.
+  function isAuthed() {
+    return request.auth != null;
+  }
+
+  // Returns true if the user that initiated the request is an admin.
+  function isAdmin() {
+    return request.auth.token != null && request.auth.token.admin == true;
+  }
+
+  // If user phone is verified
+  function phoneVerified() {
+    return request.auth.token.phoneVerified;
+  }
+
+  // if user email is verified
+  function emailVerified() {
+    return request.auth.token.email_verified;
+  }
+
+  // Returns existing data
+  function existingData() {
+    return resource.data;
+  }
+
+  // Returns incoming data
+  function incomingData() {
+    return request.resource.data;
+  }
+
+  // Get user information
+  function getUserInfo(userId) {
+    return get(/databases/$(database)/documents/userInfo/$(userId));
+  }
+
+  // Get user information
+  function getPost(postId) {
+    return get(/databases/$(database)/documents/posts/$(postId));
+  }
+}
+
+match /tutorbook {
+  // Licence: MIT (https://github.com/nicholaschiang/tutorbook/blob/61a3186b1de8ea092705a5346ef49448aed73da7/LICENSE)
+  // https://github.com/nicholaschiang/tutorbook/blob/61a3186b1de8ea092705a5346ef49448aed73da7/build/firestore.rules
+
+  // [SPECIAL ACCESS]
+  match /auth/{document=**} {
+    allow read: if request.auth.uid != null;
+  }
+  match /locations/{location} {
+    allow read: if request.auth.uid != null;
+    allow update, delete: if request.auth.token.email in resource.data.supervisors;
+    allow create: if request.auth.token.email in request.resource.data.supervisors
+      && request.auth.token.supervisor == true;
+  }
+  match /users/{supervisor}/dismissedCards/{card} {
+    // Workaround to enable supervisors to dismiss cards (as we don't want
+    // them deleting that actual document).
+    allow read, create: if request.auth.token.email == supervisor;
+  }
+
+  // [SEARCH]
+  match /search/{user} {
+    allow read: if true;
+  }
+  // [USER PROFILES]
+  match /users/{user} {
+    // to become an admin or supervisor without actually knowing the code.
+    allow read: if request.auth.uid != null;
+    allow create: if (request.auth.token.email == user
+        || request.auth.token.supervisor)
+      && request.resource.data.payments.currentBalance == 0
+      && request.resource.data.payments.currentBalanceString == "$0.00"
+      && request.resource.data.secondsPupiled == 0
+      && request.resource.data.secondsTutored == 0;
+    allow delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.proxy
+      || request.auth.token.supervisor;
+    allow update: if (request.auth.token.email == user
+        || request.auth.token.email in resource.data.proxy
+        || request.auth.token.supervisor)
+      // of the supervisor's location(s)
+      && (
+          !("currentBalance" in request.resource.data.payments)
+          || ("currentBalance" in request.resource.data.payments && request.resource.data.payments.currentBalance == resource.data.payments.currentBalance)
+         )
+      && (
+          !("currentBalanceString" in request.resource.data.payments)
+          || ("currentBalanceString" in request.resource.data.payments && request.resource.data.payments.currentBalanceString == resource.data.payments.currentBalanceString)
+         )
+      && (
+          !("secondsPupiled" in request.resource.data)
+          || ("secondsPupiled" in request.resource.data && request.resource.data.secondsPupiled == resource.data.secondsPupiled)
+         )
+      && (
+          !("secondsTutored" in request.resource.data)
+          || ("secondsTutored" in request.resource.data && request.resource.data.secondsTutored == resource.data.secondsTutored)
+         );
+  }
+
+  // [REQUESTS IN]
+  match /{path=**}/requestsIn/{requestIn} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/requestsIn/{requestIn} {
+    allow read: if request.auth.token.email == user
+      || request.auth.token.email == resource.data.fromUser.email
+      || (request.auth.token.email in resource.data.fromUser.proxy
+          || request.auth.token.email in resource.data.toUser.proxy);
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/modifiedRequestsIn/{requestIn} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/modifiedRequestsIn/{requestIn} {
+    // fromUser creates this document and the toUser dismisses it
+    // Users should never need to update this document
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.for.toUser.proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/canceledRequestsIn/{requestIn} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/canceledRequestsIn/{requestIn} {
+    // fromUser creates this document and the toUser dismisses it
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.for.toUser.proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+
+  // [REQUESTS OUT]
+  match /{path=**}/requestsOut/{requestOut} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/requestsOut/{requestOut} {
+    allow read: if request.auth.token.email == user
+      || request.auth.token.email == resource.data.toUser.email
+      || (request.auth.token.email in resource.data.fromUser.proxy
+          || request.auth.token.email in resource.data.toUser.proxy);
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/modifiedRequestsOut/{requestOut} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/modifiedRequestsOut/{requestOut} {
+    // toUser creates this document and the fromUser dismisses it
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.for.fromUser.proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/rejectedRequestsOut/{requestOut} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/rejectedRequestsOut/{requestOut} {
+    // toUser creates this document and the fromUser dismisses it
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.for.fromUser.proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/approvedRequestsOut/{requestOut} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/approvedRequestsOut/{requestOut} {
+    // toUser creates this document and the fromUser dismisses it
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in resource.data.for.fromUser.proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+
+  // [APPOINTMENTS]
+  match /users/{user}/appointments/{appt} {
+    // We have to specify that the given user can read all of their appts b/c
+    // otherwise, we'd have to specify it in the query itself, which is too
+    // much of a hassle and leads to confusing code.
+    allow read: if request.auth.token.email == user
+      || request.auth.token.email in
+      [resource.data.attendees[0].email, resource.data.attendees[1].email]
+      || request.auth.token.email in resource.data.attendees[0].proxy
+        || request.auth.token.email in resource.data.attendees[1].proxy
+        || resource.data.location.id in request.auth.token.locations;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /locations/{location}/appointments/{appt} {
+    allow read: if request.auth.token.email in
+      [resource.data.attendees[0].email, resource.data.attendees[1].email]
+      || request.auth.token.email in resource.data.attendees[0].proxy
+        || request.auth.token.email in resource.data.attendees[1].proxy
+        || location in request.auth.token.locations;
+  }
+  match /locations/{location}/modifiedAppointments/{appt} {
+    allow read, delete: if location in request.auth.token.locations;
+  }
+  match /users/{user}/modifiedAppointments/{appt} {
+    // Either attendee can create and dismiss this card
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in
+      [resource.data.for.attendees[0].email, resource.data.for.attendees[1].email]
+      || request.auth.token.email in resource.data.for.attendees[0].proxy
+        || request.auth.token.email in resource.data.for.attendees[1].proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /{path=**}/canceledAppointments/{appt} {
+    // collectionGroup query rules for supervisors and admins
+    // Allow supervisors to read docs that are at their location
+    // Supervisors can also cancel appointments at their location
+    allow read: if resource.data.for.location.id in request.auth.token.locations;
+  }
+  match /users/{user}/canceledAppointments/{appt} {
+    // Either attendee can create and dismiss this card
+    allow read, delete: if request.auth.token.email == user
+      || request.auth.token.email in
+      [resource.data.for.attendees[0].email, resource.data.for.attendees[1].email]
+      || request.auth.token.email in resource.data.for.attendees[0].proxy
+        || request.auth.token.email in resource.data.for.attendees[1].proxy;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /locations/{location}/canceledAppointments/{appt} {
+    // Only allow a user to create if they were already allowed to create a
+    // canceledAppt doc in the other user's.
+    allow read, delete: if location in request.auth.token.locations;
+  }
+
+  // [CLOCKINS AND CLOCKOUTS]
+  match /users/{supervisor}/clockIns/{clockIn} {
+    allow read: if request.auth.token.email == supervisor;
+  }
+  match /users/{supervisor}/approvedClockIns/{clockIn} {
+    allow read: if request.auth.token.email == resource.data.sentBy.email;
+  }
+  match /users/{user}/activeAppointments/{appt} {
+    allow read: if request.auth.token.email == user
+      || resource.data.location.id in request.auth.token.locations;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /locations/{location}/activeAppointments/{appt} {
+    allow read: if location in request.auth.token.locations
+      || request.auth.token.email == resource.data.attendees[0].email
+      || request.auth.token.email == resource.data.attendees[1].email;
+  }
+  match /users/{supervisor}/rejectedClockIns/{clockIn} {
+    allow read: if request.auth.token.email == resource.data.sentBy.email;
+  }
+  match /users/{supervisor}/clockOuts/{clockOut} {
+    allow read: if request.auth.token.email == supervisor;
+  }
+  match /users/{supervisor}/approvedClockOuts/{clockOut} {
+    allow read: if request.auth.token.email == resource.data.sentBy.email;
+  }
+  match /users/{user}/pastAppointments/{appt} {
+    allow read: if request.auth.token.email == user
+      || resource.data.location.id in request.auth.token.locations;
+    allow read: if request.auth.token.email in
+      get(/databases/$(database)/documents/users/$(user)).data.proxy;
+  }
+  match /locations/{location}/pastAppointments/{appt} {
+    allow read: if request.auth.token.supervisor == true
+      && location in request.auth.token.locations;
+  }
+  match /users/{supervisor}/rejectedClockOuts/{clockOut} {
+    allow read: if request.auth.token.email == resource.data.sentBy.email;
+  }
+
+  // [PAYMENTS]
+  match /users/{user}/approvedPayments/{payment} {
+    allow create: if request.auth.token.email == user
+      || request.auth.token.email == request.resource.data.from.email;
+    allow read: if request.auth.token.email == resource.data.to.email
+      || request.auth.token.email == resource.data.from.email;
+  }
+  match /stripeAccounts/{user} {
+    allow read: if request.auth.token.email == user;
+  }
+  match /users/{user}/sentPayments/{payment} {
+    allow create: if request.auth.token.email == user;
+  }
+  match /users/{user}/requestedPayments/{payment} {
+    allow create: if request.auth.token.email ==
+      request.resource.data.to.email;
+    allow read, delete: if request.auth.token.email == user;
+  }
+  match /users/{user}/requestedPayouts/{payout} {
+    allow create, read: if request.auth.token.email == user;
+  }
+  match /users/{user}/deniedPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+    allow create: if request.auth.token.email ==
+      request.resource.data.deniedBy.email;
+  }
+  match /users/{user}/approvedPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+    allow create: if request.auth.token.email ==
+      request.resource.data.approvedBy.email;
+  }
+  match /users/{user}/needApprovalPayments/{payment} {
+    allow read, delete: if request.auth.token.email == user;
+  }
+  match /users/{user}/authPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+    allow create: if request.auth.token.email == request.resource.data.from.email
+      || request.auth.token.email == request.resource.data.to.email;
+    // When a request is canceled or rejected, client removes this document.
+    allow delete: if request.auth.token.email == resource.data.from.email
+      || request.auth.token.email == resource.data.to.email;
+  }
+  match /users/{user}/pastPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+  }
+  match /users/{user}/paidPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+  }
+  match /users/{user}/invalidPayments/{payment} {
+    allow read: if request.auth.token.email == user;
+  }
+
+  // [CHATS]
+  match /chats/{chat} {
+    allow read, write: if request.auth.token.email in resource.data.chatterEmails;
+    allow create: if request.auth.token.email in
+      request.resource.data.chatterEmails;
+    match /messages/{message} {
+      allow read, create: if request.auth.token.email in
+        get(/databases/$(database)/documents/chats/$(chat)).data.chatterEmails;
+      allow update, delete: if request.auth.token.email ==
+        resource.data.sentBy.email;
+    }
+  }
 }

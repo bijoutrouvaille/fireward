@@ -163,8 +163,9 @@ _topLevelType = do
 
 _pathStatic :: Parser PathPart
 _pathStatic = do
-  n <- _varName
-  return $ PathPartStatic n
+  start <- _alphaNum <|> oneOf "_$"
+  rest <- many $ _alphaNum <|> oneOf "_$-:"
+  return $ PathPartStatic (start:rest)
 
 _pathVar :: Parser PathPart
 _pathVar = do

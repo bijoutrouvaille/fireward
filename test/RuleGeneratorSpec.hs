@@ -34,6 +34,9 @@ gu = g . trim . unlines
 r = ("Right " ++) . repA
 ru = r . trim . unlines
 
+startsWith :: String -> String -> Bool
+startsWith str = (==str) . take (length str)
+
 spec :: Spec
 spec = do
   describe "Rule Generator" $ do
@@ -210,8 +213,12 @@ spec = do
         ]
 
     it "indents a complex file" $ do
-      door <- readFile "test/fixtures/indent.ward"
+      ward <- readFile "test/fixtures/indent.ward"
       _rule <- readFile "test/fixtures/indent.rules"
       let rule = take ((length _rule) - 1) _rule
-      res <- return (g door)
-      g door `shouldBe` r rule
+      res <- return (g ward)
+      g ward `shouldBe` r rule
+  describe "Smoke Test" $ do
+    it "passes" $ do
+      ward <- readFile "examples/smoke-test.ward"
+      g ward `shouldSatisfy` (not . startsWith "Left")
