@@ -70,14 +70,14 @@ generate wrap source = q tree
     isOptVar _ = False
     optVar (TopLevelOpt name val) = _print $ name ++ " = " ++ val ++ ";"
     optVar _ = _print ""
-    optVars tops = _lines . fmap optVar . filter isOptVar $ tops --optVar <$> tops 
+    optVars tops = _lines . fmap optVar . filter isOptVar $ tops 
     tree :: ParserResult [TopLevel]
     tree = parseRules source
     q :: ParserResult [TopLevel] -> Either String String
     q (Right (tops, unparsed, l, c)) = 
       if length unparsed > 0
          then Left ("Could not parse on\n  on " ++ printLoc l c)
-         else Right . finalize tops $ genTops tops -- gen <$> tops
+         else Right . finalize tops $ genTops tops 
     q (Left (Just (error, l, c))) = Left (error ++ "\n  on " ++ printLoc l c)
     q (Left Nothing) = Left ("Unexpected parser error.")
     genTops tops = _lines $ gen <$> tops
@@ -126,6 +126,8 @@ typeFunc name refs =
 
 
     refCheck :: FuncParam -> FuncParam -> Bool -> TypeRef -> CodePrinter
+    refCheck curr prev _const (LiteralTypeRef val) =
+      _print $ (addr curr) ++ " == " ++ val
     refCheck curr prev _const (InlineTypeDef def) = 
       defCheck (addr curr) (addr prev) def
     refCheck pcurr@(FuncParam parent curr) pprev@(FuncParam prevParent prev) _const (TypeNameRef t arrSize) = 

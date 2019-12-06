@@ -88,9 +88,9 @@ spec = do
       _apply (whileNot $ symbol "end" <|> (char ';' >> return ())) "he llo;, end" `shouldBe` Right ("he llo", ";, end")
   describe "oneof" $ do
     it "parses one of" $ forAll (elements "hzu") $
-      \c -> _apply (oneOf "hzu") (c:"hello") === Right (c, "hello")
+      \c -> _apply (charIn "hzu") (c:"hello") === Right (c, "hello")
     it "parses none of" $ forAll (elements "hzu") $
-      \c -> _apply (oneOf "abc") (c:"hello") === Left Nothing
+      \c -> _apply (charIn "abc") (c:"hello") === Left Nothing
 
   describe "enum" $ do
     it "parses" $

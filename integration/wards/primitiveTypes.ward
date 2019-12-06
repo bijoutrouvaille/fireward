@@ -7,6 +7,12 @@ type OptListTest = {
 type MapTest = {
   test: map
 }
+type LitTest = {
+	strTest: 'me' | 'you'
+  numTest: 123 | 234
+  boolTest: false
+  mixTest: 'hello' | 123 | true
+}
 match /map/{x} is MapTest {
   allow write: true;
 }
@@ -15,4 +21,7 @@ match /olist/{x} is OptListTest {
 }
 match /list/{x} is ListTest {
   allow write: true;
+}
+match /literal/{x} is LitTest {
+	allow write: true;
 }

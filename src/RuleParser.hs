@@ -13,6 +13,7 @@ module RuleParser
 , _funcBody
 , _string
 , _topLevelOptVar
+, _literalTypeRef
 , escape
 , FuncDef (..)
 , TypeDef (..)
@@ -60,7 +61,10 @@ data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 data TypeDef = TypeDef [Field] deriving (Show, Eq)
 
 -- TypeNameRef name-of-the-type (Maybe array-size) -- Nothing if not array or not array not finite
-data TypeRef = TypeNameRef String (Maybe Int) | InlineTypeDef TypeDef deriving (Show, Eq)
+data TypeRef = TypeNameRef String (Maybe Int) 
+             | InlineTypeDef TypeDef 
+             | LiteralTypeRef String
+             deriving (Show, Eq)
 data Field = Field
            { required :: Bool
            , fieldName :: String
@@ -77,7 +81,7 @@ _topLevelOptVar = do
   optional space
   optional $ symbol ";"
   return $ TopLevelOpt name val
-  where _var = _concat [ some $ _alpha <|> oneOf "_", many $ _alphaNum <|> oneOf "_" ] ""
+  where _var = _concat [ some $ _alpha <|> charIn "_", many $ _alphaNum <|> charIn "_" ] ""
 
 _funcBody :: Parser String
 _funcBody = token $ do
@@ -123,12 +127,14 @@ _typeDef = grouped "{" "}" $ do
   return $ TypeDef members
   
 _typeRefs :: Parser [TypeRef]
-_typeRefs = manywith (symbol "|") ( 
-  (withComma _singleTypeName)
-    <|> (InlineTypeDef <$> withComma _typeDef))
+_typeRefs = manywith (symbol "|") 
+  (   (withComma _literalTypeRef)
+  <|> (withComma _singleTypeName)
+  <|> (InlineTypeDef <$> withComma _typeDef)
+  )
   where
-    comma = optional $ symbol ","
     withComma p = _terminated p comma
+    comma = optional $ symbol ","
 
 _listOp :: Parser Int
 _listOp = do
@@ -140,6 +146,14 @@ _singleTypeName = do
   name <- token _varName
   arrSize <- optional $ _listOp
   return $ TypeNameRef name arrSize
+_literalTypeRef :: Parser TypeRef
+_literalTypeRef =
+  LiteralTypeRef <$> token (tokenVal <|> numVal <|> stringVal)
+  where
+    tokenVal = _const "true" <|> _const "false"
+    numVal = show <$> _float
+    stringVal = _string
+
 
 _field :: Parser Field
 _field = do
@@ -163,8 +177,8 @@ _topLevelType = do
 
 _pathStatic :: Parser PathPart
 _pathStatic = do
-  start <- _alphaNum <|> oneOf "_$"
-  rest <- many $ _alphaNum <|> oneOf "_$-:"
+  start <- _alphaNum <|> charIn "_$"
+  rest <- many $ _alphaNum <|> charIn "_$-:"
   return $ PathPartStatic (start:rest)
 
 _pathVar :: Parser PathPart

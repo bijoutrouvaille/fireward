@@ -28,11 +28,11 @@ _concat ps sep = intercalate sep <$> sequence ps
 
 _alpha = lower <|> upper
 _alphaNum = _alpha <|> digit
-_varStart = _alpha <|> oneOf "_$"
+_varStart = _alpha <|> charIn "_$"
 _varName :: Parser String
 _varName = do
   c <- _varStart
-  rest <- many (_alphaNum <|> oneOf "_$")
+  rest <- many (_alphaNum <|> charIn "_$")
   return (c:rest)
 
 separated = manywith . symbol
@@ -84,6 +84,7 @@ _terminated parser terminator = do
 toFloat :: Int -> Float
 toFloat = fromIntegral -- x = x * 1.0 :: Double
 
+_float :: Parser Float
 _float = do
   neg <- optional $ symbol "-"
   optional space

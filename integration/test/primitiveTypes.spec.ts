@@ -3,7 +3,7 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest} from '../wards/primitiveTypes';
 import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'primitiveTypes';
@@ -60,5 +60,40 @@ describe(WARD_NAME, function(){
       const b: MapTest = { test: {a:1.1,b:'2.7', c: [1,2,3]} }
       await firebase.assertSucceeds(app.firestore().collection(`map`).doc(uid).set(b));
     });
+
+    describe(`Literal Types`, function() {
+      let x: LitTest;
+      beforeEach(()=>{
+        x = {
+          'numTest': 123,
+          'boolTest': false,
+          'mixTest': 123,
+          'strTest': 'you'
+        }
+      })
+      it(`succeeds saving a map of literal types`, async function(){
+        await firebase.assertSucceeds(app.firestore().collection(`literal`).doc(uid).set(x));
+        x.numTest = 234;
+        x.mixTest = "hello";
+        x.strTest = 'me';
+        await firebase.assertSucceeds(app.firestore().collection(`literal`).doc(uid).set(x));
+      })
+      
+      it(`fails saving an unmatched number`, async function(){
+        // @ts-ignore
+        x.numTest = 111;
+        await firebase.assertFails(app.firestore().collection(`literal`).doc(uid).set(x));
+      })
+      it(`fails saving an unmatched string`, async function(){
+        // @ts-ignore
+        x.strTest = 'x';
+        await firebase.assertFails(app.firestore().collection(`literal`).doc(uid).set(x));
+      })
+      it(`fails saving an unmatched boolean`, async function(){
+        // @ts-ignore
+        x.boolTest = true;
+        await firebase.assertFails(app.firestore().collection(`literal`).doc(uid).set(x));
+      })
+    })
   })
 })

@@ -143,7 +143,7 @@ expr = do
     rawpathlit = do
 
       let pathExpr = PathPartExpr <$> grouped "$(" ")" _expr
-      let pathLit = fmap PathPartLit . some $ _alpha <|> digit <|> oneOf "_-" 
+      let pathLit = fmap PathPartLit . some $ _alpha <|> digit <|> charIn "_-" 
 
       let sep = symbol "/"
        
@@ -200,7 +200,7 @@ expr = do
       where 
         val = symbol ":" >> require "map object missing a value after `:`" _expr
         quote x = "\"" ++ x ++ "\""
-        rawkey = quote <$> some (_alphaNum <|> oneOf "_")
+        rawkey = quote <$> some (_alphaNum <|> charIn "_")
         strkey = _stringD '"'
         key = rawkey <|> strkey
         keyval = (,) <$> token key <*> val

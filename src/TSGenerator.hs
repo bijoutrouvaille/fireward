@@ -71,16 +71,15 @@ typeRefList ind refs =
     convertToNative = flip maybe id <*> flip lookup natives
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
     -- see the full explanation in docs/func-monad.md
+    ref :: TypeRef -> String
+    ref (LiteralTypeRef value) = value
     ref (TypeNameRef name Nothing) = convertToNative name
     ref (TypeNameRef name (Just size)) = if size==0 || size > 12
                                             then convertToNative name ++ "[]"
                                             else "ArrayMax"++show size++"<"++name++">"
-                                            -- else intercalate " | " [ "["++intercalate ", " [ name | j <- [0..i]]++"]"
-                                            --        | i <- [0..size-1]
-                                                 -- ]
     ref (InlineTypeDef def) = typeBlock ind def
 
-topLevelType name refs = "export type "++name++" = "++typeRefList 0 refs
+topLevelType name refs = "export type " ++ name ++ " = " ++ typeRefList 0 refs
 
 gen :: [TopLevel] -> Either String String
 gen tops = result where

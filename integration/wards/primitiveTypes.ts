@@ -44,5 +44,12 @@ export type OptListTest = {
 export type MapTest = {
   test: Record<string, unknown>
 }
+export type LitTest = {
+  strTest: 'me' | 'you'
+  numTest: 123.0 | 234.0
+  boolTest: false
+  mixTest: 'hello' | 123.0 | true
+}
+
 
 

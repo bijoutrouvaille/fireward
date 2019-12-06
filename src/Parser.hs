@@ -28,7 +28,7 @@ module Parser
 , grouped
 , manywith
 , somewith
-, oneOf
+, charIn
 , whileNot
 , apply
 , Parser
@@ -177,15 +177,16 @@ somewith sep p = do
   rest <- many (sep >> p)
   return (first:rest)
 
-oneOf :: String -> Parser Char
-oneOf "" = empty
-oneOf (c:cs) = char c <|> oneOf cs
+charIn :: [Char] -> Parser Char
+charIn "" = empty
+charIn (c:cs) = char c <|> charIn cs
 
 _const :: String -> Parser String
 _const s = do
   string s
   return s
   
+
 alt :: (a -> Parser a) -> [a] -> Parser a
 alt p [] = fail ""
 alt p (x:xs) = p x <|> alt p xs
