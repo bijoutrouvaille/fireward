@@ -191,7 +191,17 @@ spec = do
       , "  && (data.x.size() <= 2 || data.x[1] is string);"
       , "}"
       ]
-      
+    
+    it "creates a correct check for empty type object" $
+      g "type X = {}" `shouldBe` ru
+        [ "function is____X(data, prev) {"
+        , "  return data.size() >= 0 && data.size() <= 0"
+        , "  && data.keys().hasOnly([])"
+        , "  ;"
+        , "}"
+        ]
+        
+
     it "generates a path with a type" $
       g "match x is X {}" `shouldBe` ru
         [ "match /x {"

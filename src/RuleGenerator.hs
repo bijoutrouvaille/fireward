@@ -103,16 +103,17 @@ typeFunc name refs =
     addr (FuncParam (Just p) n) = p ++ "." ++ n
 
     defCheck :: String -> String -> TypeDef -> CodePrinter
-    defCheck parent prevParent (TypeDef fields) = do --concat $
+    defCheck parent prevParent (TypeDef fields) = do 
       keyPresenceCheck
       _return
-      _and
-      _linesWith _and fieldChecks
+      _printIf (length fields > 0) $ do
+        _and
+        _linesWith _and fieldChecks
         where
           requiredKeys = fmap key . onlyRequired $ fields
           mx = length fields
           mn = length . onlyRequired $ fields
-          fieldChecks = --intercalate (line0++"&& ") $ fmap (fieldCheck (ind + 2) parent prevParent) fields
+          fieldChecks = 
             fieldCheck parent prevParent <$> fields
           keyPresenceCheck = do
             _linesWith _and . fmap _print . filter (\s->s/="") $
@@ -158,7 +159,7 @@ typeFunc name refs =
 
     fieldCheck :: String -> String -> Field -> CodePrinter
     fieldCheck parent prevParent (Field r n refs c) = do
-      _printIf c $ do
+      _printIf c $ do -- c means field is marked as const
         _print constCheck
         _return
         _and
