@@ -134,7 +134,7 @@ spec = do
     it "parses an expression with inner semicolons" $ do
       ex "x==\"123;\" && y-3==4 ;" `shouldBe` "x == \"123;\" && y - 3 == 4"
     it "parses issue 11 func call" $ do
-      ex "exists(/test/$(a)/$(b())/$(b(a)))" `shouldBe` "exists((/test/$(a)/$(b())/$(b(a))))"
+      ex "exists(/test/$(a)/$(b())/$(b(a)))" `shouldBe` "exists(/test/$(a)/$(b())/$(b(a)))"
     it "parses (issue 11) array within a func call" $ do
       ex "data().keys().hasAll(['a', 'b', 'c'])" `shouldBe` "data().keys().hasAll(['a', 'b', 'c'])"
 

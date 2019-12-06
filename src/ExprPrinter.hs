@@ -23,7 +23,7 @@ printExpr (ExprBool True) = "true"
 printExpr (ExprBool False) = "false"
 printExpr (ExprNull) = "null"
 printExpr (ExprIndexed e i r) = printExpr e ++ "[" ++ printExpr i ++ printIxRange r ++ "]"
-printExpr (ExprPath parts) = "(/" ++ intercalate "/" (fmap printPathPart parts) ++ ")"
+printExpr (ExprPath parts) = "/" ++ intercalate "/" (fmap printPathPart parts) ++ ""
 printExpr (ExprList es) = "[" ++ (commajoin [ printExpr e | e <- es ]) ++ "]"
 printExpr (ExprMap kvs) = "{ " ++ (commajoin [ printKeyVal kv | kv <- kvs]) ++ " }"
 

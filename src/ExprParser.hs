@@ -155,11 +155,12 @@ expr = do
       return $ ExprPath parts
       
     pathlit :: Parser Expr
-    pathlit = do
-      symbol "("
-      p <- rawpathlit
-      require "raw path is missing a closing paren `)`" $ symbol ")"
-      return p
+    pathlit = rawpathlit -- Do not enforce parens; let firebase complain about possible issues instead.
+    -- pathlit = do
+    --   symbol "("
+    --   p <- rawpathlit
+    --   require "raw path is missing a closing paren `)`" $ symbol ")"
+    --   return p
 
     baddies = 
       altr [ symbol b >> failWith ("symbol " ++ b ++ " not allowed.") 

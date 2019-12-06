@@ -1,10 +1,10 @@
 function somePath() {
   return (/foo/bar)
 }
-// TODO uncomment
-// function somePath() {
-//  return /foo/bar
-// }
+// DONE uncomment
+function somePath() {
+ return /foo/bar
+}
 
 // DONE uncomment
 function function_with_underscore () {
