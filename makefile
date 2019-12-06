@@ -58,3 +58,6 @@ watch-complex:
 
 smoke-test:
 	cat examples/smoke-test.ward | stack exec fireward > /dev/null
+
+bench:
+	hyperfine 'fireward -i examples/smoke-test.ward'
