@@ -3,7 +3,11 @@ set -ev
 
 v=$(cd .. && stack exec fireward -- -V)
 export files=(fireward-linux fireward-osx fireward.exe)
-
+for f in ${files[*]}; do
+  if [ -f "$f" ]; then 
+    rm $f
+  fi
+done
 for f in ${files[*]}; do
   echo "downloading $f"
   curl -L https://github.com/bijoutrouvaille/fireward/releases/download/$v/$f -o $f
