@@ -122,6 +122,7 @@ type User = {
   contact: Phone | Email // a union type
   uid: const string // const prevents editing this field later
   permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
+  smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
 } 
 type Phone = { number: int, country: int }
 type Email = string
@@ -215,10 +216,10 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Add Windows and Linux release executables pipelines.
 - [x] End-to-end tests with the Firestore emulator
 - [x] Namespace validation functions (e.g. `isX` for `type X` should have a better name space). Done: now: `is____X`.
-- [ ] Allow for importing files
-- [ ] Allow for read/write conditions within types (validations)
+- [x] String, numeric and boolean literal types
 - [ ] Expression variables
-- [ ] String literal types
+- [ ] Importing files
+- [ ] Read/write conditions within types (validations)
 - [ ] Type intersections
 
 
