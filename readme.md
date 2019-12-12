@@ -16,6 +16,7 @@ https://groups.google.com/forum/#!forum/fireward
 - Typed routes that convert to validation rule code.
 - `const` types that allow setting but prevent editing of individual fields
 - Tuple validation
+- Literal types
 - Type unions
 - Comments
 - A strong unit test suite
