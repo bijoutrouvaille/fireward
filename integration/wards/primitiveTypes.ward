@@ -13,6 +13,10 @@ type LitTest = {
   boolTest: false
   mixTest: 'hello' | 123 | true
 }
+type TimestampTest = {
+  test: timestamp
+}
+
 match /map/{x} is MapTest {
   allow write: true;
 }
@@ -24,4 +28,8 @@ match /list/{x} is ListTest {
 }
 match /literal/{x} is LitTest {
 	allow write: true;
+}
+match /time/{x} is TimestampTest {
+  allow write: true;
+  allow read: true;
 }

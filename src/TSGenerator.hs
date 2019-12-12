@@ -35,7 +35,7 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "Date|{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}")
+  , ("timestamp", "Date|WardTimestamp|{isEqual: (other: any)=>boolean}")
   , ("bool", "boolean")
   , ("null", "null")
   , ("map", "Record<string, unknown>")
@@ -49,11 +49,14 @@ maxTupleX n = "export type ArrayMax"++show n++"<T> = "  ++ (tupleX n True)
 someTuple = "export type SomeTuple<T> = " ++ intercalate " | " [ "ArrayMax" ++ show j ++ "<T> "| j <- [1..maxTuples-1]]
 funcMaxArray = ts ++ "\nexport function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }" 
   where ts = intercalate "\n" ["export function toArrayMax<T>(n: "++show n++", arr:T[]):ArrayMax"++show n++"<T>" | n <- [1..maxTuples-1]]
-
+timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardTimestamp)=>boolean, toMillis: ()=>number}"
+timestampTypeCheck = "export function isTimestamp(v: any): v is WardTimestamp { return !!v && (typeof v=='object') && !!v.toDate && !!v.toMillis && (typeof v.nanoseconds=='number') && (typeof v.seconds=='number')};"
 stdTuples = intercalate "\n\n" [ maxTupleX n | n <- [1..maxTuples] ]
 
 stdTypes = (intercalate "\n" 
            [ stdTuples 
+           , timestampType
+           , timestampTypeCheck
            , someTuple
            , funcMaxArray
            ]) ++ "\n\n"

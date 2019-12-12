@@ -146,7 +146,7 @@ match /users/{userId} is User {
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
 - `int` and `float` map to TypeScript `number`
 - `bool` in rules maps to TS `boolean`
-- `timestamp` maps to `{seconds: number, nanoseconds: number}|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`).
+- `timestamp` maps to `WardTimestamp|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`). `WardTimestamp` is defined in the generated typescript file, and refers to the object that Firestore returns on data reads. It is intended to follow the official definition: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
 
 #### Unions
 

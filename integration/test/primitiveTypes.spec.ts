@@ -3,7 +3,7 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest, LitTest} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp} from '../wards/primitiveTypes';
 import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'primitiveTypes';
@@ -93,6 +93,20 @@ describe(WARD_NAME, function(){
         // @ts-ignore
         x.boolTest = true;
         await firebase.assertFails(app.firestore().collection(`literal`).doc(uid).set(x));
+      })
+      
+    })
+    describe(`WardTimestamp`, function(){
+      it(`typechecks by isTimestamp`, async function(){
+        const x: TimestampTest = {
+          test: new Date()
+        };
+        await firebase.assertSucceeds(app.firestore().collection(`time`).doc(uid).set(x));
+        const xx = await app.firestore().collection('time').doc(uid).get();
+        const data = xx.data();
+        const y: unknown = data && data.test;
+        if (!isTimestamp(y)) throw new Error(`Expected a WardTimestamp but got ` + JSON.stringify(y, null, '  '))
+        if (!y.nanoseconds) throw new Error(`No nanoseconds? What a strange coincidence. Re-run the test.`)
       })
     })
   })
