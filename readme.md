@@ -183,19 +183,20 @@ _Warning_: `const` current only works on primitive types. Marking a non-primitiv
 
 Each type definition, including inline and nested objects, can have custom validations _at the end._
 
-- The syntax is the same as in route conditions: `allow method1, method2: if <condition expr>`. 
-- Allowed methods are `create, update, delete, and write`. 
+- The syntax is the same as in route conditions: `allow method1, method2: if <condition expr>`. `if` is optional.
+- Allowed methods are `create`, `update`, `delete`, and `write`. 
 - `write` is simply a shorthand for all the other ones. 
 - Automatic variables `data` and `prev` refer to incoming data and previously stored data _for this type_ respectively.
 - `data` will be null on deletes, and `prev` will be null on creates.
+- Custom validation expressions are combined with other checks (route conditions and type checks) using the logical AND operator. If either one fails, all fail.
 
-_Note_ if a validation is absent for a method and type, it will pass. For example, if you have create and delete validations, but not an update one, updates will always pass validation.
+_Note:_ if a validation is absent for a method and type, it will pass. For example, if you have create and delete validations, but not an update one, updates will pass validation, unless other conditions (e.g. route-level conditions or variable type validation) prevent it.
 
 See the complete example above.
 
 #### Literal Types
 
-Just like the Typescript language, Fireward supports literal types that can be mixed and matched using unions. The supported literal values are `true`, `false`, numbers and strings. For example, the following Fireward line will map to exact code  in Typescript `type SmorgasBoard = "hello" | 'bye' | 123 | 2.5 | false` and can be used to validate routes in Firestore.
+Just like the Typescript language, Fireward supports literal types that can be mixed and matched using unions. The supported literal values are `true`, `false`, numbers and strings. For example, the following Fireward line will map to the exact same Typescript code `type SmorgasBoard = "hello" | 'bye' | 123 | 2.5 | false` and can be used to validate routes in Firestore.
 
 #### Route Matching, Conditions and Functions
 
