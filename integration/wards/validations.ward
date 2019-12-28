@@ -1,0 +1,11 @@
+type Pilot = {
+  experience: float
+  name: string
+  allow create, update: if data.name != 'Otto' && data.experience > 3 && (prev==null || prev.experience <= data.experience) 
+  allow delete: data.name != 'Capt. Clarence Oveur'
+}
+
+match /pilots/{id} is Pilot {
+  allow write: true
+  allow read: true
+}

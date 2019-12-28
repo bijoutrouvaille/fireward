@@ -103,13 +103,32 @@ typeFunc name refs =
     addr (FuncParam (Just p) n) = p ++ "." ++ n
 
     defCheck :: String -> String -> TypeDef -> CodePrinter
-    defCheck parent prevParent (TypeDef fields) = do 
+    defCheck parent prevParent (TypeDef fields validations) = do 
+      _printIf (length validations > 0) $ do
+        _print "("
+        _indent
+        _return
+        _linesWith _and (fmap validation validations)
+        _deindent
+        _return
+        _print ") "
+        _and
       keyPresenceCheck
       _return
       _printIf (length fields > 0) $ do
         _and
         _linesWith _and fieldChecks
         where
+          validation (ValidationExpr methods body) = 
+            _linesWith _and (fmap (validationItem body) methods)
+          validationItem body m = do
+            _print "( " 
+            _print ("request.method != '" ++ show m ++ "' || ")
+            _print "( "
+            _print body
+            _print " )"
+            _print " )"
+            
           requiredKeys = fmap key . onlyRequired $ fields
           mx = length fields
           mn = length . onlyRequired $ fields

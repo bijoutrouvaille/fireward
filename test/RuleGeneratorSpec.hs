@@ -222,6 +222,42 @@ spec = do
         , "}\n"
         ]
 
+    it "generates validations for types" $
+      gu
+      [ "type X = {"
+      , "a: string"
+      , "allow create, delete: if prev.a == data.a || 1==1"
+      , "allow update, delete: 2==2 && 3==3"
+      , "allow write: true"
+      , "}"
+      ] `shouldBe` ru
+        [ "function is____X(data, prev) {"
+        , "  return ("
+        , "    ( request.method != 'create' || ( prev.a == data.a || 1 == 1 ) )"
+        , "    && ( request.method != 'delete' || ( prev.a == data.a || 1 == 1 ) )"
+        , "    && ( request.method != 'update' || ( 2 == 2 && 3 == 3 ) )"
+        , "    && ( request.method != 'delete' || ( 2 == 2 && 3 == 3 ) )"
+        , "    && ( request.method != 'create' || ( true ) )"
+        , "    && ( request.method != 'update' || ( true ) )"
+        , "    && ( request.method != 'delete' || ( true ) )"
+        , "  ) && data.keys().hasAll(['a'])"
+        , "  && data.size() >= 1 && data.size() <= 1"
+        , "  && data.keys().hasOnly(['a'])"
+        , "  && data.a is string;"
+        , "}"
+        ]
+
+    it "errors on empty list of request methods in validation" $ 
+      gu
+      [ "type X = {"
+      , "a: string,"
+      , "allow create: true"
+      , "allow: true"
+      , "}"
+      ] `shouldBe` "Left Validation expression must contain at least one request method (create, update, delete)\n  on line 4, column 6"
+
+      
+
     it "indents a complex file" $ do
       ward <- readFile "test/fixtures/indent.ward"
       _rule <- readFile "test/fixtures/indent.rules"

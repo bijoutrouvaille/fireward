@@ -14,7 +14,8 @@ module Combinators (
   void,
   altr,
   _terminated,
-  _concat
+  _concat,
+  _map
 ) where
 
 import Parser
@@ -100,3 +101,13 @@ _float = do
         _dec = do
           symbol "."
           some digit
+
+
+_map :: [(String, a)] -> Parser a
+_map xs = do
+  -- let _c = symbol >> return
+  let _c = \s -> symbol s >> return s
+  key <- altr $ fmap (_c . fst) xs 
+  let val = lookup key xs
+  maybe unparsable return val
+

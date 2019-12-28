@@ -63,7 +63,7 @@ stdTypes = (intercalate "\n"
 
 fork f g a = (f a) (g a)
 typeBlock :: Int -> TypeDef -> String
-typeBlock ind (TypeDef fields) = block ind $
+typeBlock ind (TypeDef fields _) = block ind $
   f <$> fields
   where
     f (Field r name refs c) = name ++ (if r then "" else "?") ++ ": " ++ typeRefList (ind + 2) refs

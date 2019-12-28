@@ -1,18 +1,32 @@
 rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
 
-type UserAccount = {
-  email: string
-}
 type User = {
-  name: {first:string, last?: string}
-  account: UserAccount
-  permissions: map
+  name: { first: string, last: string }, // inline nested objects
+  friends: string[], // a list of strings (string type not validated)
+  tags: string[4], // a list of strings, max size 4 (string type IS validated)
+  age?: int, // optional type
+  verified: bool
+  contact: Phone | Email // a union type
+  uid: const string // const prevents editing this field later
+  permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
+  smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
+
+	// Type Validation functions
+  // go at the end of any type
+	allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
+  allow write: if request.time > 123 // shorthand for create, update, delete
+  allow create, update: if data.verified == true // allows for a list
+} 
+type Phone = { number: int, country: int }
+type Email = string
+
+function isLoggedInUser(userId) { 
+  // return keyword optional
+  return request.auth!=null && request.auth.uid == userId; 
 }
 
-function validEmail(resource) {
-  return resource.email.data().indexOf('@') != -1 
-}
-
-match /users/{userId} is User {
-  allow write: if validEmail(request.resource);
+match /users/{userId} is User { 
+  // read, write, create, update, list, get and delete conditions are allowed
+  allow read, create, update: if isLoggedInUser(userId);
+  allow delete: false;
 }

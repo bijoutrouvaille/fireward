@@ -24,6 +24,10 @@ module RuleParser
 , TypeRef (..)
 , TopLevel (..)
 , Field (..)
+, RequestMethod (..)
+, ValidationExpr (..)
+, requestMethods
+, writeRequestMethods
 ) where
 
 import Parser
@@ -58,10 +62,43 @@ data PathBodyItem = PathBodyDir PathDirective
 
 data FuncDef = FuncDef String [String] String deriving (Show, Eq)
 
-data TypeDef = TypeDef [Field] deriving (Show, Eq)
+data RequestMethod = GET
+                   | LIST
+                   | CREATE
+                   | UPDATE
+                   | DELETE
+                   deriving (Eq)
+instance Show RequestMethod where
+  show GET = "get"
+  show LIST = "list"
+  show CREATE = "create"
+  show UPDATE = "update"
+  show DELETE = "delete"
+
+requestMethods =
+  [ ("get", GET)
+  , ("list", LIST)
+  , ("create", CREATE)
+  , ("update", UPDATE)
+  , ("delete", DELETE)
+  ]
+writeRequestMethodList = [CREATE, UPDATE, DELETE]
+writeRequestMethods = let prim = filter (\m -> snd m `elem` writeRequestMethodList) requestMethods
+                          combined = [("write", writeRequestMethodList)]
+                          in concat [fmap (\(s,m)->(s, [m])) prim, combined]
+
+
+
+
+data ValidationExpr = ValidationExpr [RequestMethod] String
+                    deriving (Eq, Show)
+data TypeDef = TypeDef 
+             { typeDefMembers :: [Field]
+             , typeDefValidations :: [ValidationExpr]
+             } deriving (Show, Eq)
 
 -- TypeNameRef name-of-the-type (Maybe array-size) -- Nothing if not array or not array not finite
-data TypeRef = TypeNameRef String (Maybe Int) 
+data TypeRef = TypeNameRef { typeRefName :: String, typeRefSize :: (Maybe Int)  }
              | InlineTypeDef TypeDef 
              | LiteralTypeRef String
              deriving (Show, Eq)
@@ -121,10 +158,33 @@ _funcDef = do
 
   where paramList = separated "," (token _varName)
 
+_typeDefValidationExpr :: Parser ValidationExpr
+_typeDefValidationExpr = do
+  symbol "allow"
+  optional space
+  inputMethods <- manywith (symbol ",") $ token _varName
+  let badMethods = (filter (\m -> Nothing == lookup m writeRequestMethods) inputMethods)
+  guardWith ( "Invalid validation methods found: " ++ show badMethods)
+    (length badMethods == 0) 
+
+  let onlyJust = reverse . foldl (\a mv->maybe a (:a) mv) []
+  let elemFrom d e = lookup e d
+  let methods = concat . onlyJust . fmap (elemFrom writeRequestMethods) $ inputMethods
+  guardWith "Validation expression must contain at least one request method (create, update, delete)" 
+    (length methods > 0) 
+  require "Validation expression missing a ':'" $ symbol ":"
+  optional $ symbol "if"
+  body <- require "Validation expressiom missing body" $ token _expr
+
+  return $ ValidationExpr methods body
+  
+
+
 _typeDef :: Parser TypeDef
 _typeDef = grouped "{" "}" $ do
   members <- many _field
-  return $ TypeDef members
+  validations <- manywith (optional $ symbol ",") _typeDefValidationExpr
+  return $ TypeDef members validations
   
 _typeRefs :: Parser [TypeRef]
 _typeRefs = manywith (symbol "|") 

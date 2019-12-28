@@ -124,6 +124,12 @@ type User = {
   uid: const string // const prevents editing this field later
   permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
   smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
+
+	// Type Validation functions
+  // go at the end of any type
+	allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
+  allow write: if request.time > 123 // shorthand for create, update, delete
+  allow create, update: if data.verified == true // allows for a list
 } 
 type Phone = { number: int, country: int }
 type Email = string
@@ -169,6 +175,12 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 Fireward allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
 
 _Warning_: `const` current only works on primitive types. Marking a non-primitive as const will compile without error but do nothing.
+
+#### Validations
+
+Each type definition, including inline and nested objects, can have custom validations at the end. The syntax is the same as in route conditions: `allow method1, method2: if <condition expr>`. Allowed methods are `create, update, delete, and write`. `write` is simply a shorthand for all the other ones. Automatic variables `data` and `prev` refer to incoming data and previously stored data _for this type_.
+
+See the complete example above.
 
 #### Route Matching, Conditions and Functions
 

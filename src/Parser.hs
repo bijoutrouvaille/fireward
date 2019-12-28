@@ -32,6 +32,7 @@ module Parser
 , whileNot
 , apply
 , Parser
+, unparsable
 , guard
 , failWith
 , guardWith
@@ -42,8 +43,9 @@ module Parser
 , trim
 ) where 
 
+-- import Data.Map.Strict 
 import Data.Char ( isDigit , isLower , isUpper, isSpace)
-import Data.List (dropWhileEnd)
+import Data.List (dropWhileEnd, lookup)
 
 import Control.Monad ((>>=), return, ap, liftM, guard)
 import Control.Applicative (Alternative, (<|>), empty, many, some, optional)
@@ -196,4 +198,7 @@ enum xs = alt (\s -> do { symbol s ; return s }) xs
 
 trim :: String -> String
 trim = dropWhile isSpace . dropWhileEnd isSpace
+
+unparsable :: Parser a
+unparsable = Parser $ \s -> Left Nothing
 
