@@ -240,13 +240,14 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 
 ## Roadmap
 
-- [x] Add comments
-- [x] Add error handling to the parser
-- [x] Add Windows and Linux release executables pipelines.
+- [x] Line comments
+- [x] Error handling to the parser
+- [x] Windows and Linux release executables pipelines
 - [x] End-to-end tests with the Firestore emulator
 - [x] Namespace validation functions (e.g. `isX` for `type X` should have a better name space). Done: now: `is____X`.
 - [x] String, numeric and boolean literal types
 - [x] Custom validation expressions within type definitions
+- [ ] Actual tuple types, e.g. [int, string, MyType]
 - [ ] Expression variables
 - [ ] Importing files
 - [ ] Type intersections
