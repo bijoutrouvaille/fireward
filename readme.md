@@ -127,11 +127,10 @@ type User = {
   permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
   smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
 
-	// Type Validation functions
-  // go at the end of any type
-	allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
+  // Custom type validation expressions go at the end of any type
+  allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
   allow write: if request.time > 123 // shorthand for create, update, delete
-  allow create, update: if data.verified == true // allows for a list
+  allow create, update: if data.verified == true // allows to group multiple methods into a single expression
 } 
 type Phone = { number: int, country: int }
 type Email = string
