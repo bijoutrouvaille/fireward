@@ -18,6 +18,7 @@ https://groups.google.com/forum/#!forum/fireward
 - Tuple validation
 - Literal types
 - Type unions
+- Custom validation expressions in type definitions
 - Comments
 - A strong unit test suite
 - End-to-end tests with emulator
@@ -236,7 +237,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] End-to-end tests with the Firestore emulator
 - [x] Namespace validation functions (e.g. `isX` for `type X` should have a better name space). Done: now: `is____X`.
 - [x] String, numeric and boolean literal types
-- [x] Custom validation functions within type definitions
+- [x] Custom validation expressions within type definitions
 - [ ] Expression variables
 - [ ] Importing files
 - [ ] Type intersections
