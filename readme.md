@@ -104,8 +104,9 @@ type Name = { first: string, last?: string }
 type User = { name: Name | string }
 
 match /users/{id} is User {
-  allow read: true;
-  allow write: false;
+  allow read: true; // will allow all reads
+  allow create, update: request.auth!=null; // will only allow creates and updates if logged in AND input is of type User
+  allow delete: false; // will never allow deletes
 }
 ```
 
@@ -149,16 +150,17 @@ match /users/{userId} is User {
 
 ### Notes on Syntax
 
-#### Types
+#### Type Mapping
 
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
+
 - `int` and `float` map to TypeScript `number`
 - `bool` in rules maps to TS `boolean`
-- `timestamp` maps to `WardTimestamp|{isEqual: (other: any)=>boolean}`. Snapshots will come as a timestamp (`{seconds: number, nanoseconds: number}`), but when writing to the database, you can assign, in addition to a timestamp, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`). `WardTimestamp` is defined in the generated typescript file, and refers to the object that Firestore returns on data reads. It is intended to follow the official definition: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
+- `timestamp` maps to `WardTimestamp|Date|{isEqual: (other: any)=>boolean}`. Snapshots will come in as a timestamp `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
 
 #### Unions
 
-Union types are supported. Intersections are not. The usage is simple and demonstrated in the basic example above.
+Union types are supported. Intersections are not (yet). The usage is simple and demonstrated in the basic example above.
 
 #### Lists
 
@@ -181,6 +183,10 @@ _Warning_: `const` current only works on primitive types. Marking a non-primitiv
 Each type definition, including inline and nested objects, can have custom validations at the end. The syntax is the same as in route conditions: `allow method1, method2: if <condition expr>`. Allowed methods are `create, update, delete, and write`. `write` is simply a shorthand for all the other ones. Automatic variables `data` and `prev` refer to incoming data and previously stored data _for this type_.
 
 See the complete example above.
+=======
+#### Literal Types
+
+Just like the Typescript language, Fireward supports literal types that can be mixed and matched using unions. The supported literal values are `true`, `false`, numbers and strings. For example, the following Fireward line will map to exact code  in Typescript `type SmorgasBoard = "hello" | 'bye' | 123 | 2.5 | false` and can be used to validate routes in Firestore.
 
 #### Route Matching, Conditions and Functions
 
