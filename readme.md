@@ -189,6 +189,7 @@ Each type definition, including inline and nested objects, can have custom valid
 - Automatic variables `data` and `prev` refer to incoming data and previously stored data _for this type_ respectively.
 - `data` will be null on deletes, and `prev` will be null on creates.
 - Custom validation expressions are combined with other checks (route conditions and type checks) using the logical AND operator. If either one fails, all fail.
+- Multiple expressions can coexist for the same request method and will combine using the logical AND, as above.
 
 _Note:_ if a validation is absent for a method and type, it will pass. For example, if you have create and delete validations, but not an update one, updates will pass validation, unless other conditions (e.g. route-level conditions or variable type validation) prevent it.
 
