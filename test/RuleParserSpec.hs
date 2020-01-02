@@ -71,7 +71,6 @@ spec = do
           PathPartVar "pretty",
           PathPartWild "world"
       ] [ TypeNameRef "Rough" Nothing ] [], "\n")
-    -- data PathDirective = PathDirective [PathOp] PathCondition
     it "parses a path directive" $
       _apply _pathDir "allow read: if 1<3 && true;" `shouldBe` 
         Right (PathDirective [ "read" ] "1 < 3 && true", "")
@@ -128,7 +127,6 @@ spec = do
     it "parses a regex call with other condition" $ do
       _parse "match /f/{x} {\n  allow write: if 1+2==2 && x.match('^he..o'); \n}" `shouldBe` 
         Right ([TopLevelPath (PathDef [PathPartStatic "f",PathPartVar "x"] [] [PathBodyDir (PathDirective ["write"] "1 + 2 == 2 && x.match('^he..o')")])],"")
-                                             --Right([], "")
 
     it "fails on a property without a definition" $ do
       _parse "type X = {fff}" `shouldBe` failure ("type `X` is missing definition", 0, 8)
@@ -164,7 +162,6 @@ spec = do
       let r = unlines
               [ "match /x {"
               , "  allow read: true"
-              -- , "  allow update: abc && allow" -- this causes an opaque exception. https://gitlab.haskell.org/ghc/ghc/issues/10615 ???
               , "  function z() { true }"
               , "  allow create: false"
               , "  match /q {}"
@@ -172,7 +169,6 @@ spec = do
               ]
       _parse r `shouldBe` Right ([ TopLevelPath (PathDef [PathPartStatic "x"] [] 
         [ PathBodyDir (PathDirective ["read"] "true")
-        -- , PathBodyDir (PathDirective ["update"] "false")
         , PathBodyFunc (FuncDef "z" [] "true")
         , PathBodyDir (PathDirective ["create"] "false")
         , PathBodyPath (PathDef [PathPartStatic "q"] [] [])

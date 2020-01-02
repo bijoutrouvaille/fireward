@@ -105,6 +105,11 @@ _float = do
 
 _map :: [(String, a)] -> Parser a
 _map xs = do
+  -- (>>) :: Monad m => m a -> m b -> m b
+  -- symbol :: String -> Parser ()
+  -- return :: a -> m a
+  -- (>>) (String -> m a) (b -> m b) -> m b
+  -- (>>) (a->b) (a->c) :: 
   -- let _c = symbol >> return
   let _c = \s -> symbol s >> return s
   key <- altr $ fmap (_c . fst) xs 

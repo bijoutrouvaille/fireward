@@ -71,9 +71,8 @@ typeRefList :: Int -> [TypeRef] -> String
 typeRefList ind refs = 
   trim .  intercalate " | " $ ref <$> refs
   where
-    convertToNative = flip maybe id <*> flip lookup natives
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
-    -- see the full explanation in docs/func-monad.md
+    convertToNative = flip maybe id <*> flip lookup natives
     ref :: TypeRef -> String
     ref (LiteralTypeRef value) = value
     ref (TypeNameRef name Nothing) = convertToNative name
@@ -99,4 +98,3 @@ generate s = result $ parseRules s where
   result (Right (tops, "", _, _)) = gen tops
   result (Right (tops, unparsed, l, c)) = Left ("Unexpected input on " ++ printLoc l c)
   printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
-

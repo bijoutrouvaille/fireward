@@ -3,5 +3,5 @@ type User = { name: Name | string }
 
 match /users/{id} is User {
   allow read: true;
-  allow write: false;
+  allow write: request.auth != null;
 }

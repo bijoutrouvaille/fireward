@@ -63,23 +63,7 @@ spec = do
         , "  }"
         , "}"
         ]
-    -- it "generates a type for all optional fields from parsed" $
-    --   
-    --   g (Right ([TopLevelType "X" [
-    --     InlineTypeRef (TypeDef [Field {required = False, fieldName = "x", typeRefs = [TypeNameRef "string" Nothing], constant = False}])]]
-    --   ,""))
-    --   `shouldBe` ru
-    --    [ "function is____Z(data, prev) {"
-    --    , "  return data.keys().size() >= 0"
-    --    , "    && data.size() <= 1"
-    --    , "    && ("
-    --    , "      !data.keys().hasAny(['a'])"
-    --    , "      || data.a is string"
-    --    , "    );"
-    --    , "}"
-    --    ]
 
-    
     it "generates a type for all optional fields" $
       gu [ "type Z = {"
          , "  a?: string"

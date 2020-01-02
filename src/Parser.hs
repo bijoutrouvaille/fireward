@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
--- {-# LANGUAGE TypeSynonymInstances, OverlappingInstances #-}
 
 -- adapted from Monadic Parsing in Haskell
 -- http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf
@@ -57,7 +56,6 @@ type ParserResult a = Either ParserError (ParserSuccess a)
 
 newtype Parser a = Parser (String -> Either ParserError (ParserSuccess a))
 
-failure = Left . Just
 
 maybeHead [] = Nothing
 maybeHead (x:_) = Just x
@@ -72,9 +70,21 @@ instance Applicative Parser where
   pure  = return
   (<*>) = ap
 
-none :: Parser [a]
-none = return []
+-- this low-level function represents a critical failure that
+-- should produce error output to the user.
+failure = Left . Just
 
+-- This represents a point at which the parser does not know what to do.
+-- Unlike a failure, this will not produce a parser error. This combinator
+-- explicitly says: this is not the structure you're looking for. 
+-- `guard True` does a similar thing, but guard returns () but `unparsable` 
+-- returns the generic Parser a, so you can do things like 
+-- `if cond then return myValue else unparsable`
+unparsable :: Parser a
+unparsable = Parser $ \s -> Left Nothing
+
+-- this ends the compilation with an error message intended for the user
+-- `if null closingParen then failWith "Missing closing paren" else return myResult`
 failWith :: String -> Parser a
 failWith msg = Parser (\s->failure (msg, 0, 0))
 
@@ -82,13 +92,9 @@ guardWith :: String -> Bool -> Parser ()
 guardWith msg True = return ()
 guardWith msg False = failWith msg
 
-
--- everyWith msg p = Parser q
---   where q s = res (apply (many p >>= (\r->space >> return r)) s)
---         res (Right (x, "", l, c, r)) = Right (x, "", l, c, r)
---         res (Right (x, u, l, c, r)) = Left (msg, l, c)
---         res error = error
-
+-- This represents an empty result set for parsers that look for multiple results.
+none :: Parser [a]
+none = return []
 
 instance Alternative Parser where
   empty = Parser (\s -> Left Nothing)
@@ -190,7 +196,7 @@ _const s = do
   
 
 alt :: (a -> Parser a) -> [a] -> Parser a
-alt p [] = fail ""
+alt p [] = unparsable
 alt p (x:xs) = p x <|> alt p xs
 
 enum :: [String] -> Parser String
@@ -198,7 +204,3 @@ enum xs = alt (\s -> do { symbol s ; return s }) xs
 
 trim :: String -> String
 trim = dropWhile isSpace . dropWhileEnd isSpace
-
-unparsable :: Parser a
-unparsable = Parser $ \s -> Left Nothing
-
