@@ -117,15 +117,21 @@ match /users/{id} is User {
 rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
 
 type User = {
+
   name: { first: string, last: string }, // inline nested objects
-  friends: string[], // a list of strings (string type not validated)
-  tags: string[4], // a list of strings, max size 4 (string type IS validated)
   age?: int, // optional type
   verified: bool
+
   contact: Phone | Email // a union type
+
   uid: const string // const prevents editing this field later
-  permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
+
   smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
+
+  friends: string[], // a list of strings (string type not validated)
+  flags: [string, 'new' | 'verified', string | int, string?], // a 4-tuple, max size 4, last item optional (type IS validated)
+
+  permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
 
   // Custom type validation expressions go at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
@@ -165,9 +171,20 @@ Union types are supported. Intersections are not (yet). The usage is simple and 
 
 #### Lists
 
-Firestore lists are supported and transpile to arrays or tuples in TS. The syntax is `MyType[]` or `MyType[n]`. The second variant will transpile to a MyType tuple up to n in size. For example, if n is 4 (`MyType[4]`), then the result will be a 0,1,2,3 or 4-tuple, basically, an array up to 4 in length. Check the top of the generated TS file for the exported types that represent it.
+Firestore lists are supported and transpile to arrays in TS. The syntax is `MyType[]`. The type is not validated in Firestore.
 
-_Important_: the only way to ensure that the list of, say strings, contains strings is by using the tuple syntax above. Firestore does not have the capability to validate arbitrary size lists.
+_Note:_ the syntax MyType[n] will continue to work for some time, but it is being phased out. Please use tuple syntax.
+
+#### Tuples
+
+The tuple syntax is very similar to TS. 
+
+- Any supported type can be an element of the tuple.
+- To make an element optional, suffix it with a question mark.
+
+Example: `[string, 'hello', 123, int?, (string | MyType)?]`
+
+The above requires the first three elements present, but the last two are optional.
 
 #### Optional Types and `null`
 
