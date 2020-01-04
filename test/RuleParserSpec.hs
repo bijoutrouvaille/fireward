@@ -26,23 +26,23 @@ spec :: Spec
 spec = do
   describe "rule parser" $ do
     it "parses a field" $
-      _apply _field "zoo: null" `shouldBe` Right (Field True "zoo" [TypeNameRef "null" Nothing] False,"")
+      _apply _field "zoo: null" `shouldBe` Right (Field True "zoo" [TypeNameRef "null"] False,"")
     it "parses a type" $
-      _apply _typeDef "{ zoo: null }" `shouldBe` Right (TypeDef [Field True "zoo" [TypeNameRef "null" Nothing] False] [],"")
+      _apply _typeDef "{ zoo: null }" `shouldBe` Right (TypeDef [Field True "zoo" [TypeNameRef "null"] False] [],"")
     it "parses a simple type" $
       _parse "type Hor = { zoo: Null }" `shouldBe` Right ([
-          TopLevelType "Hor" [InlineTypeDef (TypeDef [Field True "zoo" [TypeNameRef "Null" Nothing] False] [])]
+          TopLevelType "Hor" [InlineTypeDef (TypeDef [Field True "zoo" [TypeNameRef "Null"] False] [])]
       ],"")
     it "parses two simple types" $
       _parse (unlines [ "type A = {a:Null}"
                           , "type B = {b:Null}"
                           ]) `shouldBe` Right ([
-                            TopLevelType "A" [InlineTypeDef (TypeDef [Field True "a" [TypeNameRef "Null" Nothing] False] [])], 
-                            TopLevelType "B" [InlineTypeDef (TypeDef [Field True "b" [TypeNameRef "Null" Nothing] False] [])]
+                            TopLevelType "A" [InlineTypeDef (TypeDef [Field True "a" [TypeNameRef "Null"] False] [])], 
+                            TopLevelType "B" [InlineTypeDef (TypeDef [Field True "b" [TypeNameRef "Null"] False] [])]
                           ], "")
     it "parses a type with all optional fields" $
       _parse "type X = { x?: string }" `shouldBe` Right ([TopLevelType "X" [
-        InlineTypeDef (TypeDef [Field {required = False, fieldName = "x", typeRefs = [TypeNameRef "string" Nothing], constant = False}] [])]]
+        InlineTypeDef (TypeDef [Field {required = False, fieldName = "x", typeRefs = [TypeNameRef "string"], constant = False}] [])]]
       ,"")
     it "parses a pathStatic in pathParts" $
       _apply _pathParts "hello" `shouldBe` Right ([PathPartStatic "hello"],"")
@@ -70,7 +70,7 @@ spec = do
           PathPartStatic "hello",
           PathPartVar "pretty",
           PathPartWild "world"
-      ] [ TypeNameRef "Rough" Nothing ] [], "\n")
+      ] [ TypeNameRef "Rough"] [], "\n")
     it "parses a path directive" $
       _apply _pathDir "allow read: if 1<3 && true;" `shouldBe` 
         Right (PathDirective [ "read" ] "1 < 3 && true", "")
@@ -96,7 +96,7 @@ spec = do
                  , "  allow read: if 1>2 && 3<4;"
                  , "}"
                  ]) `shouldBe` Right ([
-                  TopLevelType "A" [InlineTypeDef (TypeDef [Field True "a" [TypeNameRef "String" Nothing] False] [])],
+                  TopLevelType "A" [InlineTypeDef (TypeDef [Field True "a" [TypeNameRef "String"] False] [])],
                   TopLevelPath (PathDef [
                     PathPartStatic "stat",
                     PathPartVar "var",
@@ -110,7 +110,7 @@ spec = do
       _parse "match a/{x=**} is X {allow create: if true;}"
         `shouldBe` Right ([TopLevelPath (PathDef [
           PathPartStatic "a", PathPartWild "x"
-        ] [ TypeNameRef "X" Nothing ] [
+        ] [ TypeNameRef "X"] [
           PathBodyDir (PathDirective ["create"] "true")
         ])], "")
     it "fails on just the type keyword" $ do
@@ -120,7 +120,7 @@ spec = do
     it "fails when there is nothing after assignment" $ do
       _parse "type X =" `shouldBe` failure ("type `X` is missing definition", 0, 8)
     it "allows a semicolon after type definition" $ do
-      _parse "type X = string;" `shouldBe` Right ([TopLevelType "X" [TypeNameRef "string" Nothing]], "")
+      _parse "type X = string;" `shouldBe` Right ([TopLevelType "X" [TypeNameRef "string" ]], "")
 
     it "parses regex" $ do
       _parse "match /x/x { allow write: if name.match('test'); }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x",PathPartStatic "x"] [] [PathBodyDir (PathDirective ["write"] "name.match('test')")])],"")
@@ -214,11 +214,11 @@ spec = do
         "}"
       ])
       `shouldBe`
-      Right ([ TopLevelType "Zxx" [TypeNameRef "Null" Nothing, InlineTypeDef (TypeDef [
-        Field True "one" [TypeNameRef "X" Nothing] False,
+      Right ([ TopLevelType "Zxx" [TypeNameRef "Null" , InlineTypeDef (TypeDef [
+        Field True "one" [TypeNameRef "X" ] False,
         Field True "two" [InlineTypeDef (TypeDef [
-          Field True "three" [TypeNameRef "Z" Nothing] False,
-          Field True "four" [TypeNameRef "P" Nothing, TypeNameRef "X" Nothing] False
+          Field True "three" [TypeNameRef "Z" ] False,
+          Field True "four" [TypeNameRef "P" , TypeNameRef "X" ] False
         ] [])] False
       ] [])]],"")
     it "parses a function that returns a string" $ 
@@ -236,7 +236,7 @@ spec = do
         "}"
       ])
       `shouldBe`
-      Right ([ TopLevelType "Zxx" [InlineTypeDef (TypeDef [Field True "one" [TypeNameRef "X" Nothing] False, Field True "two" [TypeNameRef "Y" Nothing] False] [])],
+      Right ([ TopLevelType "Zxx" [InlineTypeDef (TypeDef [Field True "one" [TypeNameRef "X" ] False, Field True "two" [TypeNameRef "Y" ] False] [])],
           TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")
         ],"")
     it "parses a complex path" $
@@ -250,8 +250,8 @@ spec = do
         "    }",
         "  }",
         "}"
-      ]) `shouldBe` Right ([ TopLevelPath (PathDef [PathPartStatic "x"] [ TypeNameRef "A" Nothing ] [
-        PathBodyPath (PathDef [PathPartStatic "y"] [ TypeNameRef "B" Nothing ] [
+      ]) `shouldBe` Right ([ TopLevelPath (PathDef [PathPartStatic "x"] [ TypeNameRef "A" ] [
+        PathBodyPath (PathDef [PathPartStatic "y"] [ TypeNameRef "B" ] [
           PathBodyDir (PathDirective ["read","write"] "true"),
           PathBodyDir (PathDirective ["create","write"] "false"),
           PathBodyFunc (FuncDef "qqq" ["a","b","c"] "123")])

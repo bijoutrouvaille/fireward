@@ -87,20 +87,30 @@ funcBlock (FuncDef name params body) = _function name params (_print body)
 
 typeFuncName typeName = "is____" ++ capitalize typeName
 
-data FuncParam = FuncParam (Maybe String) String
+data NodeLoc = NodeLoc (Maybe String) (Either String Int)
 --
 -- the main recursive function to generate the type function
 typeFunc :: String -> [TypeRef] -> CodePrinter
 typeFunc name refs = 
-  let refCheckList = refCheck (FuncParam Nothing "data") (FuncParam Nothing "prev") False <$> refs 
+  let refCheckList = refCheck (NodeLoc Nothing (Left "data")) (NodeLoc Nothing (Left "prev")) False <$> refs 
   in _function (typeFuncName name) ["data", "prev"] (_linesWith _or refCheckList)
   where
     isReq (Field r _ _ _) = r 
     key (Field _ n _ _) = n
     onlyRequired = filter isReq
-    addr :: FuncParam -> String
-    addr (FuncParam Nothing n) = n
-    addr (FuncParam (Just p) n) = p ++ "." ++ n
+
+    addr :: NodeLoc -> String
+    addr (NodeLoc Nothing (Left n)) = n
+    addr (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot address."-- n ++ "[" ++ show i ++ "]"
+    addr (NodeLoc (Just p) (Left n)) = p ++ "." ++ n
+    addr (NodeLoc (Just p) (Right i)) = p ++ "[" ++ show i ++ "]"
+
+    exsts :: NodeLoc -> String
+    exsts (NodeLoc Nothing (Left n)) = "true"
+    exsts (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot exist." -- n ++ " is list && " ++ n ++ ".size() >=" ++ show i 
+    exsts (NodeLoc (Just p) (Left n)) = p ++ ".keys().hasAll['" ++ n ++ "']"
+    exsts (NodeLoc (Just p) (Right i)) = p ++ " is list && " ++ p ++ ".size() > " ++ show i 
+    
 
     defCheck :: String -> String -> TypeDef -> CodePrinter
     defCheck parent prevParent (TypeDef fields validations) = do 
@@ -144,44 +154,125 @@ typeFunc name refs =
               ]
 
 
-    refCheck :: FuncParam -> FuncParam -> Bool -> TypeRef -> CodePrinter
+    refCheck :: NodeLoc -> NodeLoc -> Bool -> TypeRef -> CodePrinter
     refCheck curr prev _const (LiteralTypeRef val) =
       _print $ (addr curr) ++ " == " ++ val
     refCheck curr prev _const (InlineTypeDef def) = 
       defCheck (addr curr) (addr prev) def
-    refCheck pcurr@(FuncParam parent curr) pprev@(FuncParam prevParent prev) _const (TypeNameRef t arrSize) = 
-      if t `elem` primitives then primType arrSize else func
+    refCheck curr prev _const (ListTypeRef ref) =
+      _print $ addr curr ++ " is list"
+    refCheck curr prev _const (GroupedTypeRef refs) = do
+      _print "("
+      _indent; _return
+      multiRefCheck curr prev refs
+      _deindent; _return
+    refCheck pcurr@(NodeLoc parent currKey) pprev@(NodeLoc prevParent prevKey) c (TupleTypeRef fs) = do
+      _print "("
+      _print $ _addr ++ " is list " 
+      _and
+      _print $ _sizeLte _addr maxSize
+      _print " "
+      _and
+      _print $ _sizeGte _addr minSize
+      _indent
+      _return
+      _and
+      _linesWith _and [ _refLine r | r <- refs ]
+      _deindent
+      _print ")"
       where
-        listCond = _addr ++ " is list"
-
-        primType :: (Maybe Int) -> CodePrinter -- primitive types
-        primType Nothing  
-                     | t=="null" = _print $ _addr ++ " == null "   
-                     | t=="float" = _print $ "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
-                     | otherwise = _print $ _addr ++ " is " ++ t
-        primType (Just n) = do
-          _print listCond          
-          _printIf (n > 0) $ do
-            _return
+        maxSize = length fs
+        minSize = length . dropWhile ((==False) . fst) . reverse $ fs
+        refs :: [(Bool, [TypeRef], Int)]
+        refs = [ (req, ref, i) | i <- [0..length fs - 1], let (req, ref) = fs !! i ]
+        _iaddr :: Int -> String
+        _iaddr i = _addr ++ "[" ++ show i ++ "]"
+        _addr = addr pcurr
+        _prevAddr = addr pprev
+        _prevParent = maybe "prev" id prevParent
+        _iloc i = NodeLoc (Just _addr) (Right i)
+        _refLine (req, refs, i) = do
+          _print "("
+          _indent
+          _return
+          _printIf req $ do
+            _print $ exsts (_iloc i)
+            _print " "
             _and
-            arrElemCheck n
+          _printIf (not req) $ do
+            _print $ "!(" ++ exsts (_iloc i) ++ ") "
+            _or
+            _print " "
+            _print $ _iaddr i ++ " == null "
+            _print " "
+            _or
 
-        sizeCheck i = 
-           "(" ++ _sizeLte _addr i ++ " || " ++ _addr ++ "[" ++ show (i-1) ++ "] is " ++ t ++ ")"
-        arrElemCheck n = do
-          _linesWith _and [ _print $ sizeCheck i | i <- [1..n] ]
+          multiRefCheck (_iloc i) (NodeLoc (Just _prevAddr) (Right i)) refs
+          _deindent
+          _return
+          _print ")"
+          
+      
+    refCheck pcurr@(NodeLoc parent currKey) pprev@(NodeLoc prevParent prevKey) _const (TypeNameRef t) = 
+      if t `elem` primitives then primType else func
+      where
+        primType :: CodePrinter -- primitive types
+        primType 
+          | t=="null" = _print $ _addr ++ " == null "   
+          | t=="float" = _print $ "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
+          | otherwise = _print $ _addr ++ " is " ++ t
 
         -- func is defined like this because firestore does not allow tertiary logic (?:) or similar.
-        func = _print $ "(" ++ _prevParent ++ "==null && " ++ funcwp "null" ++ " || " ++ funcwp _prevParent ++ ")"
-        funcwp p = typeFuncName t ++ "(" ++ _addr ++ ", " ++ p ++ ")"
+        -- !(p==null || !p.k) === p!=null && p.k | DeMorgan law
+        func = do
+          _print "("
+          _printIf (prevParent /= Nothing) $ do
+            _print "("
+            _print $ _prevParent ++ "==null"
+            _print " "
+            _or
+            _print $ "!(" ++ exsts pprev ++ ")"
+            _print ")"
+          _printIf (prevParent == Nothing) $ do
+            _print $ _prevParent ++ "==null"
+          _print " "
+          _and
+          _print $ funcwp "null"
+          _print " "
+          _or
+          _print $ _prevParent ++ "!=null "
+          _and
+          _printIf (prevParent /= Nothing) $ do
+            _print $ exsts pprev
+            _print " "
+            _and
+          _print $ funcwp _prevAddr
+          _print ")"
+
+        funcwp parent' = typeFuncName t ++ "(" ++ _addr ++ ", " ++ parent' ++ ")"
         _addr = addr pcurr
         _prevAddr = addr pprev
         _prevParent = maybe "prev" id prevParent
 
+
+    multiRefCheck :: NodeLoc -> NodeLoc -> [TypeRef] -> CodePrinter
+    multiRefCheck curr prev refs = do
+      if length refs == 1
+         then refLines
+         else do
+           _print "("
+           _indent
+           _return
+           refLines     
+           _deindent
+           _line $ _print ")"
+      where refLines = _linesWith _or (refCheck curr prev False <$> refs)
+
+
     fieldCheck :: String -> String -> Field -> CodePrinter
     fieldCheck parent prevParent (Field r n refs c) = do
       _printIf c $ do -- c means field is marked as const
-        _print constCheck
+        constCheck
         _return
         _and
       _printIf r $ do
@@ -211,12 +302,22 @@ typeFunc name refs =
 
         notDefined parent key = "!" ++ _hasAny parent [key]
         rs = _linesWith _or (refCheck curr prev c <$> refs)
-        curr = FuncParam (Just parent) n
-        prev = FuncParam (Just prevParent) n
-        constCheck = check -- const type check
-          where check = "(" ++ prevParent ++ "==null || !" ++ _hasAll prevParent [n] ++ " || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")"
-                _prevAddr = addr prev
-                _addr = addr curr
+        curr = NodeLoc (Just parent) (Left n)
+        prev = NodeLoc (Just prevParent) (Left n)
+        _prevAddr = addr prev
+        _addr = addr curr
+        constCheck = do-- const type check
+          _print "(" 
+          _print $ prevParent ++ "==null " 
+          _or
+          _print $ "!" ++ _hasAll prevParent [n] ++ " "
+          _or
+          -- ++ " || " ++ 
+          _print $ _prevAddr ++ "==null "
+          _or
+          _print $ _addr ++ "=="++_prevAddr
+          _print ")"
+          -- _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")"
       
     
 

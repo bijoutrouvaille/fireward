@@ -37,25 +37,13 @@ export function toArrayMax<T>(n: 10, arr:T[]):ArrayMax10<T>
 export function toArrayMax<T>(n: 11, arr:T[]):ArrayMax11<T>
 export function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }
 
-export type ListTest = {
-  test: string[]
-}
-export type OptListTest = {
-  test?: string[]
-}
-export type MapTest = {
-  test: Record<string, unknown>
-}
-export type LitTest = {
-  strTest: 'me' | 'you'
-  numTest: 123 | 234
-  boolTest: false
-  mixTest: 'hello' | 123 | true
-}
-export type TimestampTest = {
-  test: Date|WardTimestamp|{isEqual: (other: any)=>boolean}
+export type Tuple1 = [string, 3, 'hello', {
+  a: 1
+}?]
+export type A = {
+  test: Tuple1
 }
 
-
-
-
+export type B = {
+  test: [number, number, number?, number?]
+}

@@ -11,6 +11,7 @@ module Combinators (
   readDef,
   _natural,
   _float,
+  _int,
   void,
   altr,
   _terminated,
@@ -102,6 +103,11 @@ _float = do
           symbol "."
           some digit
 
+_int :: Parser Int
+_int = do
+  neg <- optional $ symbol "-"
+  num <- _natural
+  return $ if neg == Nothing then num else (-1 * num)
 
 _map :: [(String, a)] -> Parser a
 _map xs = do

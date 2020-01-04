@@ -98,9 +98,12 @@ data TypeDef = TypeDef
              } deriving (Show, Eq)
 
 -- TypeNameRef name-of-the-type (Maybe array-size) -- Nothing if not array or not array not finite
-data TypeRef = TypeNameRef { typeRefName :: String, typeRefSize :: (Maybe Int)  }
+data TypeRef = TypeNameRef String
              | InlineTypeDef TypeDef 
              | LiteralTypeRef String
+             | TupleTypeRef [(Bool, [TypeRef])]
+             | ListTypeRef TypeRef
+             | GroupedTypeRef [TypeRef]
              deriving (Show, Eq)
 data Field = Field
            { required :: Bool
@@ -182,37 +185,108 @@ _typeDefValidationExpr = do
 
 _typeDef :: Parser TypeDef
 _typeDef = grouped "{" "}" $ do
-  members <- many _field
+  members <- manywith (optional $ symbol ",") _field
+  optional $ symbol ","
   validations <- manywith (optional $ symbol ",") _typeDefValidationExpr
   return $ TypeDef members validations
   
-_typeRefs :: Parser [TypeRef]
-_typeRefs = manywith (symbol "|") 
-  (   (withComma _literalTypeRef)
-  <|> (withComma _singleTypeName)
-  <|> (InlineTypeDef <$> withComma _typeDef)
-  )
-  where
-    withComma p = _terminated p comma
-    comma = optional $ symbol ","
-
-_listOp :: Parser Int
-_listOp = do
+_tupleTypeRef :: Parser TypeRef
+_tupleTypeRef = do
   symbol "["
-  size <- optional $ token _natural
-  require "expected closing `]`" $ symbol "]"
-  return $ maybe 0 id size
+  refs <- manywith (symbol ",") _ref
+  guardWith "Tuples must contain at least one item." (length refs > 0) 
+  require "Missing a closing ']' for a tuple." $ symbol "]"
+  return $ TupleTypeRef refs
+  where _ref = do
+          rs <- token _typeRefUnion
+          q <- optional $ symbol "?"
+          return (q == Nothing, rs)
+
+_inlineTypeDefRef :: Parser TypeRef
+_inlineTypeDefRef = InlineTypeDef <$> _typeDef
+_atomTypeRef :: Parser TypeRef 
+_atomTypeRef = _literalTypeRef <|> _singleTypeName <|> _inlineTypeDefRef <|> _tupleTypeRef
+
+_groupedTypeRef :: Parser TypeRef
+_groupedTypeRef = do
+  symbol "("
+  refs <- manywith (symbol "|") $ _anyTypeRef
+  guardWith "Parentheses must contain at least one type." (length refs > 0)
+  require "A grouped type is missing the closing paren ')'" 
+    $ symbol ")"
+  return $ GroupedTypeRef refs
+
+_listTypeRef :: Parser TypeRef
+_listTypeRef = do
+  ref <- _groupedTypeRef <|> _atomTypeRef
+  symbol "["
+  arrSize <- optional $ token _natural
+  guardWith "Explicit list size must be between 1 and 12" (sizeCheck arrSize) 
+  require "List is missing a closing paren." $ symbol "]"
+  return $ res ref arrSize
+  where
+    res ref Nothing = ListTypeRef ref
+    res ref (Just n) = TupleTypeRef [ (False, [ref]) | i <- [0..n-1]]
+    sizeCheck Nothing = True
+    sizeCheck (Just n) = n > 0 && n <= 12
+
+
+_anyTypeRef = _listTypeRef <|> _groupedTypeRef <|> _atomTypeRef
+
+_typeRefUnion :: Parser [TypeRef]
+_typeRefUnion = manywith (symbol "|") $ token _anyTypeRef
+
+-- _typeRefs = manywith (symbol "|") 
+--   (   (withComma _literalTypeRef)
+--   <|> (withComma _singleTypeName)
+--   <|> (InlineTypeDef <$> withComma _typeDef)
+--   )
+--   where
+--     withComma p = _terminated p comma
+--     comma = optional $ symbol ","
+
+-- atom = lit | tuple | def | name
+-- list = atom[] | group[]
+-- group = (res | res | ...)
+-- res = single | list | group
+
+-- _listOp :: Parser Int
+-- _listOp = do
+--   symbol "["
+--   size <- optional $ token _natural
+--   guardWith "Tuple size must be greater than 0." (sizeCheck size)
+--   require "expected closing `]`" $ symbol "]"
+--   return $ maybe 0 id size
+--   where sizeCheck Nothing = True
+--         sizeCheck (Just n) = n > 0
 _singleTypeName = do
   name <- token _varName
-  arrSize <- optional $ _listOp
-  return $ TypeNameRef name arrSize
+  return $ TypeNameRef name
+
+-- _listTypeRef = do
+  
+  -- return . maybe (TypeNameRef name Nothing) $ \n ->
+  --   TupleTypeRef [ (False, TypeNameRef name Nothing) ]
+  -- return $ TypeNameRef name arrSize
 _literalTypeRef :: Parser TypeRef
 _literalTypeRef =
   LiteralTypeRef <$> token (tokenVal <|> numVal <|> stringVal)
   where
     tokenVal = _const "true" <|> _const "false"
-    numVal = show <$> _float
     stringVal = _string
+    leftAndRight [] Nothing = unparsable
+    leftAndRight [] (Just ds) = return $ "0." ++ dig2str ds
+    leftAndRight ls Nothing = return $ dig2str ls
+    leftAndRight ls (Just rs) = return $ dig2str ls ++ "." ++ dig2str rs
+    dig2str ds = concat [ [d] | d <- ds ]
+    numVal = do
+      neg <- optional $ symbol "-"
+      left <- many digit 
+      right <- optional $ do
+        symbol "."
+        some digit
+      leftAndRight left right
+
 
 
 _field :: Parser Field
@@ -221,7 +295,7 @@ _field = do
   opt <- optional $ symbol "?"
   symbol ":"
   isConst <- optional $ symbol "const"
-  types <- _typeRefs
+  types <- _typeRefUnion
   guardWith ("field `"++ name ++"` lacks a type" ) (length types > 0)
   return $ Field (opt == Nothing) name types (isConst /= Nothing)
 
@@ -230,7 +304,7 @@ _topLevelType = do
   symbol "type"
   name <- require "type name missing" $ token _varName
   require "missing `=` after type name" $ symbol "="
-  members <- _typeRefs
+  members <- _typeRefUnion
   guardWith ("type `"++ name ++"` is missing definition" ) (length members > 0)
   optional $ symbol ";"
   return $ TopLevelType name members
@@ -258,7 +332,7 @@ _pathParts = manywith (char '/') (_pathVar <|> _pathStatic <|> _pathWild)
 _pathType :: Parser [TypeRef]
 _pathType = do
   symbol "is"
-  refs <- token _typeRefs
+  refs <- token _typeRefUnion
   return refs
 
 _pathDir :: Parser PathDirective

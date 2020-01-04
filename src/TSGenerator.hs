@@ -75,11 +75,21 @@ typeRefList ind refs =
     convertToNative = flip maybe id <*> flip lookup natives
     ref :: TypeRef -> String
     ref (LiteralTypeRef value) = value
-    ref (TypeNameRef name Nothing) = convertToNative name
-    ref (TypeNameRef name (Just size)) = if size==0 || size > 12
-                                            then convertToNative name ++ "[]"
-                                            else "ArrayMax"++show size++"<"++name++">"
+    ref (ListTypeRef r) = ref r ++ "[]"
+    ref (GroupedTypeRef refs) = "(" ++ typeRefList 0 refs ++ ")"
+    ref (TupleTypeRef elems) = "[" ++ intercalate ", " (fmap fromTupleElem elems) ++ "]"
+    ref (TypeNameRef name ) = convertToNative name
     ref (InlineTypeDef def) = typeBlock ind def
+    -- ref (TypeNameRef name (Just size)) = if size==0 || size > 12
+    --                                         then convertToNative name ++ "[]"
+    --                                         else "ArrayMax"++show size++"<"++name++">"
+
+    fromTupleElem (req, refs) = 
+      if req then typeRefList 0 refs
+             else if length refs == 1
+             then typeRefList 0 refs ++ "?"
+             else "(" ++ typeRefList 0 refs ++ ")?"
+                           
 
 topLevelType name refs = "export type " ++ name ++ " = " ++ typeRefList 0 refs
 

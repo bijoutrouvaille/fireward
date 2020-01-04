@@ -51,9 +51,18 @@ spec = do
     it "generates a 2-tuple array" $ do
       g "type X = {a:string[2]}" `shouldBe` ru
         [ stdTypes ++ "export type X = {"
-        , "  a: ArrayMax2<string>"
+        , "  a: [string?, string?]"
         , "}"
         ]
+    it "generates a 3-tuple" $ do
+      g "type X = {a: [string, Z, {b: 1}]}" `shouldBe` ru
+        [ stdTypes ++ "export type X = {"
+        , "  a: [string, Z, {\n  b: 1\n}]"
+        , "}"
+        ]
+    it "generates a grouped array" $ do
+      g "type X = (string | float)[]" `shouldBe` ru
+        [ stdTypes ++ "export type X = (string | number)[]" ]
     it "eats line comments" $ 
       gu
       [ "type X = { // type X"

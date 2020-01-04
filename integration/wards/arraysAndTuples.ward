@@ -1,0 +1,13 @@
+type Tuple1 = [string, 3, 'hello', {a: 1}?]
+type A = {test: Tuple1}
+
+match /a/{x} is A {
+  allow read, write: true
+}
+
+type B = {
+  test: [float, float, float?, float?]
+}
+match /b/{x} is B {
+  allow read, write: true;
+}
