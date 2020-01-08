@@ -265,7 +265,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Namespace validation functions (e.g. `isX` for `type X` should have a better name space). Done: now: `is____X`.
 - [x] String, numeric and boolean literal types
 - [x] Custom validation expressions within type definitions
-- [ ] Actual tuple types, e.g. [int, string, MyType]
+- [x] Actual tuple types, e.g. [int, string, MyType]
 - [ ] Expression variables
 - [ ] Importing files
 - [ ] Type intersections
