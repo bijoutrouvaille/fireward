@@ -47,3 +47,17 @@ export type A = {
 export type B = {
   test: [number, number, number?, number?]
 }
+
+export type Test1 = {
+  a: 1
+}
+export type C = {
+  test: Test1[]
+}
+
+export type Session = {
+  dayOfWeek: number
+}
+export type Booking = {
+  sessions: [Session, Session?]
+}

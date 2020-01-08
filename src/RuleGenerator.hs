@@ -87,32 +87,45 @@ funcBlock (FuncDef name params body) = _function name params (_print body)
 
 typeFuncName typeName = "is____" ++ capitalize typeName
 
-data NodeLoc = NodeLoc (Maybe String) (Either String Int)
+
+-- data NodeLoc = NodeLoc (Maybe String) (Either String Int)
+data NodeLoc = NodeIndex NodeLoc Int | NodeProp (Maybe NodeLoc) String
+addr :: NodeLoc -> String
+addr (NodeIndex root i) = addr root ++ "[" ++ show i ++ "]"
+addr (NodeProp Nothing prop) = prop
+addr (NodeProp (Just parent) prop) = addr parent ++ "." ++ prop
+
+exsts :: NodeLoc -> String
+exsts (NodeIndex par i) = exsts par ++ " && " ++ addr par ++ " is list && " ++ addr par ++ ".size() > " ++ show i
+exsts (NodeProp Nothing prop) = prop ++ "!=null"
+exsts (NodeProp (Just parent) prop) = exsts parent ++ " && '" ++ prop ++ "' in " ++ addr parent 
+
 --
 -- the main recursive function to generate the type function
 typeFunc :: String -> [TypeRef] -> CodePrinter
 typeFunc name refs = 
-  let refCheckList = refCheck (NodeLoc Nothing (Left "data")) (NodeLoc Nothing (Left "prev")) False <$> refs 
+  let refCheckList = refCheck (NodeProp Nothing "data") (NodeProp Nothing "prev") False <$> refs 
   in _function (typeFuncName name) ["data", "prev"] (_linesWith _or refCheckList)
   where
     isReq (Field r _ _ _) = r 
     key (Field _ n _ _) = n
     onlyRequired = filter isReq
 
-    addr :: NodeLoc -> String
-    addr (NodeLoc Nothing (Left n)) = n
-    addr (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot address."-- n ++ "[" ++ show i ++ "]"
-    addr (NodeLoc (Just p) (Left n)) = p ++ "." ++ n
-    addr (NodeLoc (Just p) (Right i)) = p ++ "[" ++ show i ++ "]"
+    -- addr (NodeLoc Nothing (Left n)) = n
+    -- addr (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot address."-- n ++ "[" ++ show i ++ "]"
+    -- addr (NodeLoc (Just p) (Left n)) = p ++ "." ++ n
+    -- addr (NodeLoc (Just p) (Right i)) = p ++ "[" ++ show i ++ "]"
 
-    exsts :: NodeLoc -> String
-    exsts (NodeLoc Nothing (Left n)) = "true"
-    exsts (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot exist." -- n ++ " is list && " ++ n ++ ".size() >=" ++ show i 
-    exsts (NodeLoc (Just p) (Left n)) = p ++ ".keys().hasAll['" ++ n ++ "']"
-    exsts (NodeLoc (Just p) (Right i)) = p ++ " is list && " ++ p ++ ".size() > " ++ show i 
+    -- exsts (NodeLoc Nothing (Left n)) = "true"
+    -- exsts (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot exist." -- n ++ " is list && " ++ n ++ ".size() >=" ++ show i 
+    -- exsts (NodeLoc (Just p) (Left n)) = p ++ ".keys().hasAll['" ++ n ++ "']"
+    -- exsts (NodeLoc (Just p) (Right i)) = p ++ " is list && " ++ p ++ ".size() > " ++ show i 
+
+    nodeParent (NodeIndex p _) = Just p
+    nodeParent (NodeProp p _) = p
     
 
-    defCheck :: String -> String -> TypeDef -> CodePrinter
+    defCheck :: NodeLoc -> NodeLoc -> TypeDef -> CodePrinter
     defCheck parent prevParent (TypeDef fields validations) = do 
       _printIf (length validations > 0) $ do
         _print "("
@@ -142,15 +155,14 @@ typeFunc name refs =
           requiredKeys = fmap key . onlyRequired $ fields
           mx = length fields
           mn = length . onlyRequired $ fields
-          fieldChecks = 
-            fieldCheck parent prevParent <$> fields
+          fieldChecks = fieldCheck parent prevParent <$> fields
           keyPresenceCheck = do
             _linesWith _and . fmap _print . filter (\s->s/="") $
               [ if length requiredKeys > 0
-                   then _hasAll parent requiredKeys
+                   then _hasAll (addr parent) requiredKeys
                    else ""
-              , _sizeBetween parent mn mx
-              , _hasOnly parent (fieldName <$> fields)
+              , _sizeBetween (addr parent) mn mx
+              , _hasOnly (addr parent) (fieldName <$> fields)
               ]
 
 
@@ -158,7 +170,7 @@ typeFunc name refs =
     refCheck curr prev _const (LiteralTypeRef val) =
       _print $ (addr curr) ++ " == " ++ val
     refCheck curr prev _const (InlineTypeDef def) = 
-      defCheck (addr curr) (addr prev) def
+      defCheck curr prev def
     refCheck curr prev _const (ListTypeRef ref) =
       _print $ addr curr ++ " is list"
     refCheck curr prev _const (GroupedTypeRef refs) = do
@@ -166,8 +178,8 @@ typeFunc name refs =
       _indent; _return
       multiRefCheck curr prev refs
       _deindent; _return
-    refCheck pcurr@(NodeLoc parent currKey) pprev@(NodeLoc prevParent prevKey) c (TupleTypeRef fs) = do
-      _print "("
+    refCheck curr prev c (TupleTypeRef fs) = do
+      _print "( "
       _print $ _addr ++ " is list " 
       _and
       _print $ _sizeLte _addr maxSize
@@ -179,6 +191,7 @@ typeFunc name refs =
       _and
       _linesWith _and [ _refLine r | r <- refs ]
       _deindent
+      _return 
       _print ")"
       where
         maxSize = length fs
@@ -187,10 +200,9 @@ typeFunc name refs =
         refs = [ (req, ref, i) | i <- [0..length fs - 1], let (req, ref) = fs !! i ]
         _iaddr :: Int -> String
         _iaddr i = _addr ++ "[" ++ show i ++ "]"
-        _addr = addr pcurr
-        _prevAddr = addr pprev
-        _prevParent = maybe "prev" id prevParent
-        _iloc i = NodeLoc (Just _addr) (Right i)
+        _addr = addr curr
+        _prevAddr = addr prev
+        _iloc i = NodeIndex curr i -- NodeLoc (Just _addr) (Right i)
         _refLine (req, refs, i) = do
           _print "("
           _indent
@@ -207,13 +219,13 @@ typeFunc name refs =
             _print " "
             _or
 
-          multiRefCheck (_iloc i) (NodeLoc (Just _prevAddr) (Right i)) refs
+          multiRefCheck (_iloc i) (NodeIndex (prev) i) refs
           _deindent
           _return
           _print ")"
           
       
-    refCheck pcurr@(NodeLoc parent currKey) pprev@(NodeLoc prevParent prevKey) _const (TypeNameRef t) = 
+    refCheck curr prev _const (TypeNameRef t) = 
       if t `elem` primitives then primType else func
       where
         primType :: CodePrinter -- primitive types
@@ -226,33 +238,38 @@ typeFunc name refs =
         -- !(p==null || !p.k) === p!=null && p.k | DeMorgan law
         func = do
           _print "("
-          _printIf (prevParent /= Nothing) $ do
-            _print "("
-            _print $ _prevParent ++ "==null"
-            _print " "
-            _or
-            _print $ "!(" ++ exsts pprev ++ ")"
-            _print ")"
-          _printIf (prevParent == Nothing) $ do
-            _print $ _prevParent ++ "==null"
-          _print " "
+          -- _printIf (prevParent /= Nothing) $ do
+          --   _print "("
+          --   _print $ _prevParent ++ "==null"
+          --   _print " "
+          --   _or
+          --   _print $ "!(" ++ exsts prev ++ ")"
+          --   _print ")"
+          -- _printIf (prevParent == Nothing) $ do
+          --   _print $ _prevParent ++ "==null"
+          _print $ "!(" ++ exsts prev ++ ") "
           _and
           _print $ funcwp "null"
           _print " "
           _or
-          _print $ _prevParent ++ "!=null "
+          -- _print $ _prevParent ++ "!=null "
+          -- _and
+          -- _printIf (prevParent /= Nothing) $ do
+          --   _print $ exsts prev
+          --   _print " "
+          --   _and
+          _print $ exsts prev
+          _print " "
           _and
-          _printIf (prevParent /= Nothing) $ do
-            _print $ exsts pprev
-            _print " "
-            _and
           _print $ funcwp _prevAddr
           _print ")"
 
         funcwp parent' = typeFuncName t ++ "(" ++ _addr ++ ", " ++ parent' ++ ")"
-        _addr = addr pcurr
-        _prevAddr = addr pprev
+        _addr = addr curr
+        _prevAddr = addr prev
         _prevParent = maybe "prev" id prevParent
+        prevParent = addr <$> nodeParent prev
+
 
 
     multiRefCheck :: NodeLoc -> NodeLoc -> [TypeRef] -> CodePrinter
@@ -269,7 +286,7 @@ typeFunc name refs =
       where refLines = _linesWith _or (refCheck curr prev False <$> refs)
 
 
-    fieldCheck :: String -> String -> Field -> CodePrinter
+    fieldCheck :: NodeLoc -> NodeLoc -> Field -> CodePrinter
     fieldCheck parent prevParent (Field r n refs c) = do
       _printIf c $ do -- c means field is marked as const
         constCheck
@@ -281,7 +298,7 @@ typeFunc name refs =
         _print "("
         _indent
         _return
-        _print $ notDefined parent n
+        _print $ notDefined n
         _return
         _or
         formattedRefs
@@ -300,24 +317,22 @@ typeFunc name refs =
                _deindent
                _line $ _print ")"
 
-        notDefined parent key = "!" ++ _hasAny parent [key]
+        notDefined key = "!" ++ _hasAny (addr parent) [key]
         rs = _linesWith _or (refCheck curr prev c <$> refs)
-        curr = NodeLoc (Just parent) (Left n)
-        prev = NodeLoc (Just prevParent) (Left n)
+        curr = NodeProp (Just parent) n
+        prev = NodeProp (Just prevParent) n
         _prevAddr = addr prev
         _addr = addr curr
         constCheck = do-- const type check
           _print "(" 
-          _print $ prevParent ++ "==null " 
+          _print $ addr prevParent ++ "==null " 
           _or
-          _print $ "!" ++ _hasAll prevParent [n] ++ " "
+          _print $ "!" ++ _hasAll (addr prevParent) [n] ++ " "
           _or
-          -- ++ " || " ++ 
           _print $ _prevAddr ++ "==null "
           _or
-          _print $ _addr ++ "=="++_prevAddr
+          _print $ _addr ++ "==" ++ _prevAddr
           _print ")"
-          -- _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")"
       
     
 
@@ -342,8 +357,9 @@ gen (TopLevelPath def) = pathBlock def
       _print "}"
 
     ifNo xs i e = if length xs == 0 then i else e
-    pathTypeCond = "(resource==null && " 
+    pathTypeCond = "(!(resource!=null && resource.data!=null) && " 
                     ++ typeFuncName pathTypeName ++ "(request.resource.data, null) || " 
+                    ++ "resource!=null && resource.data!=null && "
                     ++ typeFuncName pathTypeName ++ "(request.resource.data, resource.data))"
     pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
     --

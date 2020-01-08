@@ -11,3 +11,24 @@ type B = {
 match /b/{x} is B {
   allow read, write: true;
 }
+type Test1 = {
+  a: 1
+}
+type C = {
+  test: Test1[]
+}
+
+match /c/{x} is C {
+  allow read, write: true;
+}
+
+// Issue 18
+type Session = {
+  dayOfWeek: int
+}
+type Booking = {
+  sessions: [Session, Session?]
+}
+match /book/{id} is Booking {
+  allow read, write: true;
+}

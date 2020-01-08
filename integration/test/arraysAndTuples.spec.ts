@@ -3,7 +3,7 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {Tuple1, A, B} from '../wards/arraysAndTuples';
+import {Tuple1, A, B, Booking} from '../wards/arraysAndTuples';
 import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'arraysAndTuples';
@@ -63,9 +63,17 @@ describe(WARD_NAME, function(){
       }
       await firebase.assertFails(app.firestore().collection(`b`).doc(uid).set(x));
     })
-    
-    
-    
-   
+    it(`saves and updates all custom type rule`, async function(){
+      let x: Booking = {
+        sessions: [{dayOfWeek: 2}]
+      }
+      await firebase.assertSucceeds(app.firestore().collection(`book`).doc(uid).set(x));
+      x.sessions.push({dayOfWeek: 33})
+      await firebase.assertSucceeds(app.firestore().collection(`book`).doc(uid).set(x));
+      let y = {
+        sessions: [{dayOfWeek: 2},{dayOfWeek: 22},{dayOfWeek: 222}]
+      }
+      await firebase.assertFails(app.firestore().collection(`book`).doc(uid).set(y));
+    })
   })
 })

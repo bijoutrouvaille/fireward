@@ -140,17 +140,17 @@ spec = do
       g "type X = Z | ZZ | {a:A, b?:B|BB, c:{ca:int, cb?:string}}"
       `shouldBe` ru
       [ "function is____X(data, prev) {"
-      , "  return (prev==null && is____Z(data, null) || prev!=null && is____Z(data, prev))"
-      , "  || (prev==null && is____ZZ(data, null) || prev!=null && is____ZZ(data, prev))"
+      , "  return (!(prev!=null) && is____Z(data, null) || prev!=null && is____Z(data, prev))"
+      , "  || (!(prev!=null) && is____ZZ(data, null) || prev!=null && is____ZZ(data, prev))"
       , "  || data.keys().hasAll(['a', 'c'])"
       , "  && data.size() >= 2 && data.size() <= 3"
       , "  && data.keys().hasOnly(['a', 'b', 'c'])"
-      , "  && ((prev==null || !(prev.keys().hasAll['a'])) && is____A(data.a, null) || prev!=null && prev.keys().hasAll['a'] && is____A(data.a, prev.a))"
+      , "  && (!(prev!=null && 'a' in prev) && is____A(data.a, null) || prev!=null && 'a' in prev && is____A(data.a, prev.a))"
       , "  && ("
       , "    !data.keys().hasAny(['b'])"
       , "    || ("
-      , "      ((prev==null || !(prev.keys().hasAll['b'])) && is____B(data.b, null) || prev!=null && prev.keys().hasAll['b'] && is____B(data.b, prev.b))"
-      , "      || ((prev==null || !(prev.keys().hasAll['b'])) && is____BB(data.b, null) || prev!=null && prev.keys().hasAll['b'] && is____BB(data.b, prev.b))"
+      , "      (!(prev!=null && 'b' in prev) && is____B(data.b, null) || prev!=null && 'b' in prev && is____B(data.b, prev.b))"
+      , "      || (!(prev!=null && 'b' in prev) && is____BB(data.b, null) || prev!=null && 'b' in prev && is____BB(data.b, prev.b))"
       , "    )"
       , "  )"
       , "  && data.c.keys().hasAll(['ca'])"
@@ -163,34 +163,44 @@ spec = do
       , "  );"
       , "}" 
       ]
-    it "generates a check of definite size" $
+
+    it "generates a custom type tuple" $ 
+      g "type X = {y: [Y, Y?]}" `shouldBe` ru
+        [ "function is____X(data, prev) {"
+        , "  return data.keys().hasAll(['y'])"
+        , "  && data.size() >= 1 && data.size() <= 1"
+        , "  && data.keys().hasOnly(['y'])"
+        , "  && ( data.y is list && data.y.size() <= 2 && data.y.size() >= 1"
+        , "    && ("
+        , "      data!=null && 'y' in data && data.y is list && data.y.size() > 0 && (!(prev!=null && 'y' in prev && prev.y is list && prev.y.size() > 0) && is____Y(data.y[0], null) || prev!=null && 'y' in prev && prev.y is list && prev.y.size() > 0 && is____Y(data.y[0], prev.y[0]))"
+        , "    )"
+        , "    && ("
+        , "      !(data!=null && 'y' in data && data.y is list && data.y.size() > 1) ||  data.y[1] == null  || (!(prev!=null && 'y' in prev && prev.y is list && prev.y.size() > 1) && is____Y(data.y[1], null) || prev!=null && 'y' in prev && prev.y is list && prev.y.size() > 1 && is____Y(data.y[1], prev.y[1]))"
+        , "    )"
+        , "  );"
+        , "}"
+        ]
+
+    it "generates a n-tuple check of definite size" $
       g "type X = { x: string[2] }"
       `shouldBe` ru
         [ "function is____X(data, prev) {"
         , "  return data.keys().hasAll(['x'])"
         , "  && data.size() >= 1 && data.size() <= 1"
         , "  && data.keys().hasOnly(['x'])"
-        , "  && (data.x is list && data.x.size() <= 2 && data.x.size() >= 0"
+        , "  && ( data.x is list && data.x.size() <= 2 && data.x.size() >= 0"
         , "    && ("
-        , "      !(data.x is list && data.x.size() > 0) ||  data.x[0] == null  || data.x[0] is string"
+        , "      !(data!=null && 'x' in data && data.x is list && data.x.size() > 0) ||  data.x[0] == null  || data.x[0] is string"
         , "    )"
         , "    && ("
-        , "      !(data.x is list && data.x.size() > 1) ||  data.x[1] == null  || data.x[1] is string"
-        , "    ));"
+        , "      !(data!=null && 'x' in data && data.x is list && data.x.size() > 1) ||  data.x[1] == null  || data.x[1] is string"
+        , "    )"
+        , "  );"
         , "}"
         ]
 
 
     
-      -- [ "function is____X(data, prev) {"
-      -- , "  return data.keys().hasAll(['x'])"
-      -- , "  && data.size() >= 1 && data.size() <= 1"
-      -- , "  && data.keys().hasOnly(['x'])"
-      -- , "  && data.x is list"
-      -- , "  && (data.x.size() <= 1 || data.x[0] is string)"
-      -- , "  && (data.x.size() <= 2 || data.x[1] is string);"
-      -- , "}"
-      -- ]
     
     it "creates a correct check for empty type object" $
       g "type X = {}" `shouldBe` ru
@@ -206,9 +216,9 @@ spec = do
       g "match x is X {}" `shouldBe` ru
         [ "match /x {"
         , "  function is______PathType(data, prev) {"
-        , "    return (prev==null && is____X(data, null) || prev!=null && is____X(data, prev));"
+        , "    return (!(prev!=null) && is____X(data, null) || prev!=null && is____X(data, prev));"
         , "  }"
-        , "  allow write: if (resource==null && is______PathType(request.resource.data, null) || is______PathType(request.resource.data, resource.data));"
+        , "  allow write: if (!(resource!=null && resource.data!=null) && is______PathType(request.resource.data, null) || resource!=null && resource.data!=null && is______PathType(request.resource.data, resource.data));"
         , "}"
         ]
 
@@ -216,9 +226,9 @@ spec = do
       g "match x is X { allow create: if true; }" `shouldBe` ru
         [ "match /x {"
         , "  function is______PathType(data, prev) {"
-        , "    return (prev==null && is____X(data, null) || prev!=null && is____X(data, prev));"
+        , "    return (!(prev!=null) && is____X(data, null) || prev!=null && is____X(data, prev));"
         , "  }"
-        , "  allow create: if (resource==null && is______PathType(request.resource.data, null) || is______PathType(request.resource.data, resource.data)) && (true);"
+        , "  allow create: if (!(resource!=null && resource.data!=null) && is______PathType(request.resource.data, null) || resource!=null && resource.data!=null && is______PathType(request.resource.data, resource.data)) && (true);"
         , "}\n"
         ]
 
