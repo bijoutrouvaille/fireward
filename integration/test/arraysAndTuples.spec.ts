@@ -63,7 +63,7 @@ describe(WARD_NAME, function(){
       }
       await firebase.assertFails(app.firestore().collection(`b`).doc(uid).set(x));
     })
-    it(`saves and updates all custom type rule`, async function(){
+    it(`saves and updates all custom type rule; issue #18`, async function(){
       let x: Booking = {
         sessions: [{dayOfWeek: 2}]
       }
