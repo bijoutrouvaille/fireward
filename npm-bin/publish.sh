@@ -1,8 +1,9 @@
 #!/bin/bash
 
 set -ev
-v=$(cd .. && stack exec fireward -- -V)
-echo $v
 ./dl-releases.sh
+v=$(./fireward-osx -V)
+cp ../readme.md ./readme.md
 npm version "$v" 
 npm publish 
+rm ./readme.md
