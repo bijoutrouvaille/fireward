@@ -135,6 +135,8 @@ type User = {
 
   irrelevantType: any // translates to the `any` type in typescript and is not type checked in the rules
 
+  location: latlng // native firestore geolocation type
+
   // Custom type validation expressions go at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
   allow write: if request.time > 123 // shorthand for create, update, delete
@@ -165,6 +167,7 @@ Firestore rules language' primitive types don't map exactly to JavaScript, so Fi
 
 - `int` and `float` map to TypeScript `number`
 - `bool` in rules maps to TS `boolean`
+- `latlng` in rules maps to TS `WardGeoPoint` which tries to mimic the Web native type https://firebase.google.com/docs/reference/js/firebase.firestore.GeoPoint.
 - `timestamp` maps to `WardTimestamp|Date|{isEqual: (other: any)=>boolean}`. Snapshots will come in as a timestamp `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
 
 #### Unions

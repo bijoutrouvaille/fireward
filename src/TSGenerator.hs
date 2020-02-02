@@ -35,7 +35,8 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "Date|WardTimestamp|{isEqual: (other: any)=>boolean}")
+  , ("timestamp", "null|Date|WardTimestamp|{isEqual: (other: any)=>boolean}")
+  , ("latlng", "WardGeoPoint")
   , ("bool", "boolean")
   , ("null", "null")
   , ("map", "Record<string, unknown>")
@@ -51,6 +52,8 @@ funcMaxArray = ts ++ "\nexport function toArrayMax(n:number, arr:any[]) { return
   where ts = intercalate "\n" ["export function toArrayMax<T>(n: "++show n++", arr:T[]):ArrayMax"++show n++"<T>" | n <- [1..maxTuples-1]]
 timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardTimestamp)=>boolean, toMillis: ()=>number}"
 timestampTypeCheck = "export function isTimestamp(v: any): v is WardTimestamp { return !!v && (typeof v=='object') && !!v.toDate && !!v.toMillis && (typeof v.nanoseconds=='number') && (typeof v.seconds=='number')};"
+geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean }"
+geoPointTypeCheck = "export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };"
 stdTuples = intercalate "\n\n" [ maxTupleX n | n <- [1..maxTuples] ]
 
 stdTypes = (intercalate "\n" 
@@ -59,6 +62,8 @@ stdTypes = (intercalate "\n"
            , timestampTypeCheck
            , someTuple
            , funcMaxArray
+           , geoPointType
+           , geoPointTypeCheck
            ]) ++ "\n\n"
 
 fork f g a = (f a) (g a)

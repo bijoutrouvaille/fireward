@@ -3,7 +3,7 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint} from '../wards/primitiveTypes';
 import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'primitiveTypes';
@@ -108,6 +108,21 @@ describe(WARD_NAME, function(){
         if (!isTimestamp(y)) throw new Error(`Expected a WardTimestamp but got ` + JSON.stringify(y, null, '  '))
         if (!y.nanoseconds) throw new Error(`No nanoseconds? What a strange coincidence. Re-run the test.`)
       })
+    })
+    describe(`WardGeoPoint`, function(){
+      it(`typechecks a geopoint`, async function(){
+        const x: GeoTest = {
+          test: new firebase.firestore.GeoPoint(1, 1)
+        };
+        if (!isGeoPoint(x.test)) throw new Error(`A correct GeoPoint didn't typecheck`);
+        await firebase.assertSucceeds(app.firestore().collection(`geo`).doc(uid).set(x));
+        const xx = await app.firestore().collection('geo').doc(uid).get();
+        const data = xx.data();
+        const y: unknown = data && data.test;
+        if (!isGeoPoint(y)) throw new Error(`Expected a WardGeoPoint but got ` + JSON.stringify(y, null, '  '))
+        if (y.latitude!=x.test.latitude) throw new Error(`Geopoint.latitude did not save correctly`)
+      })
+
     })
   })
 })

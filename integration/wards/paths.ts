@@ -36,6 +36,8 @@ export function toArrayMax<T>(n: 9, arr:T[]):ArrayMax9<T>
 export function toArrayMax<T>(n: 10, arr:T[]):ArrayMax10<T>
 export function toArrayMax<T>(n: 11, arr:T[]):ArrayMax11<T>
 export function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }
+export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean }
+export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };
 
 
 

@@ -16,6 +16,9 @@ type LitTest = {
 type TimestampTest = {
   test: timestamp
 }
+type GeoTest = {
+  test: latlng
+}
 
 match /map/{x} is MapTest {
   allow write: true;
@@ -30,6 +33,11 @@ match /literal/{x} is LitTest {
 	allow write: true;
 }
 match /time/{x} is TimestampTest {
+  allow write: true;
+  allow read: true;
+}
+
+match /geo/{x} is GeoTest {
   allow write: true;
   allow read: true;
 }

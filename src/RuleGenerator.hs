@@ -40,7 +40,7 @@ surround b e s = concat [b,s,e]
 printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 
 primitives :: [String]
-primitives = words "list string bool timestamp null int float map any"
+primitives = words "list string bool timestamp null int float map any latlng"
 
 -- the main exported function. calls the `gen` function internally.
 generate :: Bool -> String -> Either String String
@@ -239,26 +239,11 @@ typeFunc name refs =
         -- !(p==null || !p.k) === p!=null && p.k | DeMorgan law
         func = do
           _print "("
-          -- _printIf (prevParent /= Nothing) $ do
-          --   _print "("
-          --   _print $ _prevParent ++ "==null"
-          --   _print " "
-          --   _or
-          --   _print $ "!(" ++ exsts prev ++ ")"
-          --   _print ")"
-          -- _printIf (prevParent == Nothing) $ do
-          --   _print $ _prevParent ++ "==null"
           _print $ "!(" ++ exsts prev ++ ") "
           _and
           _print $ funcwp "null"
           _print " "
           _or
-          -- _print $ _prevParent ++ "!=null "
-          -- _and
-          -- _printIf (prevParent /= Nothing) $ do
-          --   _print $ exsts prev
-          --   _print " "
-          --   _and
           _print $ exsts prev
           _print " "
           _and
