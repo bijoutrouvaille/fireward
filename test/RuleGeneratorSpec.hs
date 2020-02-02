@@ -274,13 +274,21 @@ spec = do
       let rule = take ((length _rule) - 1) _rule
       res <- return (g ward)
       g ward `shouldBe` r rule
-  describe "Literal Types" $ do
+  describe "Literal" $ do
     it "handle a boolean" $
       g "type X = { a: true }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && data.a == true;\n}" 
     it "handle a string" $ do
       g "type X = { a: 'me' | \"you\" }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && (\n    data.a == 'me'\n    || data.a == \"you\"\n  );\n}"
     it "handle a float" $
       g "type X = { a: 123.3 }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && data.a == 123.3;\n}" 
+
+  describe "Primitive types" $ do
+    it "handles any nested in object" $
+      g "type X = { a: any }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && true;\n}" 
+    it "handles any as top-level type" $
+      g "type X = any" `shouldBe` "Right function is____X(data, prev) {\n  return true;\n}" 
+      
+    
   describe "Smoke Test" $ do
     it "passes" $ do
       ward <- readFile "examples/smoke-test.ward"

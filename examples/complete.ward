@@ -10,6 +10,8 @@ type User = {
   uid: const string // const prevents editing this field later
   permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
   smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
+  
+  irrelevant: any
 
   // Custom type validation expressions go at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 

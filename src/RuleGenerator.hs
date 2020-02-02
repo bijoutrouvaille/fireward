@@ -40,7 +40,7 @@ surround b e s = concat [b,s,e]
 printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)
 
 primitives :: [String]
-primitives = words "list string bool timestamp null int float map"
+primitives = words "list string bool timestamp null int float map any"
 
 -- the main exported function. calls the `gen` function internally.
 generate :: Bool -> String -> Either String String
@@ -230,6 +230,7 @@ typeFunc name refs =
       where
         primType :: CodePrinter -- primitive types
         primType 
+          | t=="any" = _print "true"
           | t=="null" = _print $ _addr ++ " == null "   
           | t=="float" = _print $ "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
           | otherwise = _print $ _addr ++ " is " ++ t

@@ -133,6 +133,8 @@ type User = {
 
   permissions: map // corresponds to `map` type in the rules and `Record<string, unknown>` in TS
 
+  irrelevantType: any // translates to the `any` type in typescript and is not type checked in the rules
+
   // Custom type validation expressions go at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
   allow write: if request.time > 123 // shorthand for create, update, delete

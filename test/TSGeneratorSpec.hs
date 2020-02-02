@@ -63,6 +63,9 @@ spec = do
     it "generates a grouped array" $ do
       g "type X = (string | float)[]" `shouldBe` ru
         [ stdTypes ++ "export type X = (string | number)[]" ]
+    it "generates the any type" $ do
+      g "type X = {a:any}" `shouldBe` ru
+        [ stdTypes ++ "export type X = {\n  a: any\n}" ]
     it "eats line comments" $ 
       gu
       [ "type X = { // type X"
