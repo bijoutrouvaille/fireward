@@ -3,7 +3,7 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint, AnyTest} from '../wards/primitiveTypes';
 import {isEmulatorReady} from './../util/emulator'
 
 const WARD_NAME = 'primitiveTypes';
@@ -60,7 +60,19 @@ describe(WARD_NAME, function(){
       const b: MapTest = { test: {a:1.1,b:'2.7', c: [1,2,3]} }
       await firebase.assertSucceeds(app.firestore().collection(`map`).doc(uid).set(b));
     });
+    it(`succeeds saving number, string and boolean into any type`, async function(){
+      const x: AnyTest = {
+        test: 123
+      }
+      await firebase.assertSucceeds(app.firestore().collection(`any`).doc(uid).set(x));
+      x.test = true;
+      await firebase.assertSucceeds(app.firestore().collection(`any`).doc(uid).set(x));
+      x.test = "fireward is like an impenetrable wall";
+      await firebase.assertSucceeds(app.firestore().collection(`any`).doc(uid).set(x));
+      const xx = await app.firestore().collection(`any`).doc(uid).get();
+      if (x.test!==xx.data()?.test) throw new Error(`Any item did not properly save.`)
 
+    })
     describe(`Literal Types`, function() {
       let x: LitTest;
       beforeEach(()=>{

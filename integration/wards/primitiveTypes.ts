@@ -57,9 +57,13 @@ export type LitTest = {
 export type TimestampTest = {
   test: null|Date|WardTimestamp|{isEqual: (other: any)=>boolean}
 }
+export type AnyTest = {
+  test: any
+}
 export type GeoTest = {
   test: WardGeoPoint
 }
+
 
 
 
