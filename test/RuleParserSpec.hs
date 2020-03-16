@@ -169,7 +169,7 @@ spec = do
               ]
       _parse r `shouldBe` Right ([ TopLevelPath (PathDef [PathPartStatic "x"] [] 
         [ PathBodyDir (PathDirective ["read"] "true")
-        , PathBodyFunc (FuncDef "z" [] "true")
+        , PathBodyFunc (FuncDef "z" [] [] "true")
         , PathBodyDir (PathDirective ["create"] "false")
         , PathBodyPath (PathDef [PathPartStatic "q"] [] [])
         ])], "")
@@ -197,7 +197,7 @@ spec = do
     it "parses a one-line function" $ 
       _parse "function abc(h) { return x.y || b }"
       `shouldBe`
-      Right ([TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")],"")
+      Right ([TopLevelFunc (FuncDef "abc" ["h"] [] "x.y || b")],"")
     it "parses a multiline function" $
       _parse (unlines [
         "function abc(h) { ",
@@ -205,7 +205,7 @@ spec = do
         "}"
       ])
       `shouldBe`
-      Right ([TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")],"")
+      Right ([TopLevelFunc (FuncDef "abc" ["h"] [] "x.y || b")],"")
     it "parses a complex type" $
       _parse (unlines [
         "type Zxx = Null | { ",
@@ -222,7 +222,7 @@ spec = do
         ] [])] False
       ] [])]],"")
     it "parses a function that returns a string" $ 
-      _parse "function q(a) { return 'p' }" `shouldBe` Right ([TopLevelFunc (FuncDef "q" ["a"] "'p'")], "")
+      _parse "function q(a) { return 'p' }" `shouldBe` Right ([TopLevelFunc (FuncDef "q" ["a"] [] "'p'")], "")
 
     it "parses a function a type and a path" $
       _parse (unlines [
@@ -237,7 +237,7 @@ spec = do
       ])
       `shouldBe`
       Right ([ TopLevelType "Zxx" [InlineTypeDef (TypeDef [Field True "one" [TypeNameRef "X" ] False, Field True "two" [TypeNameRef "Y" ] False] [])],
-          TopLevelFunc (FuncDef "abc" ["h"] "x.y || b")
+          TopLevelFunc (FuncDef "abc" ["h"] [] "x.y || b")
         ],"")
     it "parses a complex path" $
       _parse (unlines [
@@ -254,7 +254,7 @@ spec = do
         PathBodyPath (PathDef [PathPartStatic "y"] [ TypeNameRef "B" ] [
           PathBodyDir (PathDirective ["read","write"] "true"),
           PathBodyDir (PathDirective ["create","write"] "false"),
-          PathBodyFunc (FuncDef "qqq" ["a","b","c"] "123")])
+          PathBodyFunc (FuncDef "qqq" ["a","b","c"] [] "123")])
         ])
       ],"")
   describe "_topLevelOptVar" $ do

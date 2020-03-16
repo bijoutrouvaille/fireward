@@ -147,8 +147,9 @@ type Phone = { number: int, country: int }
 type Email = string
 
 function isLoggedInUser(userId) { 
+  let a = request.auth; // variables require v2 rules
   // return keyword optional
-  return request.auth!=null && request.auth.uid == userId; 
+  return a!=null && a.uid == userId; 
 }
 
 match /users/{userId} is User { 
@@ -271,7 +272,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] String, numeric and boolean literal types
 - [x] Custom validation expressions within type definitions
 - [x] Actual tuple types, e.g. [int, string, MyType]
-- [ ] Expression variables
+- [x] Expression variables
 - [ ] Importing files
 - [ ] Type intersections
 

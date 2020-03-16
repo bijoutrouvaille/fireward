@@ -83,7 +83,7 @@ generate wrap source = q tree
     genTops tops = _lines $ gen <$> tops
 
 
-funcBlock (FuncDef name params body) = _function name params (_print body)
+funcBlock (FuncDef name params vars body) = _function name params vars (_print body)
 
 typeFuncName typeName = "is____" ++ capitalize typeName
 
@@ -105,21 +105,11 @@ exsts (NodeProp (Just parent) prop) = exsts parent ++ " && '" ++ prop ++ "' in "
 typeFunc :: String -> [TypeRef] -> CodePrinter
 typeFunc name refs = 
   let refCheckList = refCheck (NodeProp Nothing "data") (NodeProp Nothing "prev") False <$> refs 
-  in _function (typeFuncName name) ["data", "prev"] (_linesWith _or refCheckList)
+  in _function (typeFuncName name) ["data", "prev"] [] (_linesWith _or refCheckList)
   where
     isReq (Field r _ _ _) = r 
     key (Field _ n _ _) = n
     onlyRequired = filter isReq
-
-    -- addr (NodeLoc Nothing (Left n)) = n
-    -- addr (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot address."-- n ++ "[" ++ show i ++ "]"
-    -- addr (NodeLoc (Just p) (Left n)) = p ++ "." ++ n
-    -- addr (NodeLoc (Just p) (Right i)) = p ++ "[" ++ show i ++ "]"
-
-    -- exsts (NodeLoc Nothing (Left n)) = "true"
-    -- exsts (NodeLoc Nothing (Right i)) = fail "Unexpected node location; cannot exist." -- n ++ " is list && " ++ n ++ ".size() >=" ++ show i 
-    -- exsts (NodeLoc (Just p) (Left n)) = p ++ ".keys().hasAll['" ++ n ++ "']"
-    -- exsts (NodeLoc (Just p) (Right i)) = p ++ " is list && " ++ p ++ ".size() > " ++ show i 
 
     nodeParent (NodeIndex p _) = Just p
     nodeParent (NodeProp p _) = p

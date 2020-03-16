@@ -108,7 +108,7 @@ spec = do
          , "  && data.a is string;"
          , "}"
          ]
-    it "generates a optional const type" $
+    it "generates a optional const type" $ do
       gu [ "type Z = {"
          , "  a?: const string"
          , "}"
@@ -123,19 +123,35 @@ spec = do
          , "  );"
          , "}"                                       
          ]
-    it "generates a function in a path" $
-      gu [ "match a {"
-         , "  function x(x) {"
-         , "    return 123;"
-         , "  }"
-         , "}"
-         ] `shouldBe` ru 
-         [ "match /a {"
-         , "  function x(x) {"
-         , "    return 123;"
-         , "  }"
-         , "}"
-         ]
+    describe "path functions" $
+      it "generates a function in a path" $
+        gu [ "match a {"
+           , "  function x(x) {"
+           , "    return 123;"
+           , "  }"
+           , "}"
+           ] `shouldBe` ru 
+           [ "match /a {"
+           , "  function x(x) {"
+           , "    return 123;"
+           , "  }"
+           , "}"
+           ];
+      it "generates a function with variables" $
+        gu [ "match a {"
+           , "  function x(x) {"
+           , "    let z= 123+ false;"
+           , "    return z;"
+           , "  }"
+           , "}"
+           ] `shouldBe` ru 
+           [ "match /a {"
+           , "  function x(x) {"
+           , "    let z = 123 + false;"
+           , "    return z;"
+           , "  }"
+           , "}"
+           ]
     it "generates a function from a type" $
       g "type X = Z | ZZ | {a:A, b?:B|BB, c:{ca:int, cb?:string}}"
       `shouldBe` ru

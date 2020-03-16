@@ -42,7 +42,7 @@ _sizeBetween item min max = _sizeGte item min ++ " && " ++ _sizeLte item max
 _and = _print "&& "
 _or = _print "|| "
 
-_function name params body = do
+_function name params vars body = do
   _print "function "
   _print name
   _print "("
@@ -50,6 +50,8 @@ _function name params body = do
   _print ") {"
   _indent
   _return
+  _lines [ _print $ "let " ++ vname ++ " = " ++ vval ++ ";" | (vname, vval) <- vars ]
+  _printIf (length vars > 0) _return
   _print "return "
   body
   _print ";"

@@ -1,3 +1,4 @@
+rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
 
 function q(a) { return 'qq' }
 
@@ -15,10 +16,20 @@ match /test/test {
   allow read: if data().keys().hasAll(['a', 'b', 'c']);
 }
 
-function test (a,b) {
-  return true
+function testFalseFunc (a,b) {
+  let q = false;
+  return q;
+}
+function testTrueFunc (a,b) {
+  let q = true;
+  return q;
 }
 
-match /test/test {
-  allow read: if test(true, 'asdf');
+match /testTrueFunc/{x} {
+  allow read: if testTrueFunc(true, 'asdf');
+  allow write: if true;
+}
+match /testFalseFunc/{x} {
+  allow read: if testFalseFunc(true, 'asdf');
+  allow write: if true;
 }

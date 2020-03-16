@@ -10,7 +10,7 @@ module RuleParser
 , _pathStatic
 , _pathDir
 , _funcDef
-, _funcBody
+-- , _funcBody
 , _string
 , _topLevelOptVar
 , _literalTypeRef
@@ -60,7 +60,12 @@ data PathBodyItem = PathBodyDir PathDirective
                   | PathBodyFunc FuncDef
   deriving (Show, Eq)
 
-data FuncDef = FuncDef String [String] String deriving (Show, Eq)
+data FuncDef = FuncDef 
+             { funcDefName :: String
+             , funcDefParams :: [String] 
+             , funcDefVars :: [(String, String)]
+             , funcDefBody :: String
+             } deriving (Show, Eq)
 
 data RequestMethod = GET
                    | LIST
@@ -123,12 +128,12 @@ _topLevelOptVar = do
   return $ TopLevelOpt name val
   where _var = _concat [ some $ _alpha <|> charIn "_", many $ _alphaNum <|> charIn "_" ] ""
 
-_funcBody :: Parser String
-_funcBody = token $ do
-  let notDone c = c/='}' && c/=';' && c/='"'
-  a <- many $ _string <|> satS notDone
-  optional $ symbol ";"
-  return . trim $ concat a
+-- _funcBody :: Parser String
+-- _funcBody = token $ do
+--   let notDone c = c/='}' && c/=';' && c/='"'
+--   a <- many $ _string <|> satS notDone
+--   optional $ symbol ";"
+--   return . trim $ concat a
 
       
 
@@ -136,6 +141,16 @@ _expr :: Parser String
 _expr = do
   e <- ExprParser.expr
   return $ ExprPrinter.printExpr e
+
+_funcVarDef :: Parser (String, String)
+_funcVarDef = do
+  symbol "let"
+  name <- require "Variable name is required but missing." $ 
+    token _expr
+  require "Equal sign missing in variable definition." $ symbol "="
+  val <- require "Variable value is missing." $
+    token _expr
+  return (name, val)
 
 _funcDef :: Parser FuncDef
 _funcDef = do
@@ -145,7 +160,7 @@ _funcDef = do
     grouped "(" ")" paramList
   require ("function `"++name++"` is missing an opening `{`") $ 
     symbol "{"
-
+  vars <- many _funcVarDef
   optional $ symbol "return"
   body' <- optional $ token _expr 
   let body = maybe "" id body'
@@ -157,7 +172,7 @@ _funcDef = do
 
   guardWith ("function `"++name++"` is missing a body") (length body > 0)
 
-  return $ FuncDef name params (trim body)
+  return $ FuncDef name params vars (trim body)
 
   where paramList = separated "," (token _varName)
 

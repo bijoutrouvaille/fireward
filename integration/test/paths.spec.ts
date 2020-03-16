@@ -35,6 +35,16 @@ describe(WARD_NAME, function(){
       await app.firestore().collection('refz').doc('qq').set({})
       await firebase.assertSucceeds(app.firestore().collection('exists').doc('refz').set({}))
     })
+    it(`allows read when condition uses function with custom let bindings`, async function(){
+      const ref = app.firestore().collection('testTrueFunc').doc('x');
+      await ref.set({});
+      await firebase.assertSucceeds(ref.get())
+    })
+    it(`denies read when condition uses function with custom let bindings`, async function(){
+      const ref = app.firestore().collection('testFalseFunc').doc('x');
+      await ref.set({});
+      await firebase.assertFails(ref.get())
+    })
     // it(`denies write of a directive with 'false' body`, async function() {
     //   await firebase.assertFails(app.firestore().collection('dir').doc(uid).set({}))
     // })
