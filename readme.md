@@ -273,6 +273,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Custom validation expressions within type definitions
 - [x] Actual tuple types, e.g. [int, string, MyType]
 - [x] Expression variables
+- [ ] Implement const objects using the new Map Diffs.
 - [ ] Importing files
 - [ ] Type intersections
 
