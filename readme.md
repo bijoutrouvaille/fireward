@@ -154,7 +154,7 @@ function isLoggedInUser(userId) {
 
 match /users/{userId} is User { 
   // read, write, create, update, list, get and delete conditions are allowed
-  allow read, create, update: if isLoggedInUser(userId);
+  allow read, create, update: if isLoggedInUser(userId); // anti-patter: combining reads and writes like this is possible but dangerous. 
   allow delete: false;
 }
 
