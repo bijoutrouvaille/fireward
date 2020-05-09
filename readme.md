@@ -194,7 +194,7 @@ The above requires the first three elements present, but the last two are option
 
 #### Optional Types and `null`
 
-Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: if you are relying on TypeScript, this will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
+Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon in objects, e.g. `{phone?: string}`, or after the type name in tuples. _Warning_: if you are relying on TypeScript, an optional type will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
 
 #### `const` Types
 
