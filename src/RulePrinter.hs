@@ -182,7 +182,12 @@ typeFunc name refs =
           curr = FuncParam (Just parent) n
           prev = FuncParam (Just prevParent) n
           constCheck = if c then check else "" -- const type check
-            where check = "&& (" ++ parent ++ "==null || !" ++ parent ++ ".keys().hasAll(['" ++ n ++ "']) || " ++ _prevAddr ++ "==null || " ++_addr++"=="++_prevAddr++")\n" ++ indent (ind + 2) ++ "&& "
+            where check = "&& (" 
+                              ++ parent ++ "==null || !" 
+                              ++ parent ++ ".keys().hasAll(['" ++ n ++ "']) || " 
+                              ++ _prevAddr ++ "==null || " 
+                              ++ _addr ++ "==" 
+                              ++ _prevAddr ++ ")\n" ++ indent (ind + 2) ++ "&& "
                   _prevAddr = addr prev
                   _addr = addr curr
       
@@ -206,7 +211,7 @@ gen (TopLevelPath def) = pathBlock 0 def
     -- do nothing if no refs provided
     -- augment each if bodyItems contains write update or create
     -- add a write otherwise
-    pathTypeCond = "(resource==null && is" ++ pathTypeFuncName ++ "(request.resource.data, null) || is" ++pathTypeFuncName ++ "(request.resource.data, resource.data))"
+    pathTypeCond = "is" ++pathTypeFuncName ++ "(request.resource.data, resource==null ? null : resource.data)"
     pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
     augmentWithType bodyItems [] = bodyItems
     augmentWithType [] refs = [ pathTypeDir ]

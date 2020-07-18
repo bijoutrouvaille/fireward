@@ -225,21 +225,20 @@ typeFunc name refs =
           | t=="float" = _print $ "(" ++ _addr ++ " is float || " ++ _addr ++ " is int)"
           | otherwise = _print $ _addr ++ " is " ++ t
 
-        -- func is defined like this because firestore does not allow tertiary logic (?:) or similar.
-        -- !(p==null || !p.k) === p!=null && p.k | DeMorgan law
-        func = do
-          _print "("
-          _print $ "!(" ++ exsts prev ++ ") "
-          _and
-          _print $ funcwp "null"
-          _print " "
-          _or
-          _print $ exsts prev
-          _print " "
-          _and
-          _print $ funcwp _prevAddr
-          _print ")"
+        func = _print $ funcwp exstsTern
+          -- _print "("
+          -- _print $ "!(" ++ exsts prev ++ ") "
+          -- _and
+          -- _print $ funcwp "null"
+          -- _print " "
+          -- _or
+          -- _print $ exsts prev
+          -- _print " "
+          -- _and
+          -- _print $ funcwp _prevAddr
+          -- _print ")"
 
+        exstsTern = exsts prev ++ " ? " ++ _prevAddr ++ " : null" 
         funcwp parent' = typeFuncName t ++ "(" ++ _addr ++ ", " ++ parent' ++ ")"
         _addr = addr curr
         _prevAddr = addr prev
@@ -333,10 +332,7 @@ gen (TopLevelPath def) = pathBlock def
       _print "}"
 
     ifNo xs i e = if length xs == 0 then i else e
-    pathTypeCond = "(!(resource!=null && resource.data!=null) && " 
-                    ++ typeFuncName pathTypeName ++ "(request.resource.data, null) || " 
-                    ++ "resource!=null && resource.data!=null && "
-                    ++ typeFuncName pathTypeName ++ "(request.resource.data, resource.data))"
+    pathTypeCond = typeFuncName pathTypeName ++ "(request.resource.data, resource==null ? null : resource.data)"
     pathTypeDir = PathBodyDir (PathDirective ["write"] pathTypeCond) 
     --
     -- do nothing if no refs provided
