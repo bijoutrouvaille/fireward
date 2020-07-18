@@ -1,6 +1,6 @@
 {
   "name": "fireward",
-  "version": "1.4.3",
+  "version": "1.5.1",
   "description": "A simple and readable language for Firestore security rules, similar to Firebase Bolt.",
   "bin": "index.js",
   "scripts": {
