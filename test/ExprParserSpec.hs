@@ -92,6 +92,16 @@ spec = do
     it "parses expr index range" $
       ex "x[f(a.b) : g(p( n + 7))]" `shouldBe` "x[f(a.b):g(p(n + 7))]"
 
+    -- Ternary Operator
+    it "parses a basic ternary" $
+      ex "a ? b : c" `shouldBe` "a ? b : c"
+    it "parses a nested ternary" $
+      ex "a ? b ? c : d : e" `shouldBe` "a ? b ? c : d : e"
+    it "parses a nested ternary" $
+      ex "a ? b : c ? d : e" `shouldBe` "a ? b : c ? d : e"
+    it "parses a binary expression within a ternary" $
+      ex "a || aa ? b || bb : c || cc" `shouldBe` "a || aa ? b || bb : c || cc"
+
     -- PATHS
     it "parses a simple path" $
       ex "(/docs)" `shouldBe` "(/docs)"

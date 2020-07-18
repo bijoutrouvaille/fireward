@@ -47,6 +47,8 @@ data BinOp = OpAnd
            | OpLte
   deriving (Eq)
 
+data TernOp = TernOp
+
 allbinops = -- make sure to list compound ones first, e.g. `<=` before `<`
   [ OpGte
   , OpLte
@@ -100,6 +102,7 @@ data Expr = ExprGrp Expr
           | ExprPath [PathPart]
           | ExprList [Expr]
           | ExprMap [(String, Expr)]
+          | ExprTern Expr Expr Expr
           deriving (Show, Eq)
 
 toInt :: Float -> Int
@@ -216,7 +219,8 @@ expr = do
       return $ FuncCall name params
       where funcParam = rawpathlit <|> _expr
 
-    unit = binOrExpr where
+    unit = ternOrExpr where
+
       atom = baddies 
         <|> maplit 
         <|> listlit 
@@ -227,7 +231,23 @@ expr = do
         <|> string 
         <|> bool 
         <|> nil 
-        <|> func <|> var 
+        <|> func 
+        <|> var 
+
+      ternOrExpr = do
+        cond <- binOrExpr
+        mt <- optional $ tern cond
+        return $ maybe cond id mt
+        where 
+              tern cond = do
+                token $ symbol "?"
+                t <- ternOrExpr
+                require "Ternary operator missing a `:`" . token $ symbol ":"
+                f <- ternOrExpr
+                return $ ExprTern cond t f
+
+
+
 
       binOrExpr = do
         left <- possiblyIndexed

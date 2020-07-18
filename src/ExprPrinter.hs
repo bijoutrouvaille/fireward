@@ -26,6 +26,7 @@ printExpr (ExprIndexed e i r) = printExpr e ++ "[" ++ printExpr i ++ printIxRang
 printExpr (ExprPath parts) = "/" ++ intercalate "/" (fmap printPathPart parts) ++ ""
 printExpr (ExprList es) = "[" ++ (commajoin [ printExpr e | e <- es ]) ++ "]"
 printExpr (ExprMap kvs) = "{ " ++ (commajoin [ printKeyVal kv | kv <- kvs]) ++ " }"
+printExpr (ExprTern c t f) = printExpr c ++ " ? " ++ printExpr t ++ " : " ++ printExpr f
 
 printPathPart (PathPartLit s) = s
 printPathPart (PathPartExpr e) = "$("++printExpr e++")"
