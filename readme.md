@@ -14,7 +14,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 - Very fast compilation
 - Typed routes that convert to validation rule code.
-- `const` types that allow setting but prevent editing of individual fields
+- `readonly` types that allow setting but prevent editing of individual fields
 - Tuple validation
 - Literal types
 - Type unions
@@ -114,7 +114,7 @@ match /users/{id} is User {
 ### Complete Example
 
 ```
-rules_version = '2' // optional, see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2
+rules_version = '2' // unnecessry, see notes on Version 2 below
 
 type User = {
 
@@ -124,7 +124,9 @@ type User = {
 
   contact: Phone | Email // a union type
 
-  uid: const string // const prevents editing this field later
+  // readonly prevents editing this field later (the old `const` syntax will continue to work also)
+  // this works for both literals and nested objects
+  readonly uid: string 
 
   smorgasBoard: "hi" | "bye" | true | 123 // literal types, same as in TS
 
@@ -135,9 +137,9 @@ type User = {
 
   irrelevantType: any // translates to the `any` type in typescript and is not type checked in the rules
 
-  location: latlng // native firestore geolocation type
+  location: latlng // native Firestore geolocation type
 
-  // Custom type validation expressions go at the end of any type
+  // Custom type validation expressions can appear at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 
   allow write: if request.time > 123 // shorthand for create, update, delete
   allow create, update: if data.verified == true // allows to group multiple methods into a single expression
@@ -162,6 +164,12 @@ match /users/{userId} is User {
 
 ### Notes on Syntax
 
+#### Rules version 2
+
+Firestore rules can operate under the old or new syntax: see https://firebase.google.com/docs/firestore/security/get-started#security_rules_version_2.
+
+Fireward only supports version 2, and will automatically include the setting in generated rules.
+
 #### Type Mapping
 
 Firestore rules language' primitive types don't map exactly to JavaScript, so Fireward has to convert them when generating TypeScript definitions. In particular: 
@@ -169,7 +177,7 @@ Firestore rules language' primitive types don't map exactly to JavaScript, so Fi
 - `int` and `float` map to TypeScript `number`
 - `bool` in rules maps to TS `boolean`
 - `latlng` in rules maps to TS `WardGeoPoint` which tries to mimic the Web native type https://firebase.google.com/docs/reference/js/firebase.firestore.GeoPoint.
-- `timestamp` maps to `WardTimestamp|Date|{isEqual: (other: any)=>boolean}`. Snapshots will come in as a timestamp `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
+- `timestamp` maps to `WardTimestamp|Date|{isEqual: (other: any)=>boolean}|null`. Snapshots will come in as a `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server timestamp object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
 
 #### Unions
 

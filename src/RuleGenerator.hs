@@ -49,7 +49,7 @@ generate wrap source = q tree
     finalize :: [TopLevel] -> CodePrinter -> String
     finalize tops lines = printCode 0 $ do
       if wrap then do
-        optVars tops
+        optVars $ withRequired (isOptVar `filter` tops)
         _return
         _print "service cloud.firestore {"
         _indent
@@ -66,11 +66,12 @@ generate wrap source = q tree
         _print "}"
         else lines
 
-    isOptVar (TopLevelOpt _ _) = True
+    withRequired tops = (TopLevelOpt "rules_version" "'2'"):tops
+    isOptVar (TopLevelOpt name _) = name /= "rules_version"
     isOptVar _ = False
     optVar (TopLevelOpt name val) = _print $ name ++ " = " ++ val ++ ";"
     optVar _ = _print ""
-    optVars tops = _lines . fmap optVar . filter isOptVar $ tops 
+    optVars tops = _lines . fmap optVar  $ tops 
     tree :: ParserResult [TopLevel]
     tree = parseRules source
     q :: ParserResult [TopLevel] -> Either String String
@@ -88,7 +89,7 @@ funcBlock (FuncDef name params vars body) = _function name params vars (_print b
 typeFuncName typeName = "is____" ++ capitalize typeName
 
 
--- data NodeLoc = NodeLoc (Maybe String) (Either String Int)
+
 data NodeLoc = NodeIndex NodeLoc Int | NodeProp (Maybe NodeLoc) String
 addr :: NodeLoc -> String
 addr (NodeIndex root i) = addr root ++ "[" ++ show i ++ "]"
@@ -100,7 +101,7 @@ exsts (NodeIndex par i) = exsts par ++ " && " ++ addr par ++ " is list && " ++ a
 exsts (NodeProp Nothing prop) = prop ++ "!=null"
 exsts (NodeProp (Just parent) prop) = exsts parent ++ " && '" ++ prop ++ "' in " ++ addr parent 
 
---
+
 -- the main recursive function to generate the type function
 typeFunc :: String -> [TypeRef] -> CodePrinter
 typeFunc name refs = 
@@ -192,7 +193,7 @@ typeFunc name refs =
         _iaddr i = _addr ++ "[" ++ show i ++ "]"
         _addr = addr curr
         _prevAddr = addr prev
-        _iloc i = NodeIndex curr i -- NodeLoc (Just _addr) (Right i)
+        _iloc i = NodeIndex curr i 
         _refLine (req, refs, i) = do
           _print "("
           _indent
@@ -226,17 +227,6 @@ typeFunc name refs =
           | otherwise = _print $ _addr ++ " is " ++ t
 
         func = _print $ funcwp exstsTern
-          -- _print "("
-          -- _print $ "!(" ++ exsts prev ++ ") "
-          -- _and
-          -- _print $ funcwp "null"
-          -- _print " "
-          -- _or
-          -- _print $ exsts prev
-          -- _print " "
-          -- _and
-          -- _print $ funcwp _prevAddr
-          -- _print ")"
 
         exstsTern = exsts prev ++ " ? " ++ _prevAddr ++ " : null" 
         funcwp parent' = typeFuncName t ++ "(" ++ _addr ++ ", " ++ parent' ++ ")"
@@ -306,9 +296,13 @@ typeFunc name refs =
           _or
           _print $ _prevAddr ++ "==null "
           _or
-          _print $ _addr ++ "==" ++ _prevAddr
+          _print $ _addr ++ "==" ++ _prevAddr ++ " "
+          _or
+          _print $ mapDiff _prevAddr _addr ++ ".changedKeys().size() == 0"
           _print ")"
       
+        mapDiff prev next = prev ++ " is map && " ++ next ++ " is map && " 
+          ++ next ++ ".diff(" ++ prev ++ ")"
     
 
 gen :: TopLevel -> CodePrinter

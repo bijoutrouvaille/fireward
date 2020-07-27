@@ -303,16 +303,19 @@ _literalTypeRef =
       leftAndRight left right
 
 
+_readonly :: Parser Bool
+_readonly = (/=Nothing) <$> (optional . token $ symbol "readonly")
 
 _field :: Parser Field
 _field = do
+  readonly <- _readonly
   name <- token _varName
   opt <- optional $ symbol "?"
   symbol ":"
   isConst <- optional $ symbol "const"
   types <- _typeRefUnion
   guardWith ("field `"++ name ++"` lacks a type" ) (length types > 0)
-  return $ Field (opt == Nothing) name types (isConst /= Nothing)
+  return $ Field (opt == Nothing) name types (isConst /= Nothing || readonly)
 
 _topLevelType :: Parser TopLevel
 _topLevelType = do 

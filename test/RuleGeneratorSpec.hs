@@ -29,6 +29,7 @@ showE (Right x) = "Right " ++ repA x
 showE (Left x) = "Left " ++ repA x
 
 g = showE . RuleGenerator.generate False
+gv = showE . RuleGenerator.generate True
 gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
 r = ("Right " ++) . repA
@@ -95,16 +96,16 @@ spec = do
          , "  );"
          , "}"
          ]
-    it "generates a const type" $
+    it "generates a readonly type" $
       gu [ "type Z = {"
-         , "  a: const string"
+         , "  readonly a: string"
          , "}"
          ] `shouldBe` ru 
          [ "function is____Z(data, prev) {"
          , "  return data.keys().hasAll(['a'])"
          , "  && data.size() >= 1 && data.size() <= 1"
          , "  && data.keys().hasOnly(['a'])"
-         , "  && (prev==null || !prev.keys().hasAll(['a']) || prev.a==null || data.a==prev.a)"
+         , "  && (prev==null || !prev.keys().hasAll(['a']) || prev.a==null || data.a==prev.a || prev.a is map && data.a is map && data.a.diff(prev.a).changedKeys().size() == 0)"
          , "  && data.a is string;"
          , "}"
          ]
@@ -116,7 +117,7 @@ spec = do
          [ "function is____Z(data, prev) {"
          , "  return data.size() >= 0 && data.size() <= 1"
          , "  && data.keys().hasOnly(['a'])"
-         , "  && (prev==null || !prev.keys().hasAll(['a']) || prev.a==null || data.a==prev.a)"
+         , "  && (prev==null || !prev.keys().hasAll(['a']) || prev.a==null || data.a==prev.a || prev.a is map && data.a is map && data.a.diff(prev.a).changedKeys().size() == 0)"
          , "  && ("
          , "    !data.keys().hasAny(['a'])"
          , "    || data.a is string"
@@ -152,6 +153,7 @@ spec = do
            , "  }"
            , "}"
            ]
+
     it "generates a function from a type" $
       g "type X = Z | ZZ | {a:A, b?:B|BB, c:{ca:int, cb?:string}}"
       `shouldBe` ru
@@ -180,6 +182,41 @@ spec = do
       , "}" 
       ]
 
+    it "generates a function with a readonly nested type" $
+      g "type X = {a:A, readonly c:{ca:int}}"
+      `shouldBe` ru
+      [ "function is____X(data, prev) {"
+      , "  return data.keys().hasAll(['a', 'c'])"
+      , "  && data.size() >= 2 && data.size() <= 2"
+      , "  && data.keys().hasOnly(['a', 'c'])"
+      , "  && is____A(data.a, prev!=null && 'a' in prev ? prev.a : null)"
+      , "  && (prev==null || !prev.keys().hasAll(['c']) || prev.c==null || data.c==prev.c || prev.c is map && data.c is map && data.c.diff(prev.c).changedKeys().size() == 0)"
+      , "  && data.c.keys().hasAll(['ca'])"
+      , "  && data.c.size() >= 1 && data.c.size() <= 1"
+      , "  && data.c.keys().hasOnly(['ca'])"
+      , "  && data.c.ca is int;"
+      , "}" 
+      ]
+
+    it "generates a function with a readonly nested type and allow conditions" $
+      g "type X = {a:A, readonly c:{ca:int, allow create: true} allow write: true}"
+      `shouldBe` ru
+      [ "function is____X(data, prev) {"
+      , "  return ("
+      , "    ( request.method != 'create' || ( true ) )\n    && ( request.method != 'update' || ( true ) )\n    && ( request.method != 'delete' || ( true ) )"
+      , "  ) && data.keys().hasAll(['a', 'c'])"
+      , "  && data.size() >= 2 && data.size() <= 2"
+      , "  && data.keys().hasOnly(['a', 'c'])"
+      , "  && is____A(data.a, prev!=null && 'a' in prev ? prev.a : null)"
+      , "  && (prev==null || !prev.keys().hasAll(['c']) || prev.c==null || data.c==prev.c || prev.c is map && data.c is map && data.c.diff(prev.c).changedKeys().size() == 0)"
+      , "  && ("
+      , "    ( request.method != 'create' || ( true ) )"
+      , "  ) && data.c.keys().hasAll(['ca'])"
+      , "  && data.c.size() >= 1 && data.c.size() <= 1"
+      , "  && data.c.keys().hasOnly(['ca'])"
+      , "  && data.c.ca is int;"
+      , "}" 
+      ]
     it "generates a custom type tuple" $ 
       g "type X = {y: [Y, Y?]}" `shouldBe` ru
         [ "function is____X(data, prev) {"
@@ -282,6 +319,7 @@ spec = do
       , "}"
       ] `shouldBe` "Left Validation expression must contain at least one request method (create, update, delete)\n  on line 4, column 6"
 
+
       
 
     it "indents a complex file" $ do
@@ -290,6 +328,19 @@ spec = do
       let rule = take ((length _rule) - 1) _rule
       res <- return (g ward)
       g ward `shouldBe` r rule
+
+
+  describe "Top Level Variables" $ do
+    it "generates rule version 2 if not specified" $
+      gv "type X = any" `shouldBe` (trim . unlines) [
+        "Right rules_version = '2';",
+        "service cloud.firestore {",
+        "  match /databases/{database}/documents {",
+        "    function is____X(data, prev) {\n      return true;\n    }",
+        "  }",
+        "}"
+      ]
+
   describe "Literal" $ do
     it "handle a boolean" $
       g "type X = { a: true }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && data.a == true;\n}" 
