@@ -167,7 +167,7 @@ function isLoggedInUser(userId) {
 
 match /users/{userId} is User { 
   // read, write, create, update, list, get and delete conditions are allowed
-  allow read, create, update: if isLoggedInUser(userId);
+  allow read, create, update: if isLoggedInUser(userId); // anti-pattern: combining reads and writes like this is possible but dangerous. 
   allow delete: false;
 }
 
@@ -213,7 +213,7 @@ The above requires the first three elements present, but the last two are option
 
 #### Optional Types and `null`
 
-Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon, e.g. `{phone?: string}`. _Warning_: if you are relying on TypeScript, this will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
+Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon in objects, e.g. `{phone?: string}`, or after the type name in tuples. _Warning_: if you are relying on TypeScript, an optional type will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
 
 #### `const` Types
 
@@ -292,6 +292,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Custom validation expressions within type definitions
 - [x] Actual tuple types, e.g. [int, string, MyType]
 - [x] Expression variables
+- [ ] Implement const objects using the new Map Diffs.
 - [ ] Importing files
 - [ ] Type intersections
 
