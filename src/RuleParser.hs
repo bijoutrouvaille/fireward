@@ -97,6 +97,9 @@ writeRequestMethods = let prim = filter (\m -> snd m `elem` writeRequestMethodLi
 
 data ValidationExpr = ValidationExpr [RequestMethod] String
                     deriving (Eq, Show)
+
+-- TypeDefs are definitions of objects
+-- TypeRefs are references to types
 data TypeDef = TypeDef 
              { typeDefMembers :: [Field]
              , typeDefValidations :: [ValidationExpr]
