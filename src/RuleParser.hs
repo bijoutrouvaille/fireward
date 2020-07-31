@@ -97,9 +97,6 @@ writeRequestMethods = let prim = filter (\m -> snd m `elem` writeRequestMethodLi
 
 data ValidationExpr = ValidationExpr [RequestMethod] String
                     deriving (Eq, Show)
-
--- TypeDefs are definitions of objects
--- TypeRefs are references to types
 data TypeDef = TypeDef 
              { typeDefMembers :: [Field]
              , typeDefValidations :: [ValidationExpr]
@@ -130,15 +127,6 @@ _topLevelOptVar = do
   optional $ symbol ";"
   return $ TopLevelOpt name val
   where _var = _concat [ some $ _alpha <|> charIn "_", many $ _alphaNum <|> charIn "_" ] ""
-
--- _funcBody :: Parser String
--- _funcBody = token $ do
---   let notDone c = c/='}' && c/=';' && c/='"'
---   a <- many $ _string <|> satS notDone
---   optional $ symbol ";"
---   return . trim $ concat a
-
-      
 
 _expr :: Parser String
 _expr = do

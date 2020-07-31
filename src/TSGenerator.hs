@@ -35,7 +35,7 @@ block ind items = joinLines
 natives = 
   [ ("int", "number")
   , ("float", "number")
-  , ("timestamp", "null|Date|WardTimestamp|{isEqual: (other: any)=>boolean}")
+  , ("timestamp", "null|Date|WardTimestamp|WardFieldValue")
   , ("latlng", "WardGeoPoint")
   , ("bool", "boolean")
   , ("null", "null")
@@ -50,18 +50,17 @@ maxTupleX n = "export type ArrayMax"++show n++"<T> = "  ++ (tupleX n True)
 someTuple = "export type SomeTuple<T> = " ++ intercalate " | " [ "ArrayMax" ++ show j ++ "<T> "| j <- [1..maxTuples-1]]
 funcMaxArray = ts ++ "\nexport function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }" 
   where ts = intercalate "\n" ["export function toArrayMax<T>(n: "++show n++", arr:T[]):ArrayMax"++show n++"<T>" | n <- [1..maxTuples-1]]
-timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardTimestamp)=>boolean, toMillis: ()=>number}"
+fieldValueType = "export type WardFieldValue = { isEqual: (other: WardFieldValue) => boolean };"
+timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardFieldValue)=>boolean, toMillis: ()=>number};"
 timestampTypeCheck = "export function isTimestamp(v: any): v is WardTimestamp { return !!v && (typeof v=='object') && !!v.toDate && !!v.toMillis && (typeof v.nanoseconds=='number') && (typeof v.seconds=='number')};"
 geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean }"
 geoPointTypeCheck = "export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };"
 stdTuples = intercalate "\n\n" [ maxTupleX n | n <- [1..maxTuples] ]
 
 stdTypes = (intercalate "\n" 
-           [ stdTuples 
+           [ fieldValueType
            , timestampType
            , timestampTypeCheck
-           , someTuple
-           , funcMaxArray
            , geoPointType
            , geoPointTypeCheck
            ]) ++ "\n\n"
@@ -85,9 +84,7 @@ typeRefList ind refs =
     ref (TupleTypeRef elems) = "[" ++ intercalate ", " (fmap fromTupleElem elems) ++ "]"
     ref (TypeNameRef name ) = convertToNative name
     ref (InlineTypeDef def) = typeBlock ind def
-    -- ref (TypeNameRef name (Just size)) = if size==0 || size > 12
-    --                                         then convertToNative name ++ "[]"
-    --                                         else "ArrayMax"++show size++"<"++name++">"
+
 
     fromTupleElem (req, refs) = 
       if req then typeRefList 0 refs
