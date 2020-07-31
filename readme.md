@@ -188,7 +188,7 @@ Firestore rules language' primitive types don't map exactly to JavaScript, so Fi
 - `int` and `float` map to TypeScript `number`
 - `bool` in rules maps to TS `boolean`
 - `latlng` in rules maps to TS `WardGeoPoint` which tries to mimic the Web native type https://firebase.google.com/docs/reference/js/firebase.firestore.GeoPoint.
-- `timestamp` maps to `null|WardTimestamp|Date|{isEqual: (other: any)=>boolean}`. Snapshots will come in as a `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server `timestamp` object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
+- `timestamp` maps to `null|WardTimestamp|Date|WardFieldValue`. Snapshots will come in as a `WardTimestamp`, but when writing to the database, you can assign, in addition to a `WardTimestamp` object, a server `timestamp` object (`firebase.firestore.FieldValue.serverTimestamp()`) or a javascript `Date` object. `WardTimestamp` is defined in the generated typescript file, and it is intended to follow the officially defined interface: https://firebase.google.com/docs/reference/node/firebase.firestore.Timestamp.html.
 
 #### Unions
 
