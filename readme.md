@@ -25,7 +25,7 @@ https://groups.google.com/forum/#!forum/fireward
 
 ## In the Wild
 
-Fireward has been used in these awesome projects:
+Fireward was used in these awesome projects:
 
 [StretchMinder](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667219095) StretchMinder is a work break timer for iOS that reminds you to take frequent breaks while providing short guided movement & breathing routines which are designed to address the needs of someone who's sitting all day.
 
