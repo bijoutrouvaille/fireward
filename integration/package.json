@@ -14,7 +14,7 @@
     "@types/chai": "^4.2.3",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
-    "firebase-tools": "^7.6.1",
+    "firebase-tools": "8.6.0",
     "mocha": "^6.2.1",
     "ts-mocha": "^6.0.0",
     "ts-node": "^8.4.1",

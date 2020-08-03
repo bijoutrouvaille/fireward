@@ -29,7 +29,7 @@ gt z = (\x->trace (showN x) x) (g z)
 gu = g . trim . unlines
 r = ("Right " ++) . repA
 ru = r . trim . unlines
-timestamp = "null|Date|WardTimestamp|WardFieldValue"
+timestamp = "Types['timestamp']"
                  
 
 spec :: Spec
@@ -38,34 +38,34 @@ spec = do
     it "generates a simple thing" $
       g "type X = Y | {a:int}"
       `shouldBe` ru
-      [ stdTypes ++ "export type X = Y | {"
-      , "  a: number"
+      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y | {"
+      , "  a: Types['number']"
       , "}"
       ]
     it "generates a simple array" $ do
       g "type X = {a:string[]}" `shouldBe` ru
-        [ stdTypes ++ "export type X = {"
+        [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {"
         , "  a: string[]"
         , "}"
         ]
     it "generates a 2-tuple array" $ do
       g "type X = {a:string[2]}" `shouldBe` ru
-        [ stdTypes ++ "export type X = {"
+        [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {"
         , "  a: [string?, string?]"
         , "}"
         ]
     it "generates a 3-tuple" $ do
       g "type X = {a: [string, Z, {b: 1}]}" `shouldBe` ru
-        [ stdTypes ++ "export type X = {"
+        [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {"
         , "  a: [string, Z, {\n  b: 1\n}]"
         , "}"
         ]
     it "generates a grouped array" $ do
       g "type X = (string | float)[]" `shouldBe` ru
-        [ stdTypes ++ "export type X = (string | number)[]" ]
+        [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = (string | Types['number'])[]" ]
     it "generates the any type" $ do
       g "type X = {a:any}" `shouldBe` ru
-        [ stdTypes ++ "export type X = {\n  a: any\n}" ]
+        [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {\n  a: any\n}" ]
     it "eats line comments" $ 
       gu
       [ "type X = { // type X"
@@ -74,7 +74,7 @@ spec = do
       , "}"
       ] 
       `shouldBe` ru
-      [ stdTypes ++ "export type X = {"
+      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {"
       , "  a: string"
       , "}"
       ];
@@ -93,13 +93,13 @@ spec = do
       , "}"
       ]
       `shouldBe` ru
-      [ stdTypes ++ "export type X = Y | {"
-      , "  a: number"
+      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y | {"
+      , "  a: Types['number']"
       , "}"
-      , "export type Compound = {"
+      , "export type Compound<Types extends FirewardTypes = FirewardTypes> = {"
       , "  a: " ++ timestamp
       , "  b: {"
-      , "    ba: number"
+      , "    ba: Types['number']"
       , "    bb: {"
       , "      bba: string"
       , "    }"
