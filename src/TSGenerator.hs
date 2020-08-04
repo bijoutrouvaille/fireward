@@ -45,6 +45,7 @@ natives =
   , ("bool", "boolean")
   , ("null", "null")
   , ("map", "Record<string, unknown>")
+  , ("string", "string")
   ]
 
 
@@ -84,7 +85,8 @@ typeRefList ind refs =
   trim .  intercalate " | " $ ref <$> refs
   where
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
-    convertToNative = flip maybe id <*> flip lookup natives
+    -- convertToNative = flip maybe id <*> flip lookup natives
+    convertToNative name = maybe (name ++ "<Types>") id (lookup name natives)
     ref :: TypeRef -> String
     ref (LiteralTypeRef value) = value
     ref (ListTypeRef r) = ref r ++ "[]"
