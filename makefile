@@ -61,3 +61,6 @@ smoke-test:
 
 bench:
 	hyperfine 'fireward -i examples/smoke-test.ward'
+
+e2e:
+	cd ./integration && npm test

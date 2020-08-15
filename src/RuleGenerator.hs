@@ -88,13 +88,15 @@ funcBlock (FuncDef name params vars body) = _function name params vars (_print b
 
 typeFuncName typeName = "is____" ++ capitalize typeName
 
-
+-- quote :: [Char] -> [Char]
+-- quoteProp name = let q = take 1 name 
+--               in if q == "'" || q == "\"" then name else "\"" ++ name ++ "\""
 
 data NodeLoc = NodeIndex NodeLoc Int | NodeProp (Maybe NodeLoc) String
 addr :: NodeLoc -> String
 addr (NodeIndex root i) = addr root ++ "[" ++ show i ++ "]"
 addr (NodeProp Nothing prop) = prop
-addr (NodeProp (Just parent) prop) = addr parent ++ "." ++ prop
+addr (NodeProp (Just parent) prop) = addr parent ++ "[" ++ _enquote prop ++ "]"
 
 exsts :: NodeLoc -> String
 exsts (NodeIndex par i) = exsts par ++ " && " ++ addr par ++ " is list && " ++ addr par ++ ".size() > " ++ show i
@@ -150,8 +152,8 @@ typeFunc name refs =
           keyPresenceCheck = do
             _linesWith _and . fmap _print . filter (\s->s/="") $
               [ if length requiredKeys > 0
-                   then _hasAll (addr parent) requiredKeys
-                   else ""
+                then _hasAll (addr parent) requiredKeys
+                else ""
               , _sizeBetween (addr parent) mn mx
               , _hasOnly (addr parent) (fieldName <$> fields)
               ]
@@ -288,14 +290,14 @@ typeFunc name refs =
         prev = NodeProp (Just prevParent) n
         _prevAddr = addr prev
         _addr = addr curr
-        constCheck = do-- const type check
+        constCheck = do -- const type check
           _print "(" 
-          _print $ addr prevParent ++ "==null " 
+          _print $ _not (exsts prev) ++ " " --addr prevParent ++ "==null " 
           _or
-          _print $ "!" ++ _hasAll (addr prevParent) [n] ++ " "
-          _or
-          _print $ _prevAddr ++ "==null "
-          _or
+          -- _print $ "!" ++ _hasAll (addr prevParent) [n] ++ " "
+          -- _or
+          -- _print $ _prevAddr ++ "==null "
+          -- _or
           _print $ _addr ++ "==" ++ _prevAddr ++ " "
           _or
           _print $ mapDiff _prevAddr _addr ++ ".changedKeys().size() == 0"

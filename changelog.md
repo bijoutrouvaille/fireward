@@ -7,7 +7,7 @@ _Re:_ ternary operators, `readonly` nested objects and `readonly` keyword (inste
 _Breaking change:_ Fireward now requires rules version 2, and automatically adds it to the generated rules.
 _Breaking change:_ `WardTimestamp` is now defined by using `WardFieldValue`.
 _Breaking change:_ TS typings no longer include the Array types for old tuples.
-
+_Breaking change:_ Type `number` is no longer allowed in ward files to help avoid a common type of error.
 
 - `Changelog.md` file.
 - Ternary operators in expression parsers are now allowed.

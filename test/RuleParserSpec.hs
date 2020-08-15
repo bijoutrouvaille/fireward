@@ -115,12 +115,33 @@ spec = do
         ])], "")
     it "fails on just the type keyword" $ do
       _parse "type" `shouldBe` failure ("type name missing", 0, 4)
-    it "fail when type definition is missing =" $
-      _parse "type X {}" `shouldBe` failure ("missing `=` after type name", 0, 6)
+    it "fails when type definition is missing =" $
+      _parse "type X {}" `shouldBe` failure ("missing `=` after type name", 0, 6)    
     it "fails when there is nothing after assignment" $ do
       _parse "type X =" `shouldBe` failure ("type `X` is missing definition", 0, 8)
     it "allows a semicolon after type definition" $ do
       _parse "type X = string;" `shouldBe` Right ([TopLevelType "X" [TypeNameRef "string" ]], "")
+
+    it "fails when string type contains a /" $
+      _parse "type X = {\"abc/def\": float}" `shouldBe` failure ("field `abc/def` contains illegal character '/'", 0, 19)
+    it "fails when string prop name == '.'" $
+      _parse "type X = {\".\": float}" `shouldBe` failure ("field `.` cannot consist entirely of periods",0,13)
+    it "fails when string prop name == '..'" $
+      _parse "type X = {\"..\": float}" `shouldBe` failure ("field `..` cannot consist entirely of periods",0,14)
+    it "fails when string prop name == '...'" $
+      _parse "type X = {\"...\": float}" `shouldBe` failure ("field `...` cannot consist entirely of periods",0,15)
+    it "fails when string prop name == '__abc__'" $
+      _parse "type X = {\"__abc__\": float}" `shouldBe` failure ("field `__abc__` cannot match __.*__",0,19)
+
+    it "gets the quoted prop name" $
+      _parse "type X = {\"hello\": float}" `shouldBe` Right ([TopLevelType "X" [InlineTypeDef (TypeDef {typeDefMembers = [Field {required = True, fieldName = "\"hello\"", typeRefs = [TypeNameRef "float"], constant = False}], typeDefValidations = []})]],"")
+    it "gets the quoted prop name with dot" $
+      _parse "type X = {\"hello.\": float}" `shouldBe` Right ([TopLevelType "X" [InlineTypeDef (TypeDef {typeDefMembers = [Field {required = True, fieldName = "\"hello.\"", typeRefs = [TypeNameRef "float"], constant = False}], typeDefValidations = []})]],"")
+    it "gets the quoted prop name with excaped quote" $
+      _parse "type X = {\"hello\\\"\": float}" `shouldBe` Right ([TopLevelType "X" [InlineTypeDef (TypeDef {typeDefMembers = [Field {required = True, fieldName = "\"hello\\\"\"", typeRefs = [TypeNameRef "float"], constant = False}], typeDefValidations = []})]],"")
+
+    it "fails when type is number" $
+      _parse "type X = {a: number}" `shouldBe` failure ("type 'number' is disallowed to avoid a common source of confusion",0,19)  
 
     it "parses regex" $ do
       _parse "match /x/x { allow write: if name.match('test'); }" `shouldBe` Right ([TopLevelPath (PathDef [PathPartStatic "x",PathPartStatic "x"] [] [PathBodyDir (PathDirective ["write"] "name.match('test')")])],"")

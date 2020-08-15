@@ -22,6 +22,16 @@ type AnyTest = {
 type GeoTest = {
   test: latlng
 }
+type UTF8Test = {
+}
+type QuotedTest = {
+  "ハロー・ワールド": string
+  "abc": {
+    readonly "..-": {
+      "]": float
+    }
+  }
+}
 
 match /map/{x} is MapTest {
   allow write: true;
@@ -47,4 +57,8 @@ match /geo/{x} is GeoTest {
 match /any/{x} is AnyTest {
   allow write: true;
   allow read: true
+}
+match /quoted/{x} is QuotedTest {
+  allow write: true;
+  allow read: true;
 }

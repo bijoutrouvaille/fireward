@@ -8,7 +8,9 @@ module RuleLang (
   _sizeGte,
   _sizeBetween,
   _pathBlock,
-  _and, _or
+  _enquote,
+  _and, _or,
+  _not
   ) where
 
 import Parser
@@ -23,13 +25,17 @@ import CodePrinter
 spaces n = take n $ repeat ' '
 moveBy n = (spaces (n*2) ++)
 
-_quote x = "'" ++ x ++ "'"
-_quoteList x = _list $ _quote <$> x
+
+_enquote :: [Char] -> [Char] -- enquote unless already quoted
+_enquote name = let q = take 1 name 
+              in if q == "'" || q == "\"" then name else "'" ++ name ++ "'"
+
+_enquoteList x = _list $ _enquote <$> x
 _list = intercalate ", "
 
-_hasAny parent elements = parent ++ ".keys().hasAny([" ++ _quoteList elements ++ "])"
-_hasAll parent elements = parent ++ ".keys().hasAll([" ++ _quoteList elements ++ "])"
-_hasOnly parent elements = parent ++ ".keys().hasOnly([" ++ _quoteList elements ++ "])"
+_hasAny parent elements = parent ++ ".keys().hasAny([" ++ _enquoteList elements ++ "])"
+_hasAll parent elements = parent ++ ".keys().hasAll([" ++ _enquoteList elements ++ "])"
+_hasOnly parent elements = parent ++ ".keys().hasOnly([" ++ _enquoteList elements ++ "])"
 
 _allow conditions expr = do
   _print $ "allow " ++ _list conditions ++ ": "
@@ -41,6 +47,8 @@ _sizeBetween item min max = _sizeGte item min ++ " && " ++ _sizeLte item max
 
 _and = _print "&& "
 _or = _print "|| "
+
+_not el = "!(" ++ el ++ ")"
 
 _function name params vars body = do
   _print "function "
