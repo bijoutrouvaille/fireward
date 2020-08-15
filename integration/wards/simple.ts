@@ -12,5 +12,5 @@ export type Name<Types extends FirewardTypes = FirewardTypes> = {
   last?: string
 }
 export type User<Types extends FirewardTypes = FirewardTypes> = {
-  name: Name | string
+  name: Name<Types> | string
 }

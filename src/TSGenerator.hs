@@ -46,6 +46,7 @@ natives =
   , ("null", "null")
   , ("map", "Record<string, unknown>")
   , ("string", "string")
+  , ("any", "any")
   ]
 
 

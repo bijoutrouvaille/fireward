@@ -3,8 +3,10 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint, AnyTest, FirewardInput, FirewardOutput, TimestampNullTest} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint, AnyTest, FirewardInput, FirewardOutput, TimestampNullTest, QuotedTest} from '../wards/primitiveTypes';
+
 import {isEmulatorReady} from './../util/emulator'
+import { expect } from 'chai';
 
 const WARD_NAME = 'primitiveTypes';
 type App = ReturnType<typeof firebase.initializeTestApp>;
@@ -108,6 +110,7 @@ describe(WARD_NAME, function(){
       })
       
     })
+
     describe(`WardTimestamp`, function(){
       it(`typechecks by isTimestamp`, async function(){
         const x: TimestampTest = {
@@ -158,5 +161,19 @@ describe(WARD_NAME, function(){
         }        
       })
     });
+
+    describe(`Quoted property names`, function() {
+      it(`reads/writes Japanese, as well as non-word characters`, async function(){
+        const x: QuotedTest = {
+          'ハロー・ワールド': 'hello world',
+          'abc': {
+            '..-': {']': 123}
+          }
+        };
+        await firebase.assertSucceeds(app.firestore().collection('quoted').doc(uid).set(x));
+        const xx = await app.firestore().collection('quoted').doc(uid).get();
+        expect(xx.data()).eql(x);
+      })
+    })
   })
 })

@@ -38,7 +38,7 @@ spec = do
     it "generates a simple thing" $
       g "type X = Y | {a:int}"
       `shouldBe` ru
-      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y | {"
+      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y<Types> | {"
       , "  a: Types['number']"
       , "}"
       ]
@@ -57,7 +57,7 @@ spec = do
     it "generates a 3-tuple" $ do
       g "type X = {a: [string, Z, {b: 1}]}" `shouldBe` ru
         [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = {"
-        , "  a: [string, Z, {\n  b: 1\n}]"
+        , "  a: [string, Z<Types>, {\n  b: 1\n}]"
         , "}"
         ]
     it "generates a grouped array" $ do
@@ -93,7 +93,7 @@ spec = do
       , "}"
       ]
       `shouldBe` ru
-      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y | {"
+      [ stdTypes ++ "export type X<Types extends FirewardTypes = FirewardTypes> = Y<Types> | {"
       , "  a: Types['number']"
       , "}"
       , "export type Compound<Types extends FirewardTypes = FirewardTypes> = {"

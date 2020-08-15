@@ -14,5 +14,5 @@ export type Name<Types extends FirewardTypes = FirewardTypes> = {
 export type OptionalTypesExample<Types extends FirewardTypes = FirewardTypes> = {
   str?: string
   num?: Types['number']
-  sub?: Name
+  sub?: Name<Types>
 }

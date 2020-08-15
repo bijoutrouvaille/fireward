@@ -125,7 +125,7 @@ match /users/{id} is User {
 ### Complete Example
 
 ```
-rules_version = '2' // unnecessry, see notes on Version 2 below
+rules_version = '2' // unnecessary, see notes on Version 2 below
 
 type User = {
 
@@ -149,6 +149,8 @@ type User = {
   irrelevantType: any // translates to the `any` type in typescript and is not type checked in the rules
 
   location: latlng // native Firestore geolocation type
+
+  "ハロー・ワールド": string // for valid property names see https://firebase.google.com/docs/firestore/quotas#collections_documents_and_fields
 
   // Custom type validation expressions can appear at the end of any type
   allow update: if data.age > prev.age // data refers to this type's incoming data, prev refers to previously stored data. 

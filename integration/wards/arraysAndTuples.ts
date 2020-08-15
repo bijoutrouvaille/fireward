@@ -11,7 +11,7 @@ export type Tuple1<Types extends FirewardTypes = FirewardTypes> = [string, 3, 'h
   a: 1
 }?]
 export type A<Types extends FirewardTypes = FirewardTypes> = {
-  test: Tuple1
+  test: Tuple1<Types>
 }
 
 export type B<Types extends FirewardTypes = FirewardTypes> = {
@@ -22,12 +22,12 @@ export type Test1<Types extends FirewardTypes = FirewardTypes> = {
   a: 1
 }
 export type C<Types extends FirewardTypes = FirewardTypes> = {
-  test: Test1[]
+  test: Test1<Types>[]
 }
 
 export type Session<Types extends FirewardTypes = FirewardTypes> = {
   dayOfWeek: Types['number']
 }
 export type Booking<Types extends FirewardTypes = FirewardTypes> = {
-  sessions: [Session, Session?]
+  sessions: [Session<Types>, Session<Types>?]
 }

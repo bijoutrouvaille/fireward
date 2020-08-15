@@ -213,6 +213,16 @@ _inlineTypeDefRef = InlineTypeDef <$> _typeDef
 _atomTypeRef :: Parser TypeRef 
 _atomTypeRef = _literalTypeRef <|> _singleTypeName <|> _inlineTypeDefRef <|> _tupleTypeRef
 
+-- Extract all the type names into a flat array.
+-- Useful for validation.
+getNamed :: TypeRef -> [String]
+getNamed (TypeNameRef name) = [name]
+getNamed (ListTypeRef ref) = getNamed ref
+getNamed (GroupedTypeRef refs) = foldMap getNamed refs
+getNamed (TupleTypeRef tuple) = foldMap getNamed (foldMap snd tuple)
+getNamed (InlineTypeDef _) = []
+getNamed (LiteralTypeRef _) = []
+
 _groupedTypeRef :: Parser TypeRef
 _groupedTypeRef = do
   symbol "("
@@ -237,34 +247,17 @@ _listTypeRef = do
     sizeCheck (Just n) = n > 0 && n <= 12
 
 
-_anyTypeRef = _listTypeRef <|> _groupedTypeRef <|> _atomTypeRef
+_anyTypeRef :: Parser TypeRef
+_anyTypeRef = do
+  ref <- _listTypeRef <|> _groupedTypeRef <|> _atomTypeRef
+  let names = getNamed ref
+  let noNumber = all (/="number") names
+  guardWith "type 'number' is disallowed to avoid a common source of confusion" noNumber
+  return ref
 
 _typeRefUnion :: Parser [TypeRef]
 _typeRefUnion = manywith (symbol "|") $ token _anyTypeRef
 
--- _typeRefs = manywith (symbol "|") 
---   (   (withComma _literalTypeRef)
---   <|> (withComma _singleTypeName)
---   <|> (InlineTypeDef <$> withComma _typeDef)
---   )
---   where
---     withComma p = _terminated p comma
---     comma = optional $ symbol ","
-
--- atom = lit | tuple | def | name
--- list = atom[] | group[]
--- group = (res | res | ...)
--- res = single | list | group
-
--- _listOp :: Parser Int
--- _listOp = do
---   symbol "["
---   size <- optional $ token _natural
---   guardWith "Tuple size must be greater than 0." (sizeCheck size)
---   require "expected closing `]`" $ symbol "]"
---   return $ maybe 0 id size
---   where sizeCheck Nothing = True
---         sizeCheck (Just n) = n > 0
 _singleTypeName = do
   name <- token _varName
   return $ TypeNameRef name
@@ -297,10 +290,23 @@ _literalTypeRef =
 _readonly :: Parser Bool
 _readonly = (/=Nothing) <$> (optional . token $ symbol "readonly")
 
+_fieldName :: Parser String
+_fieldName = _varName <|> do
+  full <- _string
+
+  let name = drop 1 . take (length full - 1) $ full -- strip the quotes
+  guardWith ("field `"++ name ++"` contains illegal character '/'") (all (/='/') name)
+  guardWith ("field `"++ name ++"` cannot consist entirely of periods") (any (/='.') name)
+  guardWith ("field `"++ name ++"` cannot match __.*__") (not (length name > 3 && take 2 name == "__" && drop (length name - 2) name == "__"))
+  return full
+
+  
+
+
 _field :: Parser Field
 _field = do
   readonly <- _readonly
-  name <- token _varName
+  name <- token _fieldName
   opt <- optional $ symbol "?"
   symbol ":"
   isConst <- optional $ symbol "const"

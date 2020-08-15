@@ -34,6 +34,18 @@ export type AnyTest<Types extends FirewardTypes = FirewardTypes> = {
 export type GeoTest<Types extends FirewardTypes = FirewardTypes> = {
   test: WardGeoPoint
 }
+export type UTF8Test<Types extends FirewardTypes = FirewardTypes> = {
+
+}
+export type QuotedTest<Types extends FirewardTypes = FirewardTypes> = {
+  "ハロー・ワールド": string
+  "abc": {
+    "..-": {
+      "]": Types['number']
+    }
+  }
+}
+
 
 
 
