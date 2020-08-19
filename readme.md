@@ -217,11 +217,11 @@ The above requires the first three elements present, but the last two are option
 
 Unlike in Firebase Realitime Database, optional types differ from `null`s. Optional types are indicated with a `?` before the colon in objects, e.g. `{phone?: string}`, or after the type name in tuples. _Warning_: if you are relying on TypeScript, an optional type will allow you to define keys with value `undefined`, which Firestore may reject as an error. Firestore has no equivalent to the JavaScript `undefined`.
 
-#### `const` Types
+#### `readonly` Types
 
-Fireward allows you to declare primitive types as `const`, as in the example above. A `const` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
+Fireward allows you to declare properties as `readonly`, as in the example above. A `readonly` property will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional _and_ absent.
 
-_Warning_: `const` current only works on primitive types. Marking a non-primitive as const will compile without error but do nothing.
+_Note_: `readonly` used to only work on primitive types. Now it works for nested objects as well, thanks to the firestore [MapDiff feature](https://firebase.google.com/docs/reference/rules/rules.MapDiff).
 
 #### Type validation Expressions
 
@@ -294,7 +294,10 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Custom validation expressions within type definitions
 - [x] Actual tuple types, e.g. [int, string, MyType]
 - [x] Expression variables
-- [ ] Implement const objects using the new Map Diffs.
+- [x] Refactor with ternary types
+- [x] Implement readonly/const objects using the new Map Diffs.
+- [ ] Input/Output types for typescript (see io-generics branch)
+- [ ] Generic types
 - [ ] Importing files
 - [ ] Type intersections
 
