@@ -162,7 +162,7 @@ type Phone = { number: int, country: int }
 type Email = string
 
 function isLoggedInUser(userId) { 
-  let a = request.auth; // variables require v2 rules
+  let a = request.auth;
   // return keyword optional
   return a!=null && a.uid == userId; 
 }
