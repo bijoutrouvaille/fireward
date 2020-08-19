@@ -14,6 +14,7 @@ _Breaking change:_ Type `number` is no longer allowed in ward files to help avoi
 - read only properties now use `readonly` keyword prefixed to the name instead of `const` to the value, just like in TypeScript.
 - `read only` (`const`) objects are now checked using the [Firestore Map diff syntax](https://firebase.google.com/docs/reference/rules/rules.MapDiff#changedKeys).
 - TS now exports a `WardFieldValue` type to mimic `firestore.FieldValue` more correctly.
+- property names can now be quoted to allow for almost any Unicode values.
 
 #### Internal refactoring
 
