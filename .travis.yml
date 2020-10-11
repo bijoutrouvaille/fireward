@@ -21,7 +21,7 @@ matrix:
 branches:
     only:
     - /\d+\.\d+\.\d+/
-    - /\d+\.\d+\.\d+.beta-\d+/
+    - /\d+\.\d+\.\d+-beta.\d+/
 
 install: source ./travis/getstack.sh
 script: source ./travis/buildfile.sh
