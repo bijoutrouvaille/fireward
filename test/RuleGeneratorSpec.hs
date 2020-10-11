@@ -71,8 +71,7 @@ spec = do
          , "}"
          ] `shouldBe` ru 
          [ "function is____Z(data, prev) {"
-         , "  return data.size() >= 0 && data.size() <= 1"
-         , "  && data.keys().hasOnly(['a'])"
+         , "  return data.keys().hasOnly(['a'])"
          , "  && ("
          , "    !data.keys().hasAny(['a'])"
          , "    || data['a'] is string"
@@ -85,8 +84,7 @@ spec = do
          , "}"
          ] `shouldBe` ru 
          [ "function is____Z(data, prev) {"
-         , "  return data.size() >= 0 && data.size() <= 1"
-         , "  && data.keys().hasOnly(['a'])"
+         , "  return data.keys().hasOnly(['a'])"
          , "  && ("
          , "    !data.keys().hasAny(['a'])"
          , "    || ("
@@ -103,7 +101,6 @@ spec = do
          ] `shouldBe` ru 
          [ "function is____Z(data, prev) {"
          , "  return data.keys().hasAll(['a'])"
-         , "  && data.size() >= 1 && data.size() <= 1"
          , "  && data.keys().hasOnly(['a'])"
          , "  && (!(prev!=null && 'a' in prev) || data['a']==prev['a'] || prev['a'] is map && data['a'] is map && data['a'].diff(prev['a']).changedKeys().size() == 0)"
          , "  && data['a'] is string;"
@@ -115,8 +112,7 @@ spec = do
          , "}"
          ] `shouldBe` ru 
          [ "function is____Z(data, prev) {"
-         , "  return data.size() >= 0 && data.size() <= 1"
-         , "  && data.keys().hasOnly(['a'])"
+         , "  return data.keys().hasOnly(['a'])"
          , "  && (!(prev!=null && 'a' in prev) || data['a']==prev['a'] || prev['a'] is map && data['a'] is map && data['a'].diff(prev['a']).changedKeys().size() == 0)"
          , "  && ("
          , "    !data.keys().hasAny(['a'])"
@@ -161,7 +157,6 @@ spec = do
       , "  return is____Z(data, prev!=null ? prev : null)"
       , "  || is____ZZ(data, prev!=null ? prev : null)"
       , "  || data.keys().hasAll(['a', 'c'])"
-      , "  && data.size() >= 2 && data.size() <= 3"
       , "  && data.keys().hasOnly(['a', 'b', 'c'])"
       , "  && is____A(data['a'], prev!=null && 'a' in prev ? prev['a'] : null)"
       , "  && ("
@@ -172,7 +167,6 @@ spec = do
       , "    )"
       , "  )"
       , "  && data['c'].keys().hasAll(['ca'])"
-      , "  && data['c'].size() >= 1 && data['c'].size() <= 2"
       , "  && data['c'].keys().hasOnly(['ca', 'cb'])"
       , "  && data['c']['ca'] is int"
       , "  && ("
@@ -187,12 +181,10 @@ spec = do
       `shouldBe` ru
       [ "function is____X(data, prev) {"
       , "  return data.keys().hasAll(['a', 'c'])"
-      , "  && data.size() >= 2 && data.size() <= 2"
       , "  && data.keys().hasOnly(['a', 'c'])"
       , "  && is____A(data['a'], prev!=null && 'a' in prev ? prev['a'] : null)"
       , "  && (!(prev!=null && 'c' in prev) || data['c']==prev['c'] || prev['c'] is map && data['c'] is map && data['c'].diff(prev['c']).changedKeys().size() == 0)"
       , "  && data['c'].keys().hasAll(['ca'])"
-      , "  && data['c'].size() >= 1 && data['c'].size() <= 1"
       , "  && data['c'].keys().hasOnly(['ca'])"
       , "  && data['c']['ca'] is int;"
       , "}" 
@@ -205,14 +197,12 @@ spec = do
       , "  return ("
       , "    ( request.method != 'create' || ( true ) )\n    && ( request.method != 'update' || ( true ) )\n    && ( request.method != 'delete' || ( true ) )"
       , "  ) && data.keys().hasAll(['a', 'c'])"
-      , "  && data.size() >= 2 && data.size() <= 2"
       , "  && data.keys().hasOnly(['a', 'c'])"
       , "  && is____A(data['a'], prev!=null && 'a' in prev ? prev['a'] : null)"
       , "  && (!(prev!=null && 'c' in prev) || data['c']==prev['c'] || prev['c'] is map && data['c'] is map && data['c'].diff(prev['c']).changedKeys().size() == 0)"
       , "  && ("
       , "    ( request.method != 'create' || ( true ) )"
       , "  ) && data['c'].keys().hasAll(['ca'])"
-      , "  && data['c'].size() >= 1 && data['c'].size() <= 1"
       , "  && data['c'].keys().hasOnly(['ca'])"
       , "  && data['c']['ca'] is int;"
       , "}" 
@@ -221,7 +211,6 @@ spec = do
       g "type X = {y: [Y, Y?]}" `shouldBe` ru
         [ "function is____X(data, prev) {"
         , "  return data.keys().hasAll(['y'])"
-        , "  && data.size() >= 1 && data.size() <= 1"
         , "  && data.keys().hasOnly(['y'])"
         , "  && ( data['y'] is list && data['y'].size() <= 2 && data['y'].size() >= 1"
         , "    && ("
@@ -239,7 +228,6 @@ spec = do
       `shouldBe` ru
         [ "function is____X(data, prev) {"
         , "  return data.keys().hasAll(['x'])"
-        , "  && data.size() >= 1 && data.size() <= 1"
         , "  && data.keys().hasOnly(['x'])"
         , "  && ( data['x'] is list && data['x'].size() <= 2 && data['x'].size() >= 0"
         , "    && ("
@@ -258,8 +246,7 @@ spec = do
     it "creates a correct check for empty type object" $
       g "type X = {}" `shouldBe` ru
         [ "function is____X(data, prev) {"
-        , "  return data.size() >= 0 && data.size() <= 0"
-        , "  && data.keys().hasOnly([])"
+        , "  return data.keys().hasOnly([])"
         , "  ;"
         , "}"
         ]
@@ -304,7 +291,6 @@ spec = do
         , "    && ( request.method != 'update' || ( true ) )"
         , "    && ( request.method != 'delete' || ( true ) )"
         , "  ) && data.keys().hasAll(['a'])"
-        , "  && data.size() >= 1 && data.size() <= 1"
         , "  && data.keys().hasOnly(['a'])"
         , "  && data['a'] is string;"
         , "}"
@@ -343,15 +329,15 @@ spec = do
 
   describe "Literal" $ do
     it "handle a boolean" $
-      g "type X = { a: true }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && data['a'] == true;\n}" 
+      g "type X = { a: true }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.keys().hasOnly(['a'])\n  && data['a'] == true;\n}" 
     it "handle a string" $ do
-      g "type X = { a: 'me' | \"you\" }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && (\n    data['a'] == 'me'\n    || data['a'] == \"you\"\n  );\n}"
+      g "type X = { a: 'me' | \"you\" }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.keys().hasOnly(['a'])\n  && (\n    data['a'] == 'me'\n    || data['a'] == \"you\"\n  );\n}"
     it "handle a float" $
-      g "type X = { a: 123.3 }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && data['a'] == 123.3;\n}" 
+      g "type X = { a: 123.3 }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.keys().hasOnly(['a'])\n  && data['a'] == 123.3;\n}" 
 
   describe "Primitive types" $ do
     it "handles any nested in object" $
-      g "type X = { a: any }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.size() >= 1 && data.size() <= 1\n  && data.keys().hasOnly(['a'])\n  && true;\n}" 
+      g "type X = { a: any }" `shouldBe` "Right function is____X(data, prev) {\n  return data.keys().hasAll(['a'])\n  && data.keys().hasOnly(['a'])\n  && true;\n}" 
     it "handles any as top-level type" $
       g "type X = any" `shouldBe` "Right function is____X(data, prev) {\n  return true;\n}" 
       
