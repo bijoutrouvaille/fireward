@@ -58,8 +58,6 @@ release-beta:
 	git push origin $(BRANCH) # prevent travis from building anything but the tag
 	git tag -a "$(V)-beta.$(shell date +%s)"
 	git push origin $(BRANCH) --follow-tags
-	sleep 10
-	watch 'travis status -qpx && make publish-beta'
 
 
 publish-beta: 
