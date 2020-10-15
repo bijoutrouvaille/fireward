@@ -58,9 +58,9 @@ geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number
 geoPointTypeCheck = "export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };"
 
 inputTypes :: [Char]
-inputTypes = "export type FirewardInput = /** what you get from DB */ { timestamp: WardTimestamp|null; number: number; };"
+inputTypes = "export type FirewardOutput = /** what you get from DB */ { timestamp: WardTimestamp|null; number: number; };"
 outputTypes :: [Char]
-outputTypes = "export type FirewardOutput = /** what you send to DB */ { timestamp: WardTimestamp|Date|WardFieldValue; number: number|WardFieldValue; };"
+outputTypes = "export type FirewardInput = /** what you send to DB */ { timestamp: WardTimestamp|Date|WardFieldValue; number: number|WardFieldValue; };"
 firewardTypes = "export type FirewardTypes = FirewardInput | FirewardOutput;"
 
 stdTypes :: [Char]
