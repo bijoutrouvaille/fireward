@@ -27,12 +27,15 @@ https://groups.google.com/forum/#!forum/fireward
 
 Fireward was used in these awesome projects:
 
-[StretchMinder](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667219095) StretchMinder is a work break timer for iOS that reminds you to take frequent breaks while providing short guided movement & breathing routines which are designed to address the needs of someone who's sitting all day.
+[StretchMinder](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667219095) is a work break timer for iOS that reminds you to take frequent breaks while providing short guided movement & breathing routines which are designed to address the needs of someone who's sitting all day.
 
 [Oresman Readers Website](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667215177) is a site that houses the famous Oresman Readers, a fine art collection by Donald and Patricia Oresman. It relies on Fireward to structure and secure its data, as well as to provide a shopping cart item reservation system.
 
-Post yours [here](https://github.com/bijoutrouvaille/fireward/issues/29) to be featured in this section.
+[COGS](https://cogs.show/) is an intuitive hardware/software platform for real-world interactive experiences, including escape rooms and immersive theatre.
 
+[Super Magic Link](https://github.com/bijoutrouvaille/fireward/issues/supermagiclink.com) allows Twitch streamers to sync video games, TV shows, movies, and music to their viewers.
+
+Post your project [here](https://github.com/bijoutrouvaille/fireward/issues/29) to be featured in this section.
 
 ## Installation
 
