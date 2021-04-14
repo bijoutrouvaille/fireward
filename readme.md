@@ -33,7 +33,7 @@ Fireward was used in these awesome projects:
 
 [COGS](https://cogs.show/) is an intuitive hardware/software platform for real-world interactive experiences, including escape rooms and immersive theatre.
 
-[Super Magic Link](https://github.com/bijoutrouvaille/fireward/issues/supermagiclink.com) allows Twitch streamers to sync video games, TV shows, movies, and music to their viewers.
+[Super Magic Link](https://supermagiclink.com) allows Twitch streamers to sync video games, TV shows, movies, and music to their viewers.
 
 Post your project [here](https://github.com/bijoutrouvaille/fireward/issues/29) to be featured in this section.
 
