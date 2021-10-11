@@ -47,6 +47,22 @@ release:
 v?=$(V)
 publish: 
 	cd npm-bin && ./publish.sh
+
+z:
+	echo $(shell date +%s)
+
+BRANCH:=$(shell git branch --show-current)
+release-beta:
+	[ "$(BRANCH)" != "master" ]
+	make buildtest
+	git push origin $(BRANCH) # prevent travis from building anything but the tag
+	git tag -a "$(V)-beta.$(shell date +%s)"
+	git push origin $(BRANCH) --follow-tags
+
+
+publish-beta: 
+	cd npm-bin && ./publish.sh beta
+
 workExe:=$(shell stack path --dist-dir)/build/fireward/fireward
 
 watch-complex:

@@ -16,12 +16,16 @@ import Data.List (findIndices, intersperse, intercalate, stripPrefix)
 import Data.Char (toUpper)
 import Control.Monad (ap)
 
+capitalize :: [Char] -> [Char]
 capitalize "" = ""
 capitalize (c:cs) = (toUpper c) : cs
 
+joinLines :: [[Char]] -> [Char]
 joinLines = intercalate "\n"
 
+indent :: Int -> [Char]
 indent n = take n $ repeat ' '
+indentBy :: Int -> [Char] -> [Char]
 indentBy n = (indent n ++)
 
 block :: Int -> [String] -> String
@@ -32,37 +36,43 @@ block ind items = joinLines
   ]
 
 
+natives :: [([Char], [Char])]
 natives = 
-  [ ("int", "number")
-  , ("float", "number")
-  , ("timestamp", "null|Date|WardTimestamp|WardFieldValue")
+  [ ("int", "Types['number']")
+  , ("float", "Types['number']")
+  , ("timestamp", "Types['timestamp']")
   , ("latlng", "WardGeoPoint")
   , ("bool", "boolean")
   , ("null", "null")
   , ("map", "Record<string, unknown>")
+  , ("string", "string")
+  , ("any", "any")
   ]
 
 
 
-maxTuples = 12
-tupleX n opt = "[" ++ (intercalate ", " ["T" ++ if opt then "?" else "" | j <- [0..n-1]]) ++ "]"
-maxTupleX n = "export type ArrayMax"++show n++"<T> = "  ++ (tupleX n True) 
-someTuple = "export type SomeTuple<T> = " ++ intercalate " | " [ "ArrayMax" ++ show j ++ "<T> "| j <- [1..maxTuples-1]]
-funcMaxArray = ts ++ "\nexport function toArrayMax(n:number, arr:any[]) { return arr.slice(0,n) }" 
-  where ts = intercalate "\n" ["export function toArrayMax<T>(n: "++show n++", arr:T[]):ArrayMax"++show n++"<T>" | n <- [1..maxTuples-1]]
 fieldValueType = "export type WardFieldValue = { isEqual: (other: WardFieldValue) => boolean };"
 timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardTimestamp)=>boolean, toMillis: ()=>number, valueOf: ()=>string};"
 timestampTypeCheck = "export function isTimestamp(v: any): v is WardTimestamp { return !!v && (typeof v=='object') && !!v.toDate && !!v.toMillis && (typeof v.nanoseconds=='number') && (typeof v.seconds=='number')};"
 geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean }"
 geoPointTypeCheck = "export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };"
-stdTuples = intercalate "\n\n" [ maxTupleX n | n <- [1..maxTuples] ]
 
+inputTypes :: [Char]
+inputTypes = "export type FirewardOutput = /** what you get from DB */ { timestamp: WardTimestamp|null; number: number; };"
+outputTypes :: [Char]
+outputTypes = "export type FirewardInput = /** what you send to DB */ { timestamp: WardTimestamp|Date|WardFieldValue; number: number|WardFieldValue; };"
+firewardTypes = "export type FirewardTypes = FirewardInput | FirewardOutput;"
+
+stdTypes :: [Char]
 stdTypes = (intercalate "\n" 
            [ fieldValueType
            , timestampType
            , timestampTypeCheck
            , geoPointType
            , geoPointTypeCheck
+           , inputTypes
+           , outputTypes
+           , firewardTypes
            ]) ++ "\n\n"
 
 fork f g a = (f a) (g a)
@@ -76,7 +86,8 @@ typeRefList ind refs =
   trim .  intercalate " | " $ ref <$> refs
   where
     -- tldr: q = f <*> g === ap f g === q x = (f x) (g x).
-    convertToNative = flip maybe id <*> flip lookup natives
+    -- convertToNative = flip maybe id <*> flip lookup natives
+    convertToNative name = maybe (name ++ "<Types>") id (lookup name natives)
     ref :: TypeRef -> String
     ref (LiteralTypeRef value) = value
     ref (ListTypeRef r) = ref r ++ "[]"
@@ -93,7 +104,7 @@ typeRefList ind refs =
              else "(" ++ typeRefList 0 refs ++ ")?"
                            
 
-topLevelType name refs = "export type " ++ name ++ " = " ++ typeRefList 0 refs
+topLevelType name refs = "export type " ++ name ++ "<Types extends FirewardTypes = FirewardTypes> = " ++ typeRefList 0 refs
 
 gen :: [TopLevel] -> Either String String
 gen tops = result where

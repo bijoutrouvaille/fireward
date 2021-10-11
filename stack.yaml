@@ -43,6 +43,9 @@ packages:
 # (e.g., acme-missiles-0.3)
 extra-deps: []
 
+ghc-options:
+  "$everything": -haddock
+
 # Override default flag values for local packages and extra-deps
 flags: {}
 

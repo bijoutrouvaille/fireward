@@ -254,6 +254,39 @@ For the exception of assigning a type to a route, the syntax is identical to the
 
 Line comments are supported with `//`.
 
+
+#### Input/Output Generics 
+
+_Note:_ The usage of this feature is optional, though very convenient.
+
+Types that go _into_ the database are different from those that come _out_ of it. For example, a `float` value obtained from the database will become a Typescript `number`, but when you send it to the Firestore client to be saved in the database, its value can be also `firestore.FieldValue.increment()`, which returns a `FieldValue` class, aka Sentinel value. Timestamps are a more complex example of this difference. When Typescript typings are generated, this creates a problem: which Firestore types do we reflect in the Typescript definitions? Fireward deals with this issue by providing types as an optional generic parameter. For example, the following Fireward definition
+
+```
+type Person = {
+  name: string
+  age: int
+}
+```
+
+generates this Typescript
+
+```
+type Person<Types extends FirewardTypes = FirewardTypes> = {
+  name: string
+  age: Types['number']
+}
+```
+
+`FirewardTypes` is provided with the generated TS like so `export type FirewardTypes = FirewardInput | FirewardOutput`. `FirewardInput` and `FirewardOutput` are also provided:
+
+```
+export type FirewardOutput = /** what you get from DB */ { timestamp: WardTimestamp|null; number: number; };
+export type FirewardInput = /** what you send to DB */ { timestamp: WardTimestamp|Date|WardFieldValue; number: number|WardFieldValue; };
+```
+
+You can now see the flexibility this provides. If you want to limit your `Person` type only to values that may come from the database, simply pass the corresponding type parameter `type PersonInput = Person<FirewardInput>`. You can also define your own IO types, which will work as long they are assignable to the type that defines _all_ the possible ones--`FirewardTypes`.
+
+
 #### Splitting Across Files
 
 planned but not yet supported

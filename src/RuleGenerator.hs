@@ -154,7 +154,7 @@ typeFunc name refs =
               [ if length requiredKeys > 0
                 then _hasAll (addr parent) requiredKeys
                 else ""
-              , _sizeBetween (addr parent) mn mx
+              -- , _sizeBetween (addr parent) mn mx -- this section is no longer needed because of the hasAll and hasOnly checks
               , _hasOnly (addr parent) (fieldName <$> fields)
               ]
 

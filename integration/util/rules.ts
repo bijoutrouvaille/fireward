@@ -5,7 +5,7 @@ type App = ReturnType<typeof firebase.initializeTestApp>;
 const isWin = process.platform.toLocaleLowerCase().includes('windows');
 const execPath = '../'+execSync(`stack path --dist-dir`, {encoding: 'utf8'}).trim() + `/build/fireward/fireward` 
   + (isWin ? '.exe' : '');
-
+console.log('exec path', execPath)
 const tryRead = (path: string) => {
   try {
     return (readFileSync(path, {encoding: 'utf8'}) || '').trim();

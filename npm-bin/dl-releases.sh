@@ -1,7 +1,8 @@
 #!/bin/bash
 set -ev
 
-v=$(cd .. && stack exec fireward -- -V)
+# v=$(cd .. && stack exec fireward -- -V)
+v=$(git describe --tags `git rev-list --tags --max-count=1`)
 export files=(fireward-linux fireward-osx fireward.exe)
 for f in ${files[*]}; do
   if [ -f "$f" ]; then 
