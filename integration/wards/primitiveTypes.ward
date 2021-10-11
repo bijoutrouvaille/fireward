@@ -16,6 +16,9 @@ type LitTest = {
 type TimestampTest = {
   test: timestamp
 }
+type TimestampNullTest = {
+  test: timestamp|null
+}
 type AnyTest = {
   test: any
 }
@@ -46,6 +49,10 @@ match /literal/{x} is LitTest {
 	allow write: true;
 }
 match /time/{x} is TimestampTest {
+  allow write: true;
+  allow read: true;
+}
+match /time-null/{x} is TimestampNullTest {
   allow write: true;
   allow read: true;
 }

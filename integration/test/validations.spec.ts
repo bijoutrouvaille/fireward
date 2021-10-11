@@ -13,7 +13,7 @@ let app: App;
 before(async function(){
   this.timeout('10s')
   await isEmulatorReady();
-})
+});
 
 describe(WARD_NAME, function(){
   let count = 0;

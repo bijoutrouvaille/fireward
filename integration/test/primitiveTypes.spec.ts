@@ -3,7 +3,8 @@
  */
 import firebase = require('@firebase/testing');
 import {loadRules} from '../util/rules';
-import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint, AnyTest, QuotedTest} from '../wards/primitiveTypes';
+import {ListTest, OptListTest, MapTest, LitTest, WardTimestamp, TimestampTest, isTimestamp, GeoTest, WardGeoPoint, isGeoPoint, AnyTest, FirewardInput, FirewardOutput, TimestampNullTest, QuotedTest} from '../wards/primitiveTypes';
+
 import {isEmulatorReady} from './../util/emulator'
 import { expect } from 'chai';
 
@@ -122,8 +123,7 @@ describe(WARD_NAME, function(){
         if (!isTimestamp(y)) throw new Error(`Expected a WardTimestamp but got ` + JSON.stringify(y, null, '  '))
         if (!y.nanoseconds) throw new Error(`No nanoseconds? What a strange coincidence. Re-run the test.`)
       })
-    })
-
+    });
     describe(`WardGeoPoint`, function(){
       it(`typechecks a geopoint`, async function(){
         const x: GeoTest = {
@@ -138,7 +138,29 @@ describe(WARD_NAME, function(){
         if (y.latitude!=x.test.latitude) throw new Error(`Geopoint.latitude did not save correctly`)
       })
 
-    })
+    });
+    describe(`Input/Output generics`, function() {
+      it(`typechecks by isTimestamp`, async function(){
+        const x: TimestampTest<FirewardOutput> = {
+          test: new Date()
+        };
+        
+        await firebase.assertSucceeds(app.firestore().collection(`time-null`).doc(uid).set(x));
+        
+        // make sure it still reads and writes
+        const xx = await app.firestore().collection('time-null').doc(uid).get();
+        const data = xx.data() as any as TimestampNullTest<FirewardInput>;
+
+        // just make sure it compiles
+        type X = typeof data.test;
+
+        const xnull: X = null;
+        const xtime: X = {
+          isEqual(){return true}, 
+          nanoseconds: 1, seconds: 1, toDate() {return new Date()}, toMillis(){ return 1}
+        }        
+      })
+    });
 
     describe(`Quoted property names`, function() {
       it(`reads/writes Japanese, as well as non-word characters`, async function(){
