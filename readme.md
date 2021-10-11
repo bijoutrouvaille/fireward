@@ -27,12 +27,15 @@ https://groups.google.com/forum/#!forum/fireward
 
 Fireward was used in these awesome projects:
 
-[StretchMinder](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667219095) StretchMinder is a work break timer for iOS that reminds you to take frequent breaks while providing short guided movement & breathing routines which are designed to address the needs of someone who's sitting all day.
+[StretchMinder](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667219095) is a work break timer for iOS that reminds you to take frequent breaks while providing short guided movement & breathing routines which are designed to address the needs of someone who's sitting all day.
 
 [Oresman Readers Website](https://github.com/bijoutrouvaille/fireward/issues/29#issuecomment-667215177) is a site that houses the famous Oresman Readers, a fine art collection by Donald and Patricia Oresman. It relies on Fireward to structure and secure its data, as well as to provide a shopping cart item reservation system.
 
-Post yours [here](https://github.com/bijoutrouvaille/fireward/issues/29) to be featured in this section.
+[COGS](https://cogs.show/) is an intuitive hardware/software platform for real-world interactive experiences, including escape rooms and immersive theatre.
 
+[Super Magic Link](https://supermagiclink.com) allows Twitch streamers to sync video games, TV shows, movies, and music to their viewers.
+
+Post your project [here](https://github.com/bijoutrouvaille/fireward/issues/29) to be featured in this section.
 
 ## Installation
 
@@ -162,7 +165,7 @@ type Phone = { number: int, country: int }
 type Email = string
 
 function isLoggedInUser(userId) { 
-  let a = request.auth; // variables require v2 rules
+  let a = request.auth;
   // return keyword optional
   return a!=null && a.uid == userId; 
 }
@@ -219,7 +222,9 @@ Unlike in Firebase Realitime Database, optional types differ from `null`s. Optio
 
 #### `readonly` Types
 
-Fireward allows you to declare primitive types as `readonly`, as in the example above. A `readonly` field will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional and absent.
+Fireward allows you to declare properties as `readonly`, as in the example above. A `readonly` property will permit being written to once, rejecting subsequent writes. By design, the update will also be permitted in situations where the previous value is `null` or optional _and_ absent.
+
+_Note_: `readonly` used to only work on primitive types. Now it works for nested objects as well, thanks to the firestore [MapDiff feature](https://firebase.google.com/docs/reference/rules/rules.MapDiff).
 
 #### Type validation Expressions
 
@@ -325,7 +330,10 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Custom validation expressions within type definitions
 - [x] Actual tuple types, e.g. [int, string, MyType]
 - [x] Expression variables
-- [ ] Implement const objects using the new Map Diffs.
+- [x] Refactor with ternary types
+- [x] Implement readonly/const objects using the new Map Diffs.
+- [ ] Input/Output types for typescript (see io-generics branch)
+- [ ] Generic types
 - [ ] Importing files
 - [ ] Type intersections
 
