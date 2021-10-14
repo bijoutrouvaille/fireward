@@ -34,7 +34,7 @@ jobs:
           stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
           # version=$(stack exec fireward -- -V)
           
-          osname=$(echo "$RUNNER_OS" | awk '{print tolower($0)}' | sed 's/macos/osx')
+          osname=$(echo "$RUNNER_OS" | awk '{print tolower($0)}' | sed 's/macos/osx/')
           if [ "$osname" = "windows" ]; then
             DEPLOY_FILE=$(stack path --local-bin)\\fireward.exe
             # cp "$(stack path --local-bin)\\fireward" "$DEPLOY_FILE" # don't copy anything; it's already there
