@@ -57,6 +57,8 @@ jobs:
           # echo 'FIREWARD_VERSION='$version >> $GITHUB_ENV
           releaseid=$(gh release view $version | grep 'url:' | head -n 1 | sed -E 's/.*releases.tag.(.*)/\1/')
           echo '::set-output name=RELEASE_ID::'$releaseid
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish release
         uses: StuYarrow/publish-release@v1
         env:
