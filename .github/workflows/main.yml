@@ -43,7 +43,7 @@ jobs:
             DEPLOY_FILE=$(stack path --local-bin)/fireward-${osname}
             cp "$(stack path --local-bin)/fireward" "$DEPLOY_FILE" # don't clobber files from different os's
           fi
-          gh release view $version || gh releases create $version --title "$version" --notes "${{ github.event.head_commit.message }}" --draft
+          gh release view $version || gh release create $version --title "$version" --notes "${{ github.event.head_commit.message }}" --draft
           gh release upload $version "${DEPLOY_FILE}#${RUNNER_OS}"
 
   release:
