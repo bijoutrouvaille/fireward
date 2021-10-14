@@ -27,6 +27,7 @@ jobs:
       - name: Build
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
           # stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
           version=$(git describe --tags `git rev-list --tags --max-count=1`)
