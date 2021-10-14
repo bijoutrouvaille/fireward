@@ -13,6 +13,7 @@ jobs:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
     steps:
       - uses: actions/checkout@v2
+        # setup haskell actions https://kodimensional.dev/github-actions
       - uses: actions/setup-haskell@v1.1.4
         name: Setup Haskell Stack
         with:
