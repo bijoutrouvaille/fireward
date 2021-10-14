@@ -46,6 +46,7 @@ jobs:
 
   release:
     needs: build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: get-release
@@ -63,6 +64,7 @@ jobs:
 
   publish:
     needs: release
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
