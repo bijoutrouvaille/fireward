@@ -99,15 +99,4 @@ jobs:
 
           cp ../readme.md ./readme.md
 
-          # npm version "$v" 
-
-          if [ "$1" = "beta" ]; then
-            npm publish --tag beta
-          else 
-            npm publish 
-          fi
-
           npm publish 
-
-          rm ./readme.md
-
