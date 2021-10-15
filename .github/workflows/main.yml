@@ -53,7 +53,9 @@ jobs:
         id: get-release
         run: |
           version=$(git describe --tags `git rev-list --tags --max-count=1`)
-          releaseid=$(gh release view $version | grep 'url:' | head -n 1 | sed -E 's/.*releases.tag.(.*)/\1/')
+          tagid=$(gh release view $version | grep 'url:' | head -n 1 | sed -E 's/.*releases.tag.(.*)/\1/')
+          gh api repos/$GITHUB_REPOSITORY/releases/tags/$tagid > draft.json
+          releaseid=$(node -e "console.log(require('./draft.json').id)")
           echo "::set-output name=release_id::$releaseid"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
