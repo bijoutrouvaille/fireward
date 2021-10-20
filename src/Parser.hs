@@ -38,6 +38,7 @@ module Parser
 , failure
 , require
 , ParserResult
+, ParserSuccess(..)
 , (<|>), (>>=)
 , trim
 ) where 
@@ -50,8 +51,15 @@ import Control.Monad ((>>=), return, ap, liftM, guard)
 import Control.Applicative (Alternative, (<|>), empty, many, some, optional)
 import Prelude hiding (head)
 
+data Warning = Warning { warningText::String, warningLine::Int, warningCol::Int }
 type ParserError = Maybe (String, Int, Int)
-type ParserSuccess a = (a, String, Int, Int) -- (result, unparsed, line, col, required)
+data ParserSuccess a = ParserSuccess 
+  { parserResult::a
+  , unparsed::String
+  , parserLine::Int 
+  , parserCol::Int 
+  , parserWarnings::[Warning]
+  } -- (result, unparsed, line, col, required)
 type ParserResult a = Either ParserError (ParserSuccess a)
 
 newtype Parser a = Parser (String -> Either ParserError (ParserSuccess a))
@@ -105,14 +113,34 @@ instance Alternative Parser where
           in pick $ apply p s
 
 instance Monad Parser where
-  return x = Parser (\s -> Right (x, s, 0, 0))
+  return x = Parser (\s -> Right $ ParserSuccess x s 0 0 [])
   p >>= q = Parser outer
     where outer s = res (apply p s)
-          res (Right (x, s', l', c')) = inner (apply (q x) s') l' c'
+          res (Right (ParserSuccess { 
+            parserResult = x, 
+            unparsed = s', 
+            parserLine = l', 
+            parserCol = c', 
+            parserWarnings = w'
+          })) = inner (apply (q x) s') l' c' w'
           res (Left error) = Left error
-          inner (Right (y, s'', l'', c'')) l' c' = Right (y, s'', l'+l'', if l'' > 0 then c'' else c' + c'')
-          inner (Left (Just (error, l'', c''))) l' c' = failure (error, l'+l'', if l'' > 0 then c'' else c' + c'')
-          inner (Left Nothing) l' c' = Left Nothing
+          inner (Right (ParserSuccess
+            { parserResult = y
+            , unparsed = s''
+            , parserLine = l''
+            , parserCol = c''
+            , parserWarnings = w''
+            })) l' c' w' = Right $ ParserSuccess
+              { parserResult = y
+              , unparsed = s''
+              , parserLine = l' + l''
+              , parserCol = if l'' > 0 then c'' else c' + c''
+              , parserWarnings = w' ++ w''
+              }
+            -- (y, s'', l'+l'', if l'' > 0 then c'' else c' + c'')
+          -- (y, s'', l'', c'')) l' c' = Right (y, s'', l'+l'', if l'' > 0 then c'' else c' + c'')
+          inner (Left (Just (error, l'', c''))) l' c' w' = failure (error, l'+l'', if l'' > 0 then c'' else c' + c'')
+          inner (Left Nothing) l' c' w' = Left Nothing
      
 require msg p = Parser q
   where q s = res (apply p s)
@@ -125,7 +153,14 @@ ifLineSep c t f = if c=='\n' || c=='\r' then t else f
 getc :: Parser Char
 getc = Parser f where
   f [] = Left Nothing
-  f (c:cs) = Right (c, cs, ifLineSep c 1 0 , ifLineSep c 0 1)
+  -- f (c:cs) = Right (c, cs, ifLineSep c 1 0 , ifLineSep c 0 1)
+  f (c:cs) = Right $ ParserSuccess
+    { parserResult = c
+    , unparsed = cs
+    , parserLine = ifLineSep c 1 0
+    , parserCol = ifLineSep c 0 1
+    , parserWarnings = []
+    }
 
 sat :: (Char -> Bool) -> Parser Char
 sat p = do { c <- getc; guard (p c); return c }

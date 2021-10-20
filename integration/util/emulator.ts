@@ -1,5 +1,5 @@
 import {spawn, execSync} from 'child_process';
-import * as fs from 'fs';
+
 import json = require('../firebase.json');
 
 const EXE = './node_modules/.bin/firebase';
@@ -24,7 +24,7 @@ function start() {
       ready = true;
       return;
     };
-  } catch (error) {
+  } catch (error: any) {
     console.log('failed with previous pid', {
       // err: error.stderr.toString(),
       // out: error.stdout.toString(),
@@ -37,10 +37,11 @@ function start() {
   const proc = spawn(EXE, `emulators:start --only firestore`.split(' '), {
     stdio: 'pipe'
   });
+
   proc.stdout.on('data', (data) => {
     console.log(`EMULATOR stdout: ${data}`);
     const msg = `${data}`;
-    if (msg.indexOf('it is now safe to connect') > -1) {
+    if (msg.indexOf('It is now safe to connect your app.') > -1) {
       ready = true;
     }
   });
@@ -48,20 +49,19 @@ function start() {
 
   proc.stderr.on('data', (data) => {
     console.log(`EMULATOR  stderr: ${data}`);
-    
   });
 
   proc.on('close', (code, signal)=>{
     console.log(`Emulator closed with code ${code}: ${signal}.\nExitting.`)
-    process.exit(code);
+    process.exit(code || 0);
   })
   proc.on('error', e=>{
     console.error('Emulator error', e);
     process.exit(1);
   })
-  proc.on('message', msg=>{
+  proc.on('message', msg => {
     console.log('EMULATOR:', msg);
-    if (msg.indexOf('All emulators started, it is now safe to connect') > -1) {
+    if (msg.toString().indexOf('It is now safe to connect your app.') > -1) {
       ready = true;
     }
   })
@@ -74,12 +74,14 @@ function start() {
     process.exit(1);
   })
 }
-start();
-export const isEmulatorReady = ()=>new Promise(res=>{
-  const t = setInterval(()=>{
-    if (ready) {
-      clearInterval(t);
-      res();
-    }
-  }, 100)
-})
+
+// start();
+
+// export const isEmulatorReady = () => new Promise(res => {
+//   const t = setInterval(() => {
+//     if (ready) {
+//       clearInterval(t);
+//       res(null);
+//     }
+//   }, 100)
+// })

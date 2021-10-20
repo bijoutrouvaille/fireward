@@ -54,7 +54,7 @@ natives =
 fieldValueType = "export type WardFieldValue = { isEqual: (other: WardFieldValue) => boolean };"
 timestampType = "export type WardTimestamp = {seconds: number, nanoseconds: number, toDate: ()=>Date, isEqual: (other: WardTimestamp)=>boolean, toMillis: ()=>number, valueOf: ()=>string};"
 timestampTypeCheck = "export function isTimestamp(v: any): v is WardTimestamp { return !!v && (typeof v=='object') && !!v.toDate && !!v.toMillis && (typeof v.nanoseconds=='number') && (typeof v.seconds=='number')};"
-geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean }"
+geoPointType = "export type WardGeoPoint = { latitude: number, longitude: number, isEqual: (other: WardGeoPoint)=>boolean, toJSON: ()=>{latitude: number, longitude: number} }"
 geoPointTypeCheck = "export function isGeoPoint(v: any): v is WardGeoPoint {  return !!v && (typeof v=='object') && (typeof v.isEqual=='function')  && (typeof v.latitude=='number') && (typeof v.longitude=='number') };"
 
 inputTypes :: [Char]
@@ -118,6 +118,18 @@ generate :: String -> Either String String
 generate s = result $ parseRules s where
   result (Left Nothing) = Left ("Unexpected parser error.")
   result (Left (Just (e,l,c))) = Left (e ++ "\n  on " ++printLoc l c)
-  result (Right (tops, "", _, _)) = gen tops
-  result (Right (tops, unparsed, l, c)) = Left ("Unexpected input on " ++ printLoc l c)
+  result (Right (ParserSuccess 
+    { parserResult = tops
+    , unparsed = ""
+    , parserLine = _
+    , parserCol = _
+    , parserWarnings = w
+    })) = gen tops
+  result (Right (ParserSuccess
+    { parserResult = tops
+    , unparsed = unparsed
+    , parserLine = l
+    , parserCol = c
+    , parserWarnings = w
+    })) = Left ("Unexpected input on " ++ printLoc l c)
   printLoc l c = "line " ++ show (l+1) ++", column "++show (c+1)

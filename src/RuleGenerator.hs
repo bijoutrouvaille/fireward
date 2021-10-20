@@ -75,7 +75,14 @@ generate wrap source = q tree
     tree :: ParserResult [TopLevel]
     tree = parseRules source
     q :: ParserResult [TopLevel] -> Either String String
-    q (Right (tops, unparsed, l, c)) = 
+    -- q (Right (tops, unparsed, l, c)) = 
+    q (Right (ParserSuccess
+      { parserResult = tops
+      , unparsed = unparsed
+      , parserLine = l
+      , parserCol = c
+      , parserWarnings = w
+    })) = 
       if length unparsed > 0
          then Left ("Could not parse on\n  on " ++ printLoc l c)
          else Right . finalize tops $ genTops tops 

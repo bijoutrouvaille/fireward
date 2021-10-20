@@ -12,11 +12,25 @@ import Debug.Trace (trace)
 
 
 _parse s = res (parseRules s) 
-  where res (Right (x,v, _, _)) = Right (x,v)
-        res (Left x) = Left x
+  where 
+    res (Right (ParserSuccess 
+      { parserResult = x
+      , unparsed = v
+      , parserLine = _
+      , parserCol = _
+      , parserWarnings = w
+      })) = Right (x, v)
+    res (Left x) = Left x
 
 _apply p s = res (apply p s) 
-  where res (Right (x, u, l, c)) = Right (x, u)
+  where 
+        res (Right (ParserSuccess 
+          { parserResult = x
+          , unparsed = u
+          , parserLine = _
+          , parserCol = _
+          , parserWarnings = w
+          })) = Right (x, u)
         res (Left x) = Left x
 
 main :: IO ()

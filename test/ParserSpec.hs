@@ -11,8 +11,15 @@ import Parser
 with x f = f x
 
 _apply p s = res (apply p s) 
-  where res (Right (x, u, l, c)) = Right (x, u)
-        res (Left x) = Left x
+  where 
+    res (Right (ParserSuccess 
+      { parserResult = x
+      , unparsed = u
+      , parserLine = _
+      , parserCol = _
+      , parserWarnings = w
+      })) = Right (x, u)
+    res (Left x) = Left x
 
 
 main :: IO ()

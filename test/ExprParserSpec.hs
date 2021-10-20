@@ -10,6 +10,7 @@ import Test.QuickCheck
 import Debug.Trace (trace)
 import ExprParser
 import ExprPrinter
+import Parser (ParserSuccess(..))
 
 p = printExpr
 
@@ -25,7 +26,14 @@ ex e = print tree where
 
 parse s = d $ apply expr s where
   d (Left err) = Left err
-  d (Right (x, z, _, _)) = if z=="" then Right x else Left (Just (z, 1, 1))
+  d (Right (ParserSuccess 
+    { parserResult = x
+    , unparsed = z
+    , parserLine = _
+    , parserCol = _
+    , parserWarnings = w
+    })) = if z=="" then Right x else Left (Just (z, 1, 1))
+  -- d (Right (x, z, _, _)) = if z=="" then Right x else Left (Just (z, 1, 1))
 
 main :: IO ()
 main = hspec spec
