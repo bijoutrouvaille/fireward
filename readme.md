@@ -332,7 +332,7 @@ The tests are writted with mocha and typescript. Put fixture ward files in the `
 - [x] Expression variables
 - [x] Refactor with ternary types
 - [x] Implement readonly/const objects using the new Map Diffs.
-- [ ] Input/Output types for typescript (see io-generics branch)
+- [x] Input/Output types for typescript (see io-generics branch)
 - [ ] Generic types
 - [ ] Importing files
 - [ ] Type intersections
